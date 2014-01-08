@@ -2,3 +2,15 @@ RVS
 ===
 
 Rangeland Vegetation Simulator
+
+RVS provides a suite of modules which simulate non-forested project areas' vegetation conditions over time. 
+RVS includes calculations for biomass, succession, disturbance, and fuel modelling. The RVS API is generally 
+used in conjunction with the Forest Vegetation Simulator, found at http://www.fs.fed.us/fmsc/fvs/ and 
+https://code.google.com/p/open-fvs/
+
+RVS is still in early production and not ready for release.
+
+Author:  Robb Lankston
+robblankston@gmail.com
+
+Last Modified:  8 Jan 2014

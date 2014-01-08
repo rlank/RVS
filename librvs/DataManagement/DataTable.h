@@ -10,6 +10,8 @@
 #ifndef DATATABLE_H
 #define DATATABLE_H
 
+#include <vector>
+
 namespace RVS
 {
 namespace DataManagement

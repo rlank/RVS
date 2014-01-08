@@ -1,4 +1,0 @@
-RVS
-===
-
-Rangeland Vegetation Simulator
