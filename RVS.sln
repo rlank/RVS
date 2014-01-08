@@ -1,0 +1,72 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.20827.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RVS", "RVS\RVS.csproj", "{790F997F-8518-47B6-B4A7-6167490C6C6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RVS_CPP", "RVS_CPP\RVS_CPP.vcxproj", "{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_CPP|Any CPU = Debug_CPP|Any CPU
+		Debug_CPP|x64 = Debug_CPP|x64
+		Debug_CPP|x86 = Debug_CPP|x86
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release_CPP|Any CPU = Release_CPP|Any CPU
+		Release_CPP|x64 = Release_CPP|x64
+		Release_CPP|x86 = Release_CPP|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Debug_CPP|Any CPU.ActiveCfg = Debug|x86
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Debug_CPP|x64.ActiveCfg = Debug|x64
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Debug_CPP|x86.ActiveCfg = Debug|x86
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Debug_CPP|x86.Build.0 = Debug|x86
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Debug|x64.ActiveCfg = Debug|x64
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Debug|x64.Build.0 = Debug|x64
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Debug|x86.ActiveCfg = Debug|x86
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Release_CPP|Any CPU.ActiveCfg = Release|x86
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Release_CPP|x64.ActiveCfg = Release|x64
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Release_CPP|x86.ActiveCfg = Release|x86
+		{790F997F-8518-47B6-B4A7-6167490C6C6F}.Release_CPP|x86.Build.0 = Release|x86
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Debug_CPP|Any CPU.ActiveCfg = Debug|x86
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Debug_CPP|x64.ActiveCfg = Debug|x64
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Debug_CPP|x86.ActiveCfg = Debug|x86
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Debug_CPP|x86.Build.0 = Debug|x86
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Debug|x64.ActiveCfg = Debug|x64
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Debug|x64.Build.0 = Debug|x64
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Debug|x86.ActiveCfg = Debug|x86
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Release_CPP|Any CPU.ActiveCfg = Release|x86
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Release_CPP|x64.ActiveCfg = Release|x64
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Release_CPP|x86.ActiveCfg = Release|x86
+		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Release_CPP|x86.Build.0 = Release|x86
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug_CPP|Any CPU.ActiveCfg = Debug|Win32
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug_CPP|Any CPU.Build.0 = Debug|Win32
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug_CPP|x64.ActiveCfg = Debug|x64
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug_CPP|x64.Build.0 = Debug|x64
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug_CPP|x86.ActiveCfg = Debug|Win32
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug|Any CPU.Build.0 = Debug|Win32
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug|x64.ActiveCfg = Debug|x64
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug|x64.Build.0 = Debug|x64
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug|x86.ActiveCfg = Debug|Win32
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Debug|x86.Build.0 = Debug|Win32
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Release_CPP|Any CPU.ActiveCfg = Release|Win32
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Release_CPP|x64.ActiveCfg = Release|x64
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Release_CPP|x64.Build.0 = Release|x64
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Release_CPP|x64.Deploy.0 = Release|x64
+		{ABD23AD5-EE11-4BBE-AE1B-5B2D532A65D7}.Release_CPP|x86.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+EndGlobal
