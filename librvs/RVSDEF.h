@@ -11,6 +11,11 @@
 #define BIO_PATH "Biomass/"
 #define DIO_PATH "DataManagement/"
 
+extern const char* RVS_DB_PATH;
+#ifndef RVS_DB_PATH
+	#define RVS_DB_PATH "C:/MCR/RVS/Data/rvs_bio.db"
+#endif
+
 // OS-specific includes
 #define WIN 0
 

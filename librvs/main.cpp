@@ -23,22 +23,14 @@ int main(int argc, char* argv[])
     static bool USE_THREADING = false;
     static bool SUPPRESS_MSG = false;
 
-	char* defaultdb = "C:\\MCR\\RVS\\Data\\rvs_bio.db";
-
-    std::string consoleRead = "";
     /*
-	std::cout << "Enter path to RVS database or leave blank to use default: (" << defaultdb << ") ";
-    std::cin >> RVS::DataManagement::DIO::pathToDb;
-    
 	///////////////////////////
 	/// Do user options here //
 	///////////////////////////
-
 	*/
-    std::cout << std::endl;
 
 	// Get DIO ready for queries
-	RVS::DataManagement::DIO dio(defaultdb);
+	RVS::DataManagement::DIO dio;
 
     ////////////////////////////////////////////////////////////////////////////////
     // This is a Biomass test, so build an array of BiomassEVT and run this thing //
@@ -56,7 +48,7 @@ int main(int argc, char* argv[])
 		RVS::Biomass::BiomassReturnType retType = RVS::Biomass::BiomassReturnType::RNUL;
         RVS::Biomass::BiomassDriver bdriver = RVS::Biomass::BiomassDriver(RVS::Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG);
 
-		//RETURN_STATE = bdriver.BioMain(runplot, &biomass, &retType);
+		RETURN_STATE = bdriver.BioMain(runplot, &biomass, &retType);
 		biomassResults[runplot] = biomass;
     }
 

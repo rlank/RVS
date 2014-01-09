@@ -2,17 +2,15 @@
 
 // Static object decs
 sqlite3* RVS::DataManagement::DIO::rvsdb;
-char* RVS::DataManagement::DIO::PATHTODB;
 
-// Constructor. Only one allowed to force input of pathToDb
-RVS::DataManagement::DIO::DIO(char* pathToDb)
+// Constructor
+RVS::DataManagement::DIO::DIO(void)
 {
-	PATHTODB = pathToDb;
-	int rc = open_db_connection(pathToDb);
+	int rc = open_db_connection(RVS_DB_PATH);
 }
 
 // Destructor. Closes the connection with the db.
-RVS::DataManagement::DIO::~DIO()
+RVS::DataManagement::DIO::~DIO(void)
 {
 	int rc = sqlite3_close(rvsdb);
 	printf("Closing DB connection.\n");
@@ -21,11 +19,10 @@ RVS::DataManagement::DIO::~DIO()
 // Opens an sqlite connection to the specified database
 int RVS::DataManagement::DIO::open_db_connection(char* pathToDb)
 {
-	PATHTODB = pathToDb;
 	int rc = 0;
 
 	// Open the database
-	rc = sqlite3_open(PATHTODB, &rvsdb);
+	rc = sqlite3_open(pathToDb, &rvsdb);
 
 	if (rc)
 	{
@@ -102,14 +99,14 @@ RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_biomass_herbs_tab
 	return dt;
 }
 
-RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_biomass_input_table(int plot_num)
+RVS::DataManagement::DataTable* RVS::DataManagement::DIO::query_biomass_input_table(int plot_num)
 {
 	char* base = "SELECT * FROM Biomass_Input WHERE plot_num=";
 	char* selectString;
 	selectString = RVS::DataManagement::DIO::statementPrep(base, plot_num);
 	sqlite3_stmt* stmt = RVS::DataManagement::DIO::query_base(selectString);
 	
-	DataTable dt;
+	DataTable* dt = new DataTable(stmt);
 	delete[] selectString;
 	return dt;
 }
@@ -162,7 +159,7 @@ RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_base_old(char* se
 	DataTable dt;
 
 	// Open the database
-	rc = sqlite3_open(PATHTODB, &rvsdb);
+	rc = sqlite3_open(RVS_DB_PATH, &rvsdb);
 	
 	if (rc)
 	{
@@ -196,15 +193,6 @@ RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_base_old(char* se
 	rc = sqlite3_close(rvsdb);
 
 	return dt;
-}
-
-void RVS::DataManagement::DIO::columnTraverse(sqlite3_stmt* stmt)
-{
-	int colCount = sqlite3_data_count(stmt);
-	for (int i = 0; i < colCount; i++)
-	{
-		
-	}
 }
 
 #else

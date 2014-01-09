@@ -1,8 +1,10 @@
 /// ********************************************************** ///
 /// Name: DataTable.h                                          ///
-/// Desc:         ///
+/// Desc: Wrapper class for an sqlite3 statement object. This  ///
+/// assures proper destruction of the statement despite being  ///
+/// passed around to different parts of the program.           ///
 /// Base Class(es): none                                       ///
-/// Requires:                             ///
+/// Requires:                                                  ///
 /// ********************************************************** ///
 
 #pragma once
@@ -10,6 +12,7 @@
 #ifndef DATATABLE_H
 #define DATATABLE_H
 
+#include <sqlite3.h>
 #include <vector>
 
 namespace RVS
@@ -20,22 +23,13 @@ namespace DataManagement
 	{
 	public:
 		inline DataTable() {}
-		virtual inline ~DataTable(void) {}
+		inline DataTable(sqlite3_stmt* stmt) { this->stmt = stmt; }
+		virtual inline ~DataTable(void) { sqlite3_finalize(stmt); }
 
-
-		inline int getColumns() { return columns; }
-		inline int getRows() { return rows; }
-		inline char* getColumnNames() { return columnNames; }
+		inline sqlite3_stmt* getStmt() { return stmt; }
 
 	private:
-		int columns;
-		int rows;
-		
-		char* columnNames;
-		int* columnTypes;
-		int* colimnSizes;
-
-		
+		sqlite3_stmt* stmt;
 	};
 }
 }

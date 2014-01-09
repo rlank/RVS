@@ -6,7 +6,6 @@
 /// Requires: map, string, RVS_TypeDefs                        ///
 /// ********************************************************** ///
 
-//$$ TODO: Finish copy constructor? (is this even needed?)
 //$$ TODO: Start coding succession parameters from spreadsheet Matt sent
 
 #pragma once
@@ -16,6 +15,9 @@
 
 #include <map>
 #include <string>
+#include <vector>
+
+#include <boost/any.hpp>
 
 #include "RVS_TypeDefs.h"
 
@@ -28,11 +30,13 @@ namespace DataManagement
 	{
 	public:
 		EVT(void);
+		EVT(RVS::DataManagement::DataTable* dt);
 		EVT(const EVT& old_evt);
 		virtual ~EVT(void);
 
 		// General EVT parameters //
 		virtual inline int EVT_NUM() { return evt_num; };
+		virtual inline int EVT_NUM2() { return (int)vars_collection["evt_num"]; };
 		virtual inline std::string BPS_NUM() { return bps_num; };
 		virtual inline Lifeform LIFEFORM() { return lifeform; };
 		virtual inline std::string DOM_SPP() { return dom_spp; };
@@ -43,7 +47,7 @@ namespace DataManagement
 		virtual inline int TOTALSAMPLEPLOTS() { return totalSamplePlots; };
 
 		// General EVT public functions //
-		virtual void base_buildEVT(RVS::DataManagement::DataTable &dt, int &row_num);
+		virtual void buildEVT(RVS::DataManagement::DataTable* dt);
 
 		// Biomass EVT parameters //
 		virtual float PERCENT_DOM() = 0;
@@ -73,10 +77,12 @@ namespace DataManagement
 		float cover;
 		int samplePlots;
 		int totalSamplePlots;
+
+		std::map<std::string, boost::any*> vars_collection;
 	    
 		// General EVT protected functions //
 		virtual void initialize_object();
-		
+		virtual void parseItem(sqlite3_stmt* stmt, int column);
 
 		// BIOMASS EVT variables //
 		float percentDom;

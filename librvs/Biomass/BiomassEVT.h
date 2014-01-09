@@ -11,7 +11,13 @@
 #define BIOMASS_EVT_H
 
 #include <map>
+#include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string>
+
+#include <boost/foreach.hpp>
+#include <sqlite3.h>
 
 #include <DataManagement/EVT.h>
 #include <DataManagement/RVS_TypeDefs.h>
@@ -29,7 +35,7 @@ namespace Biomass
 	public:
 		// Constructors | Destructors //
 		BiomassEVT(void);
-		BiomassEVT(RVS::DataManagement::DataTable* dt, int* row_num);
+		BiomassEVT(RVS::DataManagement::DataTable* dt);
 		BiomassEVT(const BiomassEVT& old_biomassevt);
 		virtual ~BiomassEVT(void);
 
@@ -48,17 +54,14 @@ namespace Biomass
 		inline Biomass::BiomassReturnType RETURN_TYPE() { return returnType; };
 		inline std::map<Biomass::BiomassVarUnits, std::string> PARAMETERS() { return parms; }
 
+		virtual std::string toString();
+
 	protected:
-		/// <summary>
         /// A better buildEVT function that doesn't depend on column positions
-        /// </summary>
         /// <param name="dt"></param>
-        /// <param name="row_num"></param>
-		void buildEVT(RVS::DataManagement::DataTable* dt, int* row_num);
-		/// <summary>
+		virtual void buildEVT(RVS::DataManagement::DataTable* dt);
         /// Variable initializer. Called by all Constructors.
-        /// </summary>
-		void initialize_object();
+		virtual void initialize_object();
 
 	private:
 	    void copyData(const BiomassEVT& biomassevt_to_copy);

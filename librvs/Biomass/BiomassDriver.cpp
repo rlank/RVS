@@ -36,28 +36,30 @@ int BiomassDriver::BioMain(int plot_num, double* biomass_return_value, RVS::Biom
 
 		// read in data. the query_biomass_input_table function returns a DataTable
 		// with only records for that plot number
-		RVS::DataManagement::DataTable dt = RVS::DataManagement::DIO::query_biomass_input_table(plot_num);
+		RVS::DataManagement::DataTable* dt = RVS::DataManagement::DIO::query_biomass_input_table(plot_num);
+		sqlite3_stmt* inputStmt = dt->getStmt();
 
-		// create BiomassEVT array for input into BiomassDriver
-		int rowCount = 1; //$$ TODO get rows from dt
-		evt_records = new RVS::Biomass::BiomassEVT*[rowCount];
-
-		for (int row_counter = 0; row_counter < rowCount; row_counter++)
+		int rc = SQLITE_OK;
+		int row_counter = 0;
+		while (rc == SQLITE_OK || rc == SQLITE_ROW)
 		{
-			evt_records[row_counter] = new RVS::Biomass::BiomassEVT(&dt, &row_counter);
-
+			rc = sqlite3_step(inputStmt);
+			RVS::Biomass::BiomassEVT* bioEVT = new RVS::Biomass::BiomassEVT(dt);
+			evt_records.push_back(bioEVT);
+			
+			/*
 			if (row_counter == 0)
 			{
-				primary_production = this->calcHerbBiomass(evt_records[row_counter]);
+				primary_production = this->calcHerbBiomass(bioEVT);
 			}
-
+			*/
 			double singleBiomass = 0;
 
 			// Branch biomass calculation to do either HERB or SHRUB
-			switch (evt_records[row_counter]->LIFEFORM())
+			switch (bioEVT->LIFEFORM())
 			{
 				case RVS::DataManagement::shrub:
-					singleBiomass = this->calcShrubBiomass(evt_records[row_counter]);
+					//singleBiomass = this->calcShrubBiomass(bioEVT);
 					//evt_records[row_counter].RESULTS.Add("biomass", (float)singleBiomass);
 					break;
 				case RVS::DataManagement::herb:
@@ -69,7 +71,15 @@ int BiomassDriver::BioMain(int plot_num, double* biomass_return_value, RVS::Biom
 			}
 
 			shrubBiomass += singleBiomass;
+			row_counter++;
 		}
+
+		BOOST_FOREACH(RVS::Biomass::BiomassEVT* v, evt_records)
+		{
+			std::cout << v->toString() << std::endl;
+		}
+
+		delete dt;
 
 		herbBiomass = primary_production - shrubBiomass;
 		BIOMASS_RETURN_VAL = shrubBiomass + herbBiomass;
@@ -87,9 +97,6 @@ int BiomassDriver::BioMain(int plot_num, double* biomass_return_value, RVS::Biom
 			std::cout << "Units: " << BIOMASS_RET_TYPE << std::endl;
 			std::cout << "Return State: " << RETURN_STATE << std::endl;
 		}
-
-		// cleanup
-		delete evt_records;
 	}
 	catch (std::exception& e)
 	{
