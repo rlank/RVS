@@ -29,15 +29,6 @@ void RVS::Biomass::BiomassEVT::buildEVT(RVS::DataManagement::DataTable* dt)
 	{
 		this->parseItem(stmt, i);
 	}
-
-//   this.parseItem(dt.Rows[row_num]["ret_code"], ref returnType);
-
-//   if (pa1_code != BiomassVarUnits.NUL)
-//       parms.Add(pa1_code, pa1_val);
-//   if (pa2_code != BiomassVarUnits.NUL)
-//       parms.Add(pa2_code, pa2_val);
-//   if (pa3_code != BiomassVarUnits.NUL)
-//       parms.Add(pa3_code, pa3_val);
 }
 
 void RVS::Biomass::BiomassEVT::initialize_object()
@@ -49,19 +40,85 @@ void RVS::Biomass::BiomassEVT::initialize_object()
 	PA2_Val = 0;
 	PA3_Code = RVS::Biomass::VNUL;
 	PA3_Val = 0;
-	coef1 = 0;
-	coef2 = 0;
-	coef3 = 0;
-	coef4 = 0;
 	returnType = RVS::Biomass::RNUL;
-	//parms = new std::map<RVS::Biomass::BiomassVarUnits, std::string);
+}
+
+void RVS::Biomass::BiomassEVT::parseItem(sqlite3_stmt* stmt, int column)
+{
+	const char* colName = sqlite3_column_name(stmt, column);
+
+	boost::any aval;
+	this->getVar(stmt, column, &aval);
+
+	// Special cases that need populated
+	if (strcmp(colName, RET_CODE_FIELD) == 0)
+	{
+		this->parseReturnType(boost::any_cast<std::string>(aval));
+	}
+	else if (strcmp(colName, BIOMASS_PARAM_1_CODE_FIELD) == 0 || strcmp(colName, BIOMASS_PARAM_2_CODE_FIELD) == 0)
+	{
+		this->parseParameter(stmt, (char*)colName, column);
+	}
+
+	std::string name = std::string((char*)colName);
+	vars_collection[name] = aval;
+	this->putVar(colName, aval);
+}
+
+ //$$ TODO add other return types
+void RVS::Biomass::BiomassEVT::parseReturnType(std::string rtype)
+{
+	const char* ctype = rtype.c_str();
+	if (strcmp(ctype, "PCH") == 0)
+	{
+		returnType = PCH;
+	}
+}
+
+void RVS::Biomass::BiomassEVT::parseParameter(sqlite3_stmt* stmt, char* columnName, int column)
+{
+	boost::any val;
+	if (strcmp(columnName, BIOMASS_PARAM_1_CODE_FIELD) == 0)
+	{
+		this->getVar(stmt, column, &val);
+		PA1_Code = RVS::Biomass::BiomassVarUnitsMap[boost::any_cast<std::string>(val)];
+		this->getVar(stmt, column + 1, &val);
+		PA1_Val = boost::any_cast<int>(val);
+
+		if (PA1_Code == HT)
+		{
+			height = PA1_Val;
+		}
+		else
+		{
+			cover = PA1_Val;
+		}
+	}
+	else if (strcmp(columnName, BIOMASS_PARAM_2_CODE_FIELD) == 0)
+	{
+		this->getVar(stmt, column, &val);
+		PA2_Code = RVS::Biomass::BiomassVarUnitsMap[boost::any_cast<std::string>(val)];
+		this->getVar(stmt, column + 1, &val);
+		PA2_Val = boost::any_cast<int>(val);
+
+		if (PA2_Code == HT)
+		{
+			height = PA2_Val;
+		}
+		else
+		{
+			cover = PA2_Val;
+		}
+	}
 }
 
 std::string RVS::Biomass::BiomassEVT::toString()
 {
-	std::stringstream str; 
-	
-	str << EVT_NUM2() << " " << vars_collection["dom_spp"];
+	std::stringstream str;
+	int i = this->b_EVT_NUM();
+	std::string b = this->b_BPS_NUM();
+
+	str << "EVT: " << i << ", BPS: " << b;
 	return str.str();
 }
 

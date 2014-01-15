@@ -1,6 +1,5 @@
 #include "BiomassEquations.h"
 
-
 double RVS::Biomass::BiomassEquations::eq_PCH(double cf1, double cf2, double height)
 {
 	double result = 0;
@@ -9,31 +8,11 @@ double RVS::Biomass::BiomassEquations::eq_PCH(double cf1, double cf2, double hei
 	return result;
 }
 
-void RVS::Biomass::BiomassEquations::getToken(std::string inStr)
+double RVS::Biomass::BiomassEquations::eq_pch_acre(double pch)
 {
-	//string retStr = "";
- //           
-	//char[] chars = inStr.ToCharArray();
-	//bool isNumber = false;
-
-	//if (Char.IsDigit(chars[0]))
-	//{
-	//	isNumber = true;
-	//}
-
-	//for (int i = 0; i < inStr.Length; i++)
-	//{
-	//	if (Char.IsDigit(chars[i]) == isNumber)
-	//	{
-	//		retStr += chars[i].ToString();
-	//	}
-	//	else
-	//	{
-	//		break;
-	//	}
-	//}
-
-	//return retStr;
+	double pch_acre = (pch / 1000) * PCH_MULT;
+	return pch_acre;
 }
+
 
 

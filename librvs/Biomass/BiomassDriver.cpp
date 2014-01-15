@@ -36,30 +36,28 @@ int BiomassDriver::BioMain(int plot_num, double* biomass_return_value, RVS::Biom
 
 		// read in data. the query_biomass_input_table function returns a DataTable
 		// with only records for that plot number
-		RVS::DataManagement::DataTable* dt = RVS::DataManagement::DIO::query_biomass_input_table(plot_num);
-		sqlite3_stmt* inputStmt = dt->getStmt();
+		RVS::DataManagement::DataTable* dt = RVS::Biomass::BiomassDIO::query_biomass_input_table(plot_num);
 
-		int rc = SQLITE_OK;
+		int rc = sqlite3_step(dt->getStmt());
 		int row_counter = 0;
-		while (rc == SQLITE_OK || rc == SQLITE_ROW)
+		while (rc == SQLITE_ROW)
 		{
-			rc = sqlite3_step(inputStmt);
+			//$$ TODO are these evts getting deleted?
 			RVS::Biomass::BiomassEVT* bioEVT = new RVS::Biomass::BiomassEVT(dt);
 			evt_records.push_back(bioEVT);
 			
-			/*
 			if (row_counter == 0)
 			{
 				primary_production = this->calcHerbBiomass(bioEVT);
 			}
-			*/
+			
 			double singleBiomass = 0;
 
 			// Branch biomass calculation to do either HERB or SHRUB
 			switch (bioEVT->LIFEFORM())
 			{
 				case RVS::DataManagement::shrub:
-					//singleBiomass = this->calcShrubBiomass(bioEVT);
+					singleBiomass = this->calcShrubBiomass(bioEVT);
 					//evt_records[row_counter].RESULTS.Add("biomass", (float)singleBiomass);
 					break;
 				case RVS::DataManagement::herb:
@@ -72,11 +70,7 @@ int BiomassDriver::BioMain(int plot_num, double* biomass_return_value, RVS::Biom
 
 			shrubBiomass += singleBiomass;
 			row_counter++;
-		}
-
-		BOOST_FOREACH(RVS::Biomass::BiomassEVT* v, evt_records)
-		{
-			std::cout << v->toString() << std::endl;
+			rc = sqlite3_step(dt->getStmt());
 		}
 
 		delete dt;
@@ -112,20 +106,41 @@ double BiomassDriver::calcHerbBiomass(RVS::Biomass::BiomassEVT* evt)
 	std::string bps = evt->BPS_NUM().substr(2);
 	int baseBPS = std::stoi(bps);
 
-	RVS::DataManagement::DataTable dt = RVS::DataManagement::DIO::query_biomass_herbs_table(baseBPS);
-    double biomass = 0;
+	//$$ TODO move the query work to the new BiomassDIO
+	char* clevel;
     switch (this->level)
     {
 		case RVS::Biomass::low:
-            //biomass = Convert.ToDouble(dt.Rows[0]["low_val"]);
+			clevel = "low_val";
             break;
         case RVS::Biomass::medium:
-            //biomass = Convert.ToDouble(dt.Rows[0]["med_val"]);
+			clevel = "med_val";
             break;
         case RVS::Biomass::high:
-            //biomass = Convert.ToDouble(dt.Rows[0]["high_val"]);
+			clevel = "high_val";
             break;
+		default:
+			clevel = "med_val";
+			break;
     }
+
+	RVS::DataManagement::DataTable* dt = RVS::Biomass::BiomassDIO::query_biomass_herbs_table(baseBPS);
+	double biomass = 0;
+
+	int colCount = sqlite3_column_count(dt->getStmt());
+	int rc = sqlite3_step(dt->getStmt());
+
+	for (int i = 0; i < colCount; i++)
+	{
+		const char* colName = sqlite3_column_name(dt->getStmt(), i);
+		if (strcmp(colName, clevel) == 0)
+		{
+			biomass = sqlite3_column_int(dt->getStmt(), i);  //$$ TODO this isn't getting the data. WHY???
+			break;
+		}
+	}
+
+	delete dt;
     return biomass;
 };
 
@@ -133,59 +148,34 @@ double BiomassDriver::calcShrubBiomass(RVS::Biomass::BiomassEVT* evt)
 {
     double biomass = 0;
 
-    if (this->checkShrubInput() == true)
-    {
-        biomass = this->calcHerbBiomass(evt);
-        return biomass;
-    }
+	// Query the biomass crosswalk table for the equation for the requested return type
+    std::string returnType = RVS::Biomass::ENUMPARSE(evt->RETURN_TYPE());
+	int equationNumber = RVS::Biomass::BiomassDIO::query_biomass_crosswalk_table(evt->SPP_CODE(), returnType);
 
-    std::string equationCode = RVS::Biomass::ENUMPARSE(evt->RETURN_TYPE());
+	float cf1 = 0;
+	float cf2 = 0;
+	float cf3 = 0;
+	float cf4 = 0;
 
-    RVS::DataManagement::DataTable dt;
-    dt = RVS::DataManagement::DIO::query_biomass_crosswalk_table(evt->SPP_CODE().c_str());
-
-    int equationIndex = 0;
-    //RVS::DataManagement::DIO.parseItem(dt.Rows[0][equationCode], ref equationIndex);  //$$ TODO
-
-    //if (!suppress_messages)
-    //    std::cout << "equ_code: " << equationIndex << std::endl;
-
-    dt = RVS::DataManagement::DIO::query_biomass_equation_table(equationIndex);
-
-    std::string equationstring = "";
-    //RVS::DataManagement::DIO.parseItem(dt.Rows[0]["EQ_FRM"], ref equationstring);   //$$ TODO
-
-    double cf1 = 0;
-    double cf2 = 0;
-    double cf3 = 0;
-    double cf4 = 0;
-
-    //DataManagement.DIO.parseItem(dt.Rows[0]["CF1"], ref cf1);    //$$ TODO
-    //DataManagement.DIO.parseItem(dt.Rows[0]["CF2"], ref cf2);    //$$ TODO
-    //DataManagement.DIO.parseItem(dt.Rows[0]["CF3"], ref cf3);    //$$ TODO
-    //DataManagement.DIO.parseItem(dt.Rows[0]["CF4"], ref cf4);    //$$ TODO
+	// Populate the coefficients with values from the biomass equation table
+	RVS::Biomass::BiomassDIO::query_biomass_equation_coefficients(equationNumber, &cf1, &cf2, &cf3, &cf4);
 
     double height = evt->HEIGHT();
 
     double pch = RVS::Biomass::BiomassEquations::eq_PCH(cf1, cf2, height);
-    double pch_acre = (pch / 1000) * 4046.85642;
+	double pch_acre = RVS::Biomass::BiomassEquations::eq_pch_acre(pch);
 
+	// For verbose mode, print out the read and calculated values
     if (!suppress_messages)
     {
-        std::cout << evt->DOM_SPP() << " CF1: " << cf1 << std::endl;
-        std::cout << evt->DOM_SPP() << " CF2: " << cf2 << std::endl;
-        std::cout << evt->DOM_SPP() << " HT: " << evt->HEIGHT();
-        std::cout << evt->DOM_SPP() << " COV: " << evt->COVER() << std::endl;
-        std::cout << evt->DOM_SPP() << " PCH: " << pch << std::endl;
+        //std::cout << evt->DOM_SPP() << " CF1: " << cf1 << std::endl;
+        //std::cout << evt->DOM_SPP() << " CF2: " << cf2 << std::endl;
+        //std::cout << evt->DOM_SPP() << " HT: " << evt->HEIGHT() << std::endl;
+        //std::cout << evt->DOM_SPP() << " COV: " << evt->COVER() << std::endl;
+        //std::cout << evt->DOM_SPP() << " PCH: " << pch << std::endl;
     }
             
     biomass = pch_acre * (evt->COVER() / 100);
 
     return biomass;
-};
-
-bool BiomassDriver::checkShrubInput()
-{
-    bool useLookuptableInstead = false;
-    return useLookuptableInstead;
 };

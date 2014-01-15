@@ -17,9 +17,9 @@
 #include <iostream>
 #include <stdio.h>
 
+#include "BiomassDIO.h"
 #include "BiomassEVT.h"
 #include "BiomassEquations.h"
-#include <DataManagement/DIO.h>
 #include <DataManagement/RVS_TypeDefs.h>
 
 
@@ -50,8 +50,8 @@ namespace Biomass
         int BioMain(int plot_num, double* biomass_return_value, RVS::Biomass::BiomassReturnType* biomass_return_type);
 
 	private:
-		std::vector<RVS::Biomass::BiomassEVT*> evt_records;
 		RVS::Biomass::BiomassLookupLevel level;
+		std::vector<RVS::Biomass::BiomassEVT*> evt_records;
 
         /// This is the primary biomass calculator for herbs and the fallback for shrubs
         /// (used when shrub equation parsing fails). Loads the Bio_Herbs table and 
@@ -60,8 +60,6 @@ namespace Biomass
         /// <returns>Biomass</returns>
 		double calcHerbBiomass(RVS::Biomass::BiomassEVT* evt);
 		double calcShrubBiomass(RVS::Biomass::BiomassEVT* evt);
-
-		bool checkShrubInput();
 	};
 }
 }

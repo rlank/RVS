@@ -47,10 +47,6 @@ namespace Biomass
 		inline float PA2_VAL() { return PA2_Val; };
 		inline Biomass::BiomassVarUnits PA3_CODE() { return PA3_Code; };
 		inline float PA3_VAL() { return PA3_Val; };
-		inline float COEF1() { return coef1; };
-		inline float COEF2() { return coef2; };
-		inline float COEF3() { return coef3; };
-		inline float COEF4() { return coef4; };
 		inline Biomass::BiomassReturnType RETURN_TYPE() { return returnType; };
 		inline std::map<Biomass::BiomassVarUnits, std::string> PARAMETERS() { return parms; }
 
@@ -60,8 +56,14 @@ namespace Biomass
         /// A better buildEVT function that doesn't depend on column positions
         /// <param name="dt"></param>
 		virtual void buildEVT(RVS::DataManagement::DataTable* dt);
-        /// Variable initializer. Called by all Constructors.
+        /// Variable initializer. Called by all constructors everywhere.
 		virtual void initialize_object();
+		// parseItem override
+		virtual void parseItem(sqlite3_stmt*, int);
+		// Parses the return type to the enum
+		virtual void parseReturnType(std::string rtype);
+		// Parses a parameter code and value from the database
+		virtual void parseParameter(sqlite3_stmt* stmt, char* columnName, int column);
 
 	private:
 	    void copyData(const BiomassEVT& biomassevt_to_copy);

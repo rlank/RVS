@@ -13,7 +13,14 @@ RVS::DataManagement::DIO::DIO(void)
 RVS::DataManagement::DIO::~DIO(void)
 {
 	int rc = sqlite3_close(rvsdb);
-	printf("Closing DB connection.\n");
+	if (rc != 0)
+	{
+		printf("Warning: DB not closing properly.\n");
+	}
+	else
+	{
+		printf("Closing DB connection.\n");
+	}
 }
 
 // Opens an sqlite connection to the specified database
@@ -35,12 +42,14 @@ int RVS::DataManagement::DIO::open_db_connection(char* pathToDb)
 
 std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 {
-	char* selectString = "SELECT DISTINCT plot_num FROM RVS_Input_Use;";
-	sqlite3_stmt* stmt = RVS::DataManagement::DIO::query_base(selectString);
+	std::stringstream* selectStream = new std::stringstream();
+	*selectStream << "SELECT DISTINCT " << PLOT_NUM_FIELD << " FROM " << RVS_INPUT_TABLE << "; ";
+	
+	char* selectString = streamToCharPtr(selectStream);
+	sqlite3_stmt* stmt = query_base(selectString);
 	
 	std::vector<int> items;
 	int rc = SQLITE_OK;
-
 	while (rc == SQLITE_OK || rc == SQLITE_ROW)
 	{
 		rc = sqlite3_step(stmt);
@@ -49,89 +58,14 @@ std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 	}
 
 	rc = sqlite3_finalize(stmt);
+	delete[] selectStream;
+	delete[] selectString;
 
 	return items;
 }
 
 
-RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_biomass_crosswalk_table(std::string spp)
-{
-	char* base = "SELECT * FROM Bio_Crosswalk WHERE spp_code=";
-	char* selectString;
-	selectString = RVS::DataManagement::DIO::statementPrep(base, spp.c_str());
-	sqlite3_stmt* stmt = RVS::DataManagement::DIO::query_base(selectString);
 
-	DataTable dt;
-	delete[] selectString;
-	return dt;
-}
-
-RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_biomass_equation_table(std::string spp_code)
-{
-	char* base = "SELECT * FROM Bio_Equation_Import WHERE SPP_CODE=";
-	char* selectString;
-	selectString = RVS::DataManagement::DIO::statementPrep(base, spp_code.c_str());
-	sqlite3_stmt* stmt = RVS::DataManagement::DIO::query_base(selectString);
-	DataTable dt;
-	delete[] selectString;
-	return dt;
-}
-
-RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_biomass_equation_table(int equation_number)
-{
-	char* base = "SELECT * FROM Bio_Equation_Import WHERE EQN_NO=";
-	char* selectString;
-	selectString = RVS::DataManagement::DIO::statementPrep(base, equation_number);
-	sqlite3_stmt* stmt = RVS::DataManagement::DIO::query_base(selectString);
-	DataTable dt;
-	delete[] selectString;
-	return dt;
-}
-
-RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_biomass_herbs_table(int baseBPS)
-{
-	char* base = "SELECT * FROM Bio_Herbs WHERE BPS_CODE=";
-	char* selectString;
-	selectString = RVS::DataManagement::DIO::statementPrep(base, baseBPS);
-	sqlite3_stmt* stmt = RVS::DataManagement::DIO::query_base(selectString);
-	DataTable dt;
-	delete[] selectString;
-	return dt;
-}
-
-RVS::DataManagement::DataTable* RVS::DataManagement::DIO::query_biomass_input_table(int plot_num)
-{
-	char* base = "SELECT * FROM Biomass_Input WHERE plot_num=";
-	char* selectString;
-	selectString = RVS::DataManagement::DIO::statementPrep(base, plot_num);
-	sqlite3_stmt* stmt = RVS::DataManagement::DIO::query_base(selectString);
-	
-	DataTable* dt = new DataTable(stmt);
-	delete[] selectString;
-	return dt;
-}
-
-char* RVS::DataManagement::DIO::statementPrep(char* base, int whereInt)
-{
-	std::stringstream selectstream;
-	selectstream << base << whereInt << ";";
-	std::string nstring = selectstream.str();
-	char* selectString = new char[nstring.size() + 1];
-	std::copy(nstring.begin(), nstring.end(), selectString);
-	selectString[nstring.size()] = '\0';
-	return selectString;
-}
-
-char* RVS::DataManagement::DIO::statementPrep(char* base, const char* whereStr)
-{
-	std::stringstream selectstream;
-	selectstream << base << "'" << whereStr << "';";
-	std::string nstring = selectstream.str();
-	char* selectString = new char[nstring.size() + 1];
-	std::copy(nstring.begin(), nstring.end(), selectString);
-	selectString[nstring.size()] = '\0';
-	return selectString;
-}
 
 #if USESQLITE
 
@@ -150,6 +84,54 @@ sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* selectString)
 	return stmt;
 }
 
+sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field)
+{
+	std::stringstream* selectStream = new std::stringstream();
+	*selectStream << "SELECT " << field << " FROM " << table << "; ";
+
+	char* selectString = streamToCharPtr(selectStream);
+	sqlite3_stmt* stmt = query_base(selectString);
+
+	delete[] selectStream;
+	delete[] selectString;
+
+	return stmt;
+}
+
+sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field, boost::any whereclause)
+{
+	std::stringstream* selectStream = new std::stringstream();
+
+	if (whereclause.type() == typeid(std::string))
+	{
+		*selectStream << "SELECT * FROM " << table << " WHERE " << field << "='" << boost::any_cast<std::string>(whereclause) << "'; ";
+	}
+	else if (whereclause.type() == typeid(int))
+	{
+		*selectStream << "SELECT * FROM " << table << " WHERE " << field << "=" << boost::any_cast<int>(whereclause) << "; ";
+	}
+
+	
+	char* selectString = streamToCharPtr(selectStream);
+	sqlite3_stmt* stmt = query_base(selectString);
+
+	delete[] selectStream;
+	delete[] selectString;
+
+	return stmt;
+}
+
+char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
+{
+	// Get the string representation of the stream
+	std::string nstring = stream->str();
+	// Create a character array of the size of string
+	char* str = new char[nstring.size() + 1];
+	// Copy the string value into the array and terminate
+	std::copy(nstring.begin(), nstring.end(), str);
+	str[nstring.size()] = '\0';
+	return str;
+}
 
 RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_base_old(char* selectString)
 {

@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Biomass\BiomassDIO.h" />
     <ClInclude Include="Biomass\BiomassDriver.h" />
     <ClInclude Include="Biomass\BiomassEquations.h" />
     <ClInclude Include="Biomass\BiomassEVT.h" />
@@ -27,10 +28,12 @@
     <ClInclude Include="DataManagement\DIO_Access.h" />
     <ClInclude Include="DataManagement\EVT.h" />
     <ClInclude Include="DataManagement\RVS_TypeDefs.h" />
+    <ClInclude Include="RVSDBNAMES.h" />
     <ClInclude Include="RVSDEF.h" />
     <ClInclude Include="sqlite3.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Biomass\BiomassDIO.cpp" />
     <ClCompile Include="Biomass\BiomassDriver.cpp" />
     <ClCompile Include="Biomass\BiomassEquations.cpp" />
     <ClCompile Include="Biomass\BiomassEVT.cpp" />
@@ -39,6 +42,9 @@
     <ClCompile Include="DataManagement\EVT.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="sqlite3.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0274CF35-19C7-4A83-A3C8-1EECA04FCC25}</ProjectGuid>

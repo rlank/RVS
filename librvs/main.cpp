@@ -14,6 +14,7 @@
 //#include <boost/exception/all.hpp>
 
 #include <RVSDEF.h>
+#include <Biomass/BiomassDIO.h>
 #include <Biomass/BiomassDriver.h>
 #include <DataManagement/DIO.h>
 
@@ -30,7 +31,7 @@ int main(int argc, char* argv[])
 	*/
 
 	// Get DIO ready for queries
-	RVS::DataManagement::DIO dio;
+	RVS::Biomass::BiomassDIO dio;
 
     ////////////////////////////////////////////////////////////////////////////////
     // This is a Biomass test, so build an array of BiomassEVT and run this thing //
@@ -41,8 +42,6 @@ int main(int argc, char* argv[])
 
 	for (int plot_num = 0; plot_num < plotcounts.size() - 1; plot_num++)
 	{
-		printf("plot num: %i : %i\n", plot_num, plotcounts[plot_num]);
-
         double biomass = 0;
         int runplot = plotcounts[plot_num];
 		RVS::Biomass::BiomassReturnType retType = RVS::Biomass::BiomassReturnType::RNUL;

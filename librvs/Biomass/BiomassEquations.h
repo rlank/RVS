@@ -12,11 +12,14 @@ namespace RVS
 {
 namespace Biomass
 {
+	static float const PCH_MULT = 4046.85942f;
+
 	class BiomassEquations
 	{
 	public:
-		static void getToken(std::string inStr);
+		
 		static double eq_PCH(double cf1, double cf2, double height);
+		static double eq_pch_acre(double pch);
 	};
 }
 }

@@ -11,6 +11,9 @@
 #ifndef RVS_TYPEDEFS_H
 #define RVS_TYPEDEFS_H
 
+#include <map>
+#include <string>
+
 #include "DataTable.h"
 
 namespace RVS
@@ -116,6 +119,20 @@ namespace Biomass
 				default: return "Not recognized";
 			}
 		};
+
+	static std::map<std::string, BiomassVarUnits> BiomassVarUnitsMap = 
+	{
+		{ "BIO", BIO },
+		{ "COV", COV },
+		{ "DBA", DBA },
+		{ "HT", HT },
+		{ "LEN", LEN },
+		{ "NUM", NUM },
+		{ "SPA", SPA },
+		{ "VOL", VOL },
+		{ "WID", WID },
+		{ "", VNUL }
+	};
 }
 }
 
