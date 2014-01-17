@@ -81,11 +81,21 @@ void EVT::parseLifeform(std::string sval)
 	{
 		lifeform = shrub;
 	}
+	else if (strcmp(val, "herb") == 0)
+	{
+		lifeform = herb;
+	}
+	else
+	{
+		lifeform = unk;
+	}
 }
 
 void EVT::getVar(sqlite3_stmt* stmt, int column, boost::any* retval)
 {
+	// Get the column data type from sqlite
 	int colType = sqlite3_column_type(stmt, column);
+	// Parse the data based on the appropriate data type
 	switch (colType)
 	{
 	case SQLITE_INTEGER:
@@ -106,6 +116,8 @@ void EVT::getVar(sqlite3_stmt* stmt, int column, boost::any* retval)
 
 void EVT::putVar(const char* name, boost::any var)
 {
+	// Checks if the passed variable is "important" and puts
+	// it in a class variable for easier access.
 	if (strcmp(name, EVT_NUM_FIELD) == 0)
 	{
 		evt_num = boost::any_cast<int>(var);

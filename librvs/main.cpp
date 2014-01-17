@@ -3,7 +3,7 @@
 /// Desc: (Test) driver for RVS. Build as execultable and      ///
 /// this becomes the program entry point                       ///
 /// Base Class(es): none                                       ///
-/// Last Modified: 8 Jan 14                                    ///
+/// Last Modified: 15 Jan 14                                   ///
 /// ********************************************************** ///
 
 #include <exception>
@@ -18,9 +18,10 @@
 #include <Biomass/BiomassDriver.h>
 #include <DataManagement/DIO.h>
 
+int* RC = new int(SQLITE_OK);
+
 int main(int argc, char* argv[])
 {
-	static int RETURN_STATE = 0;
     static bool USE_THREADING = false;
     static bool SUPPRESS_MSG = false;
 
@@ -45,14 +46,15 @@ int main(int argc, char* argv[])
         double biomass = 0;
         int runplot = plotcounts[plot_num];
 		RVS::Biomass::BiomassReturnType retType = RVS::Biomass::BiomassReturnType::RNUL;
-        RVS::Biomass::BiomassDriver bdriver = RVS::Biomass::BiomassDriver(RVS::Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG);
+        RVS::Biomass::BiomassDriver bdriver = RVS::Biomass::BiomassDriver(RVS::Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG, true);
 
-		RETURN_STATE = bdriver.BioMain(runplot, &biomass, &retType);
+		RC = bdriver.BioMain(runplot, &biomass, &retType);
 		biomassResults[runplot] = biomass;
     }
 
 	std::cout << std::endl << "Ran to completion." << std::endl;
 	std::string endprogram; 
-	std::cin >> endprogram;
+	//std::cin >> endprogram;
+
 	return (0);
 }

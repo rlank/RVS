@@ -37,9 +37,7 @@ namespace DataManagement
 }
 namespace Biomass
 {
-	/// <summary>
     /// Enumeration of return units for shrub allometries
-    /// </summary>
     enum BiomassReturnType
     {
         AFN = 1, // New all-sided leaf area (cm^2)
@@ -62,9 +60,7 @@ namespace Biomass
         RNUL = 0  // None/void type
     };
 
-    /// <summary>
     /// Enumeration of parameter input types for shrub allometries
-    /// </summary>
     enum BiomassVarUnits
     {
         BIO = 21, // Total aboveground biomass
@@ -79,9 +75,7 @@ namespace Biomass
         VNUL = 20  // None/Void type
     };
 
-    /// <summary>
     /// Enumeration of herb lookup level
-    /// </summary>
     enum BiomassLookupLevel { high, medium, low };
 
 	inline char* ENUMPARSE(int i)

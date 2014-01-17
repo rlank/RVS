@@ -6,6 +6,7 @@
 /// ********************************************************** ///
 
 #pragma once
+#pragma warning(disable:4244)
 
 #ifndef BIOMASS_EVT_H
 #define BIOMASS_EVT_H

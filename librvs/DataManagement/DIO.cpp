@@ -1,44 +1,118 @@
 #include "DIO.h"
 
-// Static object decs
+// Static object decs //
+
+// RVS input database
 sqlite3* RVS::DataManagement::DIO::rvsdb;
+// RVS ouput database
+sqlite3* RVS::DataManagement::DIO::outdb;
 
 // Constructor
 RVS::DataManagement::DIO::DIO(void)
 {
-	int rc = open_db_connection(RVS_DB_PATH);
+	RC = open_db_connection(RVS_DB_PATH, &rvsdb);
+	if (*RC != 0)
+	{
+		//$$ TODO throw bad input database exception here
+	}
 }
 
 // Destructor. Closes the connection with the db.
 RVS::DataManagement::DIO::~DIO(void)
 {
-	int rc = sqlite3_close(rvsdb);
-	if (rc != 0)
+	*RC = sqlite3_close(rvsdb);
+	if (*RC != 0)
 	{
 		printf("Warning: DB not closing properly.\n");
 	}
 	else
 	{
-		printf("Closing DB connection.\n");
+		printf("Closing InputDB connection.\n");
 	}
+
+	if (outdb != NULL)
+	{
+		*RC = sqlite3_close(outdb);
+	}
+	if (*RC != 0)
+	{
+		printf("Warning: Out DB not closing properly.\n");
+	}
+	else
+	{
+		printf("Closing OutDB connection.\n");
+	}
+
+	delete RC;  // This is the last thing the program does. Delete the return pointer
 }
 
 // Opens an sqlite connection to the specified database
-int RVS::DataManagement::DIO::open_db_connection(char* pathToDb)
+int* RVS::DataManagement::DIO::open_db_connection(char* pathToDb, sqlite3** db)
 {
-	int rc = 0;
-
 	// Open the database
-	rc = sqlite3_open(pathToDb, &rvsdb);
+	*RC = sqlite3_open(pathToDb, db);
 
-	if (rc)
+	if (*RC != SQLITE_OK)
 	{
-		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(rvsdb));
-		sqlite3_close(rvsdb);
+		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(*db));
+		sqlite3_close(*db);
 	}
-	return rc;
+	return RC;
 }
 
+int* RVS::DataManagement::DIO::create_output_db()
+{
+	RC = create_output_db(OUT_DB_PATH);
+	return RC;
+}
+
+int* RVS::DataManagement::DIO::create_output_db(char* path)
+{
+	RC = open_db_connection(path, &outdb);
+	return RC;
+}
+
+int* RVS::DataManagement::DIO::create_table(char* sql)
+{
+	if (outdb == NULL)
+	{
+		RC = RVS::DataManagement::DIO::create_output_db();
+	}
+
+	if (*RC != 0)
+	{
+		//$$ TODO throw create output error
+	}
+
+	char* err;
+	int(*cb)(void*, int, char**, char**);
+	cb = &RVS::DataManagement::DIO::callback;
+
+	*RC = sqlite3_exec(outdb, sql, cb, 0, &err);
+
+	if (*RC != SQLITE_OK)
+	{
+		sqlite3_free(err);
+	}
+
+	return RC;
+}
+
+int* RVS::DataManagement::DIO::exec_sql(char* sql)
+{
+	char* err;
+	int(*cb)(void*, int, char**, char**);
+	cb = &RVS::DataManagement::DIO::callback;
+
+	*RC = sqlite3_exec(outdb, sql, cb, 0, &err);
+
+	if (*RC != SQLITE_OK)
+	{
+		sqlite3_free(err);
+	}
+
+	return RC;
+}
 
 std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 {
@@ -49,22 +123,20 @@ std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 	sqlite3_stmt* stmt = query_base(selectString);
 	
 	std::vector<int> items;
-	int rc = SQLITE_OK;
-	while (rc == SQLITE_OK || rc == SQLITE_ROW)
+	*RC = SQLITE_OK;
+	while (*RC == SQLITE_OK || *RC == SQLITE_ROW)
 	{
-		rc = sqlite3_step(stmt);
+		*RC = sqlite3_step(stmt);
 		int plot = sqlite3_column_int(stmt, 0);
 		items.push_back(plot);
 	}
 
-	rc = sqlite3_finalize(stmt);
+	*RC = sqlite3_finalize(stmt);
 	delete[] selectStream;
 	delete[] selectString;
 
 	return items;
 }
-
-
 
 
 #if USESQLITE
@@ -75,8 +147,8 @@ sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* selectString)
 	sqlite3_stmt* stmt;
 
 	// Prepare SQL query as object code
-	int rc = sqlite3_prepare_v2(rvsdb, selectString, nByte, &stmt, NULL);
-	if (rc)
+	*RC = sqlite3_prepare_v2(rvsdb, selectString, nByte, &stmt, NULL);
+	if (*RC != SQLITE_OK)
 	{
 		fprintf(stderr, "DB Operation Error: %s\n", sqlite3_errmsg(rvsdb));
 	}
@@ -133,6 +205,12 @@ char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
 	return str;
 }
 
+int RVS::DataManagement::DIO::callback(void* nu, int argc, char** argv, char** azColName)
+{
+	return 0;
+}
+
+/*
 RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_base_old(char* selectString)
 {
 	sqlite3* rvsdb;
@@ -176,7 +254,7 @@ RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_base_old(char* se
 
 	return dt;
 }
-
+*/
 #else
 RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_base(std::string selectString)
 {

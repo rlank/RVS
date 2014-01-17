@@ -36,10 +36,11 @@ namespace Biomass
 		///
 		/// <param name="level">The lookup level to use for primary production (herb biomass)</param>
         /// <param name="suppress_messages">Optional. Toggle to 'true' to suppress console messages. Useful when threading.</param>
-		BiomassDriver(RVS::Biomass::BiomassLookupLevel level, bool suppress_messages = false);
+		BiomassDriver(RVS::Biomass::BiomassLookupLevel level, bool suppress_messages = false, bool write_intermediate = false);
 		virtual ~BiomassDriver(void);
 
 		bool suppress_messages;
+		bool write_intermediate;
 
         /// Main function. Pass a return value and type reference, and BioMain sets them upon completion.
         /// No other function needs to be called to calculate biomass.
@@ -47,7 +48,7 @@ namespace Biomass
         /// <param name="biomass_return_value">The calculated biomass of the plot.</param>
         /// <param name="biomass_return_type">The units of the calculated biomass.</param>
         /// <returns>Return code. 0 indicates a clean run.</returns>
-        int BioMain(int plot_num, double* biomass_return_value, RVS::Biomass::BiomassReturnType* biomass_return_type);
+        int* BioMain(int plot_num, double* biomass_return_value, RVS::Biomass::BiomassReturnType* biomass_return_type);
 
 	private:
 		RVS::Biomass::BiomassLookupLevel level;

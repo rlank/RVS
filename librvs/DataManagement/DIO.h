@@ -33,7 +33,7 @@ namespace DataManagement
 	public:
 		DIO(void);
 		virtual ~DIO(void);
-		
+
 		//## Query functions ##//
 
 		/// Returns an array of unique analysis plot values. Use this array to control main driver
@@ -42,10 +42,18 @@ namespace DataManagement
 		
 		
 	protected:
+		static int* create_output_db();
+		static int* create_output_db(char* path);
+		static int* create_table(char* sql);
+		
+		static int* exec_sql(char* sql);
+
+		static inline sqlite3* get_outdb() { return outdb; }
+
 		// Converts a std::stringstream to a char pointer (array)
 		static char* streamToCharPtr(std::stringstream* stream);
 		// Opens the database connection. Will remain open until DIO destructs
-		static int open_db_connection(char* pathToDb);
+		static int* open_db_connection(char* pathToDb, sqlite3** db);
 
 		/// Base query function. All the public functions only define the selection string.
 		/// This function contains the actual OleDB stuff.
@@ -53,9 +61,12 @@ namespace DataManagement
 		static sqlite3_stmt* query_base(char* table, char* field);
 		static sqlite3_stmt* query_base(char* table, char* field, boost::any whereclause);
 
+		static int callback(void* nu, int argc, char** argv, char** azColName);
+
 	private:
 		static sqlite3* rvsdb;  // SQLite database object
-		static DataTable query_base_old(char* selectString);
+		static sqlite3* outdb;  // SQLite output database object
+		//static DataTable query_base_old(char* selectString);
 	};
 }
 }

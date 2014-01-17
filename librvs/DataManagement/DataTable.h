@@ -13,7 +13,8 @@
 #define DATATABLE_H
 
 #include <sqlite3.h>
-#include <vector>
+
+#include <RVSDEF.h>
 
 namespace RVS
 {
@@ -24,7 +25,7 @@ namespace DataManagement
 	public:
 		inline DataTable() {}
 		inline DataTable(sqlite3_stmt* stmt) { this->stmt = stmt; }
-		virtual inline ~DataTable(void) { sqlite3_finalize(stmt); }
+		virtual inline ~DataTable(void) { *RC = sqlite3_finalize(stmt); }
 
 		inline sqlite3_stmt* getStmt() { return stmt; }
 

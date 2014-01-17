@@ -8,12 +8,15 @@
 #ifndef RVSDEF_H
 #define RVSDEF_H
 
-#define BIO_PATH "Biomass/"
-#define DIO_PATH "DataManagement/"
-
+extern int* RC;
 extern const char* RVS_DB_PATH;
+extern const char* OUT_DB_PATH;
+
 #ifndef RVS_DB_PATH
-	#define RVS_DB_PATH "C:/MCR/RVS/Data/rvs_bio.db"
+#define RVS_DB_PATH "C:/MCR/RVS/Data/rvs_bio.db"
+#endif
+#ifndef OUT_DB_PATH
+#define OUT_DB_PATH "C:/MCR/RVS/Data/rvs_out.db"
 #endif
 
 // OS-specific includes
@@ -39,11 +42,17 @@ extern const char* RVS_DB_PATH;
 
 // Includes for either sqlite or access (odbc)
 #if USESQLITE
+	#pragma warning(push)
+	#pragma warning(disable:4703)
 	#include "sqlite3.h"
+	#pragma warning(pop)
 #else
 	#include <sql.h>
 	#include <sqltypes.h>
 	#include <sqlext.h>
 #endif
+
+
+
 
 #endif

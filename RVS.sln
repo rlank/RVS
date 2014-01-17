@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.20827.3
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}"
 EndProject
@@ -22,7 +22,6 @@ Global
 		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Debug|x86.ActiveCfg = Debug|x86
 		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Release|Any CPU.ActiveCfg = Release|x86
 		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Release|x64.ActiveCfg = Release|x64
-		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Release|x64.Build.0 = Release|x64
 		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Release|x86.ActiveCfg = Release|x86
 		{E9ECD9B2-9CCB-4F5F-8A93-657B5102AC89}.Release|x86.Build.0 = Release|x86
 		{0274CF35-19C7-4A83-A3C8-1EECA04FCC25}.Debug|Any CPU.ActiveCfg = Debug|Win32
@@ -38,5 +37,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
