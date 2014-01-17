@@ -17,7 +17,7 @@
 
 #include <boost/any.hpp>
 
-#include <RVSDBNAMES.h>
+#include "../RVSDBNAMES.h"
 #include "RVS_TypeDefs.h"
 
 namespace RVS

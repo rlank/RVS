@@ -11,6 +11,7 @@
 *.sln.docstates
 *.vcxproj
 *.vcxproj.filters
+*.vcxproj.user
 
 # Build results
 

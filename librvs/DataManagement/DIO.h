@@ -19,8 +19,8 @@
 #include <boost/any.hpp>
 
 #include "DataTable.h"
-#include <RVSDBNAMES.h>
-#include <RVSDEF.h>
+#include "../RVSDBNAMES.h"
+#include "../RVSDEF.h"
 #include "RVS_TypeDefs.h"
 
 namespace RVS

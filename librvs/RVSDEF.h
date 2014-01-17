@@ -32,7 +32,11 @@ extern const char* OUT_DB_PATH;
 #endif
 
 #if WIN
-	#include <Windows.h>
+	#define RVS_DB_PATH "C:/MCR/RVS/Data/rvs_bio.db"
+	#define OUT_DB_PATH "C:/MCR/RVS/Data/rvs_out.db"
+#else
+	#define RVS_DB_PATH "/home/robb/rvs_bio.db"
+	#define OUT_DB_PATH "/home/robb/rvs_out.db"
 #endif
 
 // Define whether this will use sqlite or access
@@ -47,6 +51,7 @@ extern const char* OUT_DB_PATH;
 	#include "sqlite3.h"
 	#pragma warning(pop)
 #else
+	#include <Windows.h>
 	#include <sql.h>
 	#include <sqltypes.h>
 	#include <sqlext.h>

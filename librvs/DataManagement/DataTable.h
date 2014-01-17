@@ -12,9 +12,9 @@
 #ifndef DATATABLE_H
 #define DATATABLE_H
 
-#include <sqlite3.h>
+#include "../sqlite3.h"
 
-#include <RVSDEF.h>
+#include "../RVSDEF.h"
 
 namespace RVS
 {
