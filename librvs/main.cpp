@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
 {
     static bool USE_THREADING = false;
     static bool SUPPRESS_MSG = false;
+	static bool WRITE_SHRUB = false;
 
     /*
 	///////////////////////////
@@ -46,7 +47,7 @@ int main(int argc, char* argv[])
         double biomass = 0;
         int runplot = plotcounts[plot_num];
 		RVS::Biomass::BiomassReturnType retType = RVS::Biomass::BiomassReturnType::RNUL;
-        RVS::Biomass::BiomassDriver bdriver = RVS::Biomass::BiomassDriver(RVS::Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG, true);
+		RVS::Biomass::BiomassDriver bdriver = RVS::Biomass::BiomassDriver(RVS::Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG, WRITE_SHRUB);
 
 		RC = bdriver.BioMain(runplot, &biomass, &retType);
 		biomassResults[runplot] = biomass;

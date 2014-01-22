@@ -132,7 +132,7 @@ std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 	}
 
 	*RC = sqlite3_finalize(stmt);
-	delete[] selectStream;
+	delete selectStream;
 	delete[] selectString;
 
 	return items;
@@ -164,7 +164,7 @@ sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field)
 	char* selectString = streamToCharPtr(selectStream);
 	sqlite3_stmt* stmt = query_base(selectString);
 
-	delete[] selectStream;
+	delete selectStream;
 	delete[] selectString;
 
 	return stmt;
@@ -187,7 +187,7 @@ sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field, boo
 	char* selectString = streamToCharPtr(selectStream);
 	sqlite3_stmt* stmt = query_base(selectString);
 
-	delete[] selectStream;
+	delete selectStream;
 	delete[] selectString;
 
 	return stmt;
