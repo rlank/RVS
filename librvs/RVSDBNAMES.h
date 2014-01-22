@@ -9,7 +9,7 @@
 #define RVSDBNAMES_H
 
 #define RVS_INPUT_TABLE "RVS_Input_Use"
-#define BIOMASS_INPUT_TABLE "Biomass_Input_Big"
+#define BIOMASS_INPUT_TABLE "Biomass_Input"
 #define BIOMASS_CROSSWALK_TABLE "Bio_Crosswalk"
 #define BIOMASS_HERBS_TABLE "Bio_Herbs_KgH"
 #define BIOMASS_EQUATION_TABLE "Bio_Equation_Import"

@@ -1,7 +1,7 @@
-// ############################################\\
+//############################################//
 // Preproccessor directives for RVS 
-// Last Modified: 8 Jan 14
-// ############################################\\
+// Last Modified: 22 Jan 14
+//############################################//
 
 #pragma once
 
@@ -48,7 +48,7 @@ extern const char* OUT_DB_PATH;
 #if USESQLITE
 	#pragma warning(push)
 	#pragma warning(disable:4703)
-	#include "sqlite3.h"
+	#include <sqlite3.h>
 	#pragma warning(pop)
 #else
 	#include <Windows.h>
