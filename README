@@ -8,9 +8,11 @@ RVS includes calculations for biomass, succession, disturbance, and fuel modelli
 used in conjunction with the Forest Vegetation Simulator, found at http://www.fs.fed.us/fmsc/fvs/ and 
 https://code.google.com/p/open-fvs/
 
-RVS is still in early production and not ready for release.
+Requirements:
+boost C++ v. 1.54+
+sqlite v. 3 (source included here)
 
 Author:  Robb Lankston
 robblankston@gmail.com
 
-Last Modified:  17 Jan 2014
+Last Modified:  22 Jan 2014

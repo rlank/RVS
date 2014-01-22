@@ -5,7 +5,6 @@
 /// current conditions. Conditions (height, cover, time) are   ///
 /// changed via Succession and Disturbance modules.            ///
 /// Base Class(es): none                                       ///
-/// Requires: iostream, BiomassEVT, DIO, RVS_TypeDefs          ///
 /// ********************************************************** ///
 
 #pragma once

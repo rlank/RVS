@@ -12,12 +12,6 @@ extern int* RC;
 extern const char* RVS_DB_PATH;
 extern const char* OUT_DB_PATH;
 
-#ifndef RVS_DB_PATH
-#define RVS_DB_PATH "C:/MCR/RVS/Data/rvs_bio.db"
-#endif
-#ifndef OUT_DB_PATH
-#define OUT_DB_PATH "C:/MCR/RVS/Data/rvs_out.db"
-#endif
 
 // OS-specific includes
 #define WIN 0
@@ -32,11 +26,15 @@ extern const char* OUT_DB_PATH;
 #endif
 
 #if WIN
+	#ifndef RVS_DB_PATH
 	#define RVS_DB_PATH "C:/MCR/RVS/Data/rvs_bio.db"
 	#define OUT_DB_PATH "C:/MCR/RVS/Data/rvs_out.db"
+	#endif
 #else
+	#ifndef RVS_DB_PATH
 	#define RVS_DB_PATH "/home/robb/rvs_bio.db"
 	#define OUT_DB_PATH "/home/robb/rvs_out.db"
+	#endif
 #endif
 
 // Define whether this will use sqlite or access

@@ -129,10 +129,6 @@ void RVS::Biomass::BiomassEVT::parseParameter(sqlite3_stmt* stmt, char* columnNa
 std::string RVS::Biomass::BiomassEVT::toString()
 {
 	std::stringstream str;
-	int i = this->b_EVT_NUM();
-	std::string b = this->b_BPS_NUM();
-
-	str << "EVT: " << i << ", BPS: " << b;
 	return str.str();
 }
 

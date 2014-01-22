@@ -2,11 +2,9 @@
 /// Name: BiomassEVT.h                                         ///
 /// Desc: Biomass EVT interface class.                         ///
 /// Base Class(es): RVS::DataManagement::EVT                   ///
-/// Requires: map, string, EVT.h, RVS_TypeDefs.h               ///
 /// ********************************************************** ///
 
 #pragma once
-#pragma warning(disable:4244)
 
 #ifndef BIOMASS_EVT_H
 #define BIOMASS_EVT_H
@@ -64,6 +62,18 @@ namespace Biomass
 		virtual void parseReturnType(std::string rtype);
 		// Parses a parameter code and value from the database
 		virtual void parseParameter(sqlite3_stmt* stmt, char* columnName, int column);
+
+
+		// BIOMASS EVT variables //
+		float percentDom;
+		Biomass::BiomassVarUnits PA1_Code;
+		float PA1_Val;
+		Biomass::BiomassVarUnits PA2_Code;
+		float PA2_Val;
+		Biomass::BiomassVarUnits PA3_Code;
+		float PA3_Val;
+		Biomass::BiomassReturnType returnType;
+		std::map<RVS::Biomass::BiomassVarUnits, std::string> parms;
 
 	private:
 	    void copyData(const BiomassEVT& biomassevt_to_copy);

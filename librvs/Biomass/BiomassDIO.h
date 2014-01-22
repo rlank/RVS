@@ -3,10 +3,7 @@
 /// Desc: Data Input/output class for dealing with Biomass     ///
 /// data and queries.                                          ///
 /// Base Class(es): DIO.h                                      ///
-/// Requires: string, RVS_TypeDefs                             ///
 /// ********************************************************** ///
-
-#pragma warning(disable:4244)
 
 #ifndef BIOMASSDIO_H
 #define BIOMASSDIO_H

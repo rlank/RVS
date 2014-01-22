@@ -139,19 +139,19 @@ void RVS::Biomass::BiomassDIO::query_biomass_equation_coefficients(int equation_
 		const char* colName = sqlite3_column_name(dt->getStmt(), i);
 		if (strcmp(colName, BIOMASS_EQN_COEF_1_FIELD) == 0)
 		{
-			*cf1 = sqlite3_column_double(dt->getStmt(), i);
+			*cf1 = (float)sqlite3_column_double(dt->getStmt(), i);
 		}
 		else if (strcmp(colName, BIOMASS_EQN_COEF_2_FIELD) == 0)
 		{
-			*cf2 = sqlite3_column_double(dt->getStmt(), i);
+			*cf2 = (float)sqlite3_column_double(dt->getStmt(), i);
 		}
 		else if (strcmp(colName, BIOMASS_EQN_COEF_3_FIELD) == 0)
 		{
-			*cf3 = sqlite3_column_double(dt->getStmt(), i);
+			*cf3 = (float)sqlite3_column_double(dt->getStmt(), i);
 		}
 		else if (strcmp(colName, BIOMASS_EQN_COEF_4_FIELD) == 0)
 		{
-			*cf4 = sqlite3_column_double(dt->getStmt(), i);
+			*cf4 = (float)sqlite3_column_double(dt->getStmt(), i);
 		}
 	}
 
