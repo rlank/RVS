@@ -1,7 +1,6 @@
 CC=gcc
 CP=g++
-CPflags=-g -std=c++11 -Wno-write_strings -w -c
-EXEfLAGS=
+CPflags=-g -std=c++11 -Wno-write-strings -Wall -pedantic -c
 SHAREFLAGS=-fPIC
 
 libver=0.2
@@ -11,7 +10,6 @@ dmpath:=DataManagement
 buildpath:=build
 
 INCLUDES:=-I$(shell pwd)/Biomass/ -I$(shell pwd)/DataManagement/
-
 
 ##########
 ## MAIN ##

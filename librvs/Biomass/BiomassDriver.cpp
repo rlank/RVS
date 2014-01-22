@@ -144,7 +144,7 @@ double BiomassDriver::calcHerbBiomass(RVS::Biomass::BiomassEVT* evt)
 
 	double biomass = RVS::Biomass::BiomassDIO::query_biomass_herbs_table(baseBPS, clevel);
     return biomass;
-};
+}
 
 double BiomassDriver::calcShrubBiomass(RVS::Biomass::BiomassEVT* evt)
 {
@@ -171,4 +171,4 @@ double BiomassDriver::calcShrubBiomass(RVS::Biomass::BiomassEVT* evt)
     biomass = pch_acre * (evt->COVER() / 100);
 
     return biomass;
-};
+}

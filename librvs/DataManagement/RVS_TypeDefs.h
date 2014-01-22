@@ -112,7 +112,7 @@ namespace Biomass
 				case 29: return "WID";
 				default: return "Not recognized";
 			}
-		};
+		}
 
 	static std::map<std::string, BiomassVarUnits> BiomassVarUnitsMap = 
 	{

@@ -44,10 +44,7 @@ extern const char* OUT_DB_PATH;
 
 // Includes for either sqlite or access (odbc)
 #if USESQLITE
-	#pragma warning(push)
-	#pragma warning(disable:4703)
 	#include <sqlite3.h>
-	#pragma warning(pop)
 #else
 	#include <Windows.h>
 	#include <sql.h>

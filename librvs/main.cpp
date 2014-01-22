@@ -22,15 +22,13 @@ int* RC = new int(SQLITE_OK);
 
 int main(int argc, char* argv[])
 {
-    static bool USE_THREADING = false;
     static bool SUPPRESS_MSG = false;
-	static bool WRITE_SHRUB = false;
+	static bool WRITE_SHRUB = true;
 
-    /*
+    
 	///////////////////////////
 	/// Do user options here //
 	///////////////////////////
-	*/
 
 	// Get DIO ready for queries
 	RVS::Biomass::BiomassDIO dio;
@@ -42,7 +40,7 @@ int main(int argc, char* argv[])
     std::vector<int> plotcounts = RVS::DataManagement::DIO::query_analysis_plots();
     std::map<int, double> biomassResults;
 
-	for (int plot_num = 0; plot_num < plotcounts.size() - 1; plot_num++)
+	for (int plot_num = 0; plot_num < (int)(plotcounts.size()-1); plot_num++)
 	{
         double biomass = 0;
         int runplot = plotcounts[plot_num];

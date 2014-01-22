@@ -7,7 +7,6 @@
 /// ********************************************************** ///
 
 #pragma once
-#pragma warning(disable:4996)
 
 #ifndef DIO_H
 #define DIO_H
