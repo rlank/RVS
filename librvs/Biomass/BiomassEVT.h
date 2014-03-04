@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string>
 
-#include "../sqlite3.h"
+#include <sqlite3.h>
 
 #include "../DataManagement/EVT.h"
 #include "../DataManagement/RVS_TypeDefs.h"

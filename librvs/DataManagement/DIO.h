@@ -65,7 +65,6 @@ namespace DataManagement
 	private:
 		static sqlite3* rvsdb;  // SQLite database object
 		static sqlite3* outdb;  // SQLite output database object
-		//static DataTable query_base_old(char* selectString);
 	};
 }
 }

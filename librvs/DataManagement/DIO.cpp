@@ -88,7 +88,7 @@ int* RVS::DataManagement::DIO::create_table(char* sql)
 	int(*cb)(void*, int, char**, char**);
 	cb = &RVS::DataManagement::DIO::callback;
 
-	*RC = sqlite3_exec(outdb, sql, cb, 0, &err);
+	*RC = sqlite3_exec(outdb, sql, NULL, 0, &err);
 
 	if (*RC != SQLITE_OK)
 	{
@@ -198,10 +198,12 @@ char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
 	// Get the string representation of the stream
 	std::string nstring = stream->str();
 	// Create a character array of the size of string
-	char* str = new char[nstring.size() + 1];
+	//char* str = new char[nstring.size() + 1];
 	// Copy the string value into the array and terminate
-	std::copy(nstring.begin(), nstring.end(), str);
-	str[nstring.size()] = '\0';
+	//std::copy(nstring.begin(), nstring.end(), str); // apparently this has been depreciated
+	//str[nstring.size()] = '\0';
+
+	char* str = (char*)nstring.c_str();
 	return str;
 }
 
@@ -210,51 +212,7 @@ int RVS::DataManagement::DIO::callback(void* nu, int argc, char** argv, char** a
 	return 0;
 }
 
-/*
-RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_base_old(char* selectString)
-{
-	sqlite3* rvsdb;
-	int rc = 0;
 
-	DataTable dt;
-
-	// Open the database
-	rc = sqlite3_open(RVS_DB_PATH, &rvsdb);
-	
-	if (rc)
-	{
-		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(rvsdb));
-		sqlite3_close(rvsdb);
-		return dt;
-	}
-
-	int nByte = -1;
-	sqlite3_stmt* stmt;
-
-	// Prepare SQL query as object code
-	rc = sqlite3_prepare_v2(rvsdb, selectString, nByte, &stmt, NULL);
-	// Run initial step
-	rc = sqlite3_step(stmt);
-
-	if (rc == 0 || rc == 100 || rc == 101)
-	{
-		int colCount = 0;
-		colCount = sqlite3_data_count(stmt);
-		printf("Columns: %i\n", colCount);
-	}
-
-	while (rc == 100)
-	{
-		rc = sqlite3_step(stmt);
-		printf("Stepping\n");
-	}
-
-	rc = sqlite3_finalize(stmt);
-	rc = sqlite3_close(rvsdb);
-
-	return dt;
-}
-*/
 #else
 RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_base(std::string selectString)
 {

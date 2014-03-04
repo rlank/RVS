@@ -23,12 +23,45 @@ int* RC = new int(SQLITE_OK);
 int main(int argc, char* argv[])
 {
     static bool SUPPRESS_MSG = false;
-	static bool WRITE_SHRUB = true;
+	static bool WRITE_SHRUB = false;
 
     
 	///////////////////////////
-	/// Do user options here //
+	/// User execution args ///
 	///////////////////////////
+
+	// Args:
+	// 1: Input database path
+	// 2: Output database path
+	// 3: Write intermediate shrub biomass (true/false)
+
+	/*
+	for (int i = 1; i < argc; i++)
+	{
+		
+		switch (i)
+		{
+		case 1:
+			#ifdef RVS_DB_PATH
+			#undef RVS_DB_PATH
+			#endif 
+			break;
+		case 2:
+			#ifdef OUT_DB_PATH
+			#undef OUT_DB_PATH
+			#endif
+			break;
+		case 3:
+			if (strcmp("false", argv[3]) == 0)
+			{
+				WRITE_SHRUB = false;
+			}
+			break;
+
+		}
+		
+	}
+	*/
 
 	// Get DIO ready for queries
 	RVS::Biomass::BiomassDIO dio;

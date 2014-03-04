@@ -24,8 +24,8 @@ int* RVS::Biomass::BiomassDIO::create_biomass_output_table()
 		BIOMASS_TOTAL_OUT_FIELD << " REAL NOT NULL);";
 
 	char* sql = streamToCharPtr(&sqlstream);
-
 	RC = RVS::DataManagement::DIO::create_table(sql);
+	delete[] sql;
 
 	return RC;
 }
@@ -43,6 +43,7 @@ int* RVS::Biomass::BiomassDIO::write_biomass_output_record(int* plot_num, int* e
 
 	char* sql = streamToCharPtr(&sqlstream);
 	RC = RVS::DataManagement::DIO::exec_sql(sql);
+	delete[] sql;
 	return RC;
 }
 
@@ -59,9 +60,8 @@ int* RVS::Biomass::BiomassDIO::create_biomass_intermediate_table()
 		BIOMASS_SHRUB_OUT_FIELD << " REAL);";
 
 	char* sql = streamToCharPtr(&sqlstream);
-
 	RC = RVS::DataManagement::DIO::create_table(sql);
-
+	delete[] sql;
 	return RC;
 }
 
@@ -78,6 +78,7 @@ int* RVS::Biomass::BiomassDIO::write_biomass_intermediate_record(RVS::Biomass::B
 
 	char* sql = streamToCharPtr(&sqlstream);
 	RC = RVS::DataManagement::DIO::exec_sql(sql);
+	delete[] sql;
 	return RC;
 }
 

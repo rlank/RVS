@@ -3,16 +3,13 @@ RVS
 
 Rangeland Vegetation Simulator
 
-RVS provides a suite of modules which simulate non-forested project areas' vegetation conditions over time. 
-RVS includes calculations for biomass, succession, disturbance, and fuel modelling. The RVS API is best 
-used in conjunction with the Forest Vegetation Simulator, found at http://www.fs.fed.us/fmsc/fvs/ and 
-https://code.google.com/p/open-fvs/
+RVS provides a suite of modules which simulate non-forested project areas' vegetation conditions over time. RVS includes calculations for biomass, succession, disturbance, and fuel modelling. The RVS API is best used in conjunction with the Forest Vegetation Simulator, found at http://www.fs.fed.us/fmsc/fvs/ and https://code.google.com/p/open-fvs/
 
 Requirements:
-boost C++ v. 1.54+
-sqlite v. 3 (source included here)
+boost C++ v1.54+
+sqlite v3
 
 Author:  Robb Lankston
 robblankston@gmail.com
 
-Last Modified:  22 Jan 2014
+Last Modified:  4 Feb 2014
