@@ -23,7 +23,8 @@ int* RVS::Biomass::BiomassDIO::create_biomass_output_table()
 		BIOMASS_HERB_OUT_FIELD << " REAL," << \
 		BIOMASS_TOTAL_OUT_FIELD << " REAL NOT NULL);";
 
-	char* sql = streamToCharPtr(&sqlstream);
+	char* sql = new char;
+	sql = streamToCharPtr(&sqlstream);
 	RC = RVS::DataManagement::DIO::create_table(sql);
 	delete[] sql;
 
@@ -41,7 +42,8 @@ int* RVS::Biomass::BiomassDIO::write_biomass_output_record(int* plot_num, int* e
 		ret_code << "\"," << *totalBiomass << "," << *shrubBiomass << "," << \
 		*herbBiomass << ");";
 
-	char* sql = streamToCharPtr(&sqlstream);
+	char* sql = new char;
+	sql = streamToCharPtr(&sqlstream);
 	RC = RVS::DataManagement::DIO::exec_sql(sql);
 	delete[] sql;
 	return RC;
@@ -59,7 +61,8 @@ int* RVS::Biomass::BiomassDIO::create_biomass_intermediate_table()
 		RET_CODE_FIELD << " char(12)," << \
 		BIOMASS_SHRUB_OUT_FIELD << " REAL);";
 
-	char* sql = streamToCharPtr(&sqlstream);
+	char* sql = new char; 
+	sql = streamToCharPtr(&sqlstream);
 	RC = RVS::DataManagement::DIO::create_table(sql);
 	delete[] sql;
 	return RC;
@@ -76,7 +79,8 @@ int* RVS::Biomass::BiomassDIO::write_biomass_intermediate_record(RVS::Biomass::B
 		bioEVT->DOM_SPP() << "\",\"" << bioEVT->SPP_CODE() << "\",\"" << \
 		ENUMPARSE(bioEVT->RETURN_TYPE()) << "\"," << *shrubBiomass << ");";
 
-	char* sql = streamToCharPtr(&sqlstream);
+	char* sql = new char;
+	sql = streamToCharPtr(&sqlstream);
 	RC = RVS::DataManagement::DIO::exec_sql(sql);
 	delete[] sql;
 	return RC;

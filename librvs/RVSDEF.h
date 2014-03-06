@@ -9,8 +9,9 @@
 #define RVSDEF_H
 
 extern int* RC;
-extern const char* RVS_DB_PATH;
-extern const char* OUT_DB_PATH;
+extern float* GROWTH_MULT;
+//extern const char* RVS_DB_PATH;
+//extern const char* OUT_DB_PATH;
 
 
 // OS-specific includes

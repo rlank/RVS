@@ -23,11 +23,6 @@ double RVS::Biomass::BiomassEquations::eq_PCH(double cf1, double cf2, double hei
 	return result;
 }
 
-double RVS::Biomass::BiomassEquations::eq_pch_acre(double pch)
-{
-	double pch_acre = (pch / 1000) * PCH_MULT;
-	return pch_acre;
-}
 
 
 

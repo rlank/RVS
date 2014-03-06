@@ -46,7 +46,9 @@ namespace DataManagement
 
 		// General EVT public functions //
 		virtual void buildEVT(RVS::DataManagement::DataTable* dt);
+		virtual double expandCalculationToPlot(double singleAmount);
 
+		const float EXPANSION_FACTOR = 4046.85942f;
 		                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 	protected:
 		// General EVT variables //

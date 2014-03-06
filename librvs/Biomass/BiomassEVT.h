@@ -76,6 +76,7 @@ namespace Biomass
 		std::map<RVS::Biomass::BiomassVarUnits, std::string> parms;
 
 	private:
+
 	    void copyData(const BiomassEVT& biomassevt_to_copy);
 
 	};

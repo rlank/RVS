@@ -16,7 +16,7 @@ RVS::Biomass::BiomassEVT::BiomassEVT(RVS::DataManagement::DataTable* dt) : RVS::
 
 RVS::Biomass::BiomassEVT::~BiomassEVT(void)
 {
-
+	
 }
 
 
@@ -98,11 +98,12 @@ void RVS::Biomass::BiomassEVT::parseParameter(sqlite3_stmt* stmt, char* columnNa
 		// If it was height, populate height variable and vis verca
 		if (PA1_Code == HT)
 		{
-			height = PA1_Val;
+
+			height = PA1_Val + (PA1_Val * *GROWTH_MULT);  //$$ HACK linear growth increase
 		}
 		else
 		{
-			cover = PA1_Val;
+			cover = PA1_Val + (PA1_Val * *GROWTH_MULT);  //$$ HACK linear growth increase
 		}
 	}
 	else if (strcmp(columnName, BIOMASS_PARAM_2_CODE_FIELD) == 0)
@@ -117,11 +118,11 @@ void RVS::Biomass::BiomassEVT::parseParameter(sqlite3_stmt* stmt, char* columnNa
 		// If it was height, populate height variable and vis verca
 		if (PA2_Code == HT)
 		{
-			height = PA2_Val;
+			height = PA2_Val + (PA2_Val * *GROWTH_MULT);  //$$ HACK linear growth increase
 		}
 		else
 		{
-			cover = PA2_Val;
+			cover = PA2_Val + (PA2_Val * *GROWTH_MULT);  //$$ HACK linear growth increase
 		}
 	}
 }

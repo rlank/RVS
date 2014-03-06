@@ -20,6 +20,7 @@
 #include "BiomassEVT.h"
 #include "BiomassEquations.h"
 #include "../DataManagement/RVS_TypeDefs.h"
+#include "../Fuels/FuelsDriver.h"
 
 
 namespace RVS

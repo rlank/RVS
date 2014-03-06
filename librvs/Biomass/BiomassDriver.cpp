@@ -22,13 +22,6 @@ int* BiomassDriver::BioMain(int plot_num, double* biomass_return_value, RVS::Bio
 {
 	try
 	{
-		if (!suppress_messages)
-		{
-			std::cout << std::endl;
-			std::cout << "Results for plot " << plot_num << std::endl;
-			std::cout << "====================" << std::endl;
-		}
-
 		// declare local return vars
 		double BIOMASS_RETURN_VAL = 0;
 		RVS::Biomass::BiomassReturnType BIOMASS_RET_TYPE = RVS::Biomass::RNUL;
@@ -90,11 +83,17 @@ int* BiomassDriver::BioMain(int plot_num, double* biomass_return_value, RVS::Bio
 		BIOMASS_RETURN_VAL = shrubBiomass + herbBiomass;
 		BIOMASS_RET_TYPE = RVS::Biomass::PCH;
 
+		// $$ HACK calculate fuels for this plot
+		RVS::Fuels::FuelsDriver fd(suppress_messages, write_intermediate);
+		RC = fd.FuelsMain(bioEVT, &plot_num, &shrubBiomass, &herbBiomass);
+
+
 		delete bioEVT;
 		delete dt;
 
 		// Write output biomass record
 		RC = RVS::Biomass::BiomassDIO::write_biomass_output_record(&plot_num, &evt, &bps, ret_code, &BIOMASS_RETURN_VAL, &herbBiomass, &shrubBiomass);
+
 
 		if (!suppress_messages)
 		{
@@ -103,8 +102,8 @@ int* BiomassDriver::BioMain(int plot_num, double* biomass_return_value, RVS::Bio
 			std::cout << "Shrub Biomass: " << shrubBiomass << std::endl;
 			std::cout << "Herb Biomass: " << herbBiomass << std::endl;
 			std::cout << "Total Biomass: " << BIOMASS_RETURN_VAL << std::endl;
-			std::cout << "Units: " << BIOMASS_RET_TYPE << std::endl;
-			std::cout << "Return State: " << *RC << std::endl;
+			//std::cout << "Units: " << BIOMASS_RET_TYPE << std::endl;
+			//std::cout << "Return State: " << *RC << std::endl;
 		}
 
 		
@@ -143,6 +142,7 @@ double BiomassDriver::calcHerbBiomass(RVS::Biomass::BiomassEVT* evt)
     }
 
 	double biomass = RVS::Biomass::BiomassDIO::query_biomass_herbs_table(baseBPS, clevel);
+
     return biomass;
 }
 
@@ -166,9 +166,10 @@ double BiomassDriver::calcShrubBiomass(RVS::Biomass::BiomassEVT* evt)
 
 	//$$ TODO set up "get shrub biomass" to return different types of (requested) biomass
     double pch = RVS::Biomass::BiomassEquations::eq_PCH(cf1, cf2, height);
-	double pch_acre = RVS::Biomass::BiomassEquations::eq_pch_acre(pch);
+	//double pch_acre = RVS::Biomass::BiomassEquations::eq_pch_acre(pch);
+	double pch_expanded = evt->expandCalculationToPlot(pch);
             
-    biomass = pch_acre * (evt->COVER() / 100);
+	biomass = pch_expanded * (evt->COVER() / 100);  // Return the expanded amount as a function of percent cover
 
     return biomass;
 }

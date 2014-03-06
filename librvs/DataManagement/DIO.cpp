@@ -20,30 +20,36 @@ RVS::DataManagement::DIO::DIO(void)
 // Destructor. Closes the connection with the db.
 RVS::DataManagement::DIO::~DIO(void)
 {
-	*RC = sqlite3_close(rvsdb);
-	if (*RC != 0)
+	if (rvsdb != NULL)
 	{
-		printf("Warning: DB not closing properly.\n");
+		*RC = sqlite3_close(rvsdb);
+		rvsdb = NULL;
+
+		if (*RC != 0)
+		{
+			printf("Warning: DB not closing properly.\n");
+		}
+		else
+		{
+			printf("Closing InputDB connection.\n");
+		}
 	}
-	else
-	{
-		printf("Closing InputDB connection.\n");
-	}
+	
 
 	if (outdb != NULL)
 	{
 		*RC = sqlite3_close(outdb);
-	}
-	if (*RC != 0)
-	{
-		printf("Warning: Out DB not closing properly.\n");
-	}
-	else
-	{
-		printf("Closing OutDB connection.\n");
-	}
+		outdb = NULL;
 
-	delete RC;  // This is the last thing the program does. Delete the return pointer
+		if (*RC != 0)
+		{
+			printf("Warning: Out DB not closing properly.\n");
+		}
+		else
+		{
+			printf("Closing OutDB connection.\n");
+		}
+	}
 }
 
 // Opens an sqlite connection to the specified database
@@ -119,7 +125,8 @@ std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 	std::stringstream* selectStream = new std::stringstream();
 	*selectStream << "SELECT DISTINCT " << PLOT_NUM_FIELD << " FROM " << RVS_INPUT_TABLE << "; ";
 	
-	char* selectString = streamToCharPtr(selectStream);
+	char* selectString = new char;
+	selectString = streamToCharPtr(selectStream);
 	sqlite3_stmt* stmt = query_base(selectString);
 	
 	std::vector<int> items;
@@ -161,7 +168,8 @@ sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field)
 	std::stringstream* selectStream = new std::stringstream();
 	*selectStream << "SELECT " << field << " FROM " << table << "; ";
 
-	char* selectString = streamToCharPtr(selectStream);
+	char* selectString = new char;
+	selectString = streamToCharPtr(selectStream);
 	sqlite3_stmt* stmt = query_base(selectString);
 
 	delete selectStream;
@@ -184,7 +192,8 @@ sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field, boo
 	}
 
 	
-	char* selectString = streamToCharPtr(selectStream);
+	char* selectString = new char;
+	selectString = streamToCharPtr(selectStream);
 	sqlite3_stmt* stmt = query_base(selectString);
 
 	delete selectStream;
@@ -198,12 +207,10 @@ char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
 	// Get the string representation of the stream
 	std::string nstring = stream->str();
 	// Create a character array of the size of string
-	//char* str = new char[nstring.size() + 1];
+	char* str = new char[nstring.size() + 1];
 	// Copy the string value into the array and terminate
-	//std::copy(nstring.begin(), nstring.end(), str); // apparently this has been depreciated
-	//str[nstring.size()] = '\0';
-
-	char* str = (char*)nstring.c_str();
+	std::copy(nstring.begin(), nstring.end(), str); // apparently this has been depreciated
+	str[nstring.size()] = '\0';
 	return str;
 }
 

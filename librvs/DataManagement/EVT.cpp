@@ -55,6 +55,12 @@ void EVT::initialize_object()
 	totalSamplePlots = 0;
 }
 
+double RVS::DataManagement::EVT::expandCalculationToPlot(double singleAmount)
+{
+	double expanded = (singleAmount / 1000) * EXPANSION_FACTOR;
+	return expanded;
+}
+
 void RVS::DataManagement::EVT::parseItem(sqlite3_stmt* stmt, int column)
 {
 	const char* colName = sqlite3_column_name(stmt, column);

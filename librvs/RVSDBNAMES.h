@@ -1,7 +1,7 @@
 //############################################//
 // Define table and field names here for 
 // consistency across classes.
-// Last Modified: 16 Jan 14
+// Last Modified: 5 Mar 14
 //############################################//
 
 #pragma once
@@ -10,7 +10,7 @@
 #define RVSDBNAMES_H
 
 #define RVS_INPUT_TABLE "RVS_Input_Use"
-#define BIOMASS_INPUT_TABLE "Biomass_Input_Big"
+#define BIOMASS_INPUT_TABLE "Biomass_Input"
 #define BIOMASS_CROSSWALK_TABLE "Bio_Crosswalk"
 #define BIOMASS_HERBS_TABLE "Bio_Herbs_KgH"
 #define BIOMASS_EQUATION_TABLE "Bio_Equation_Import"
@@ -38,10 +38,11 @@
 #define BIOMASS_INTERMEDIATE_TABLE "Biomass_Output_Spp"
 #define FUELS_OUTPUT_TABLE "Fuels_Output"
 
-
 #define BIOMASS_HERB_OUT_FIELD "herb_biomass"
 #define BIOMASS_SHRUB_OUT_FIELD "shrub_biomass"
 #define BIOMASS_TOTAL_OUT_FIELD "total_biomass"
-
+#define FUELS_1HR_OUT_FIELD "fuel_size_1hr"
+#define FUELS_10HR_OUT_FIELD "fuel_size_10hr"
+#define FUELS_100HR_OUT_FIELD "fuel_size_100hr"
 
 #endif

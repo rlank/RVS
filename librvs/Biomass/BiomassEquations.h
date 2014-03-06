@@ -16,8 +16,6 @@ namespace RVS
 {
 namespace Biomass
 {
-	static const float PCH_MULT = 4046.85942f;
-
 	class BiomassEquations
 	{
 	public:
@@ -25,7 +23,6 @@ namespace Biomass
 		static double eq_AFN(double cf1, double cf2, double cf3, double dba);
 
 		static double eq_PCH(double cf1, double cf2, double height);
-		static double eq_pch_acre(double pch);
 	};
 }
 }
