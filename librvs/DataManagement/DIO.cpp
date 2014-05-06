@@ -74,6 +74,7 @@ int* RVS::DataManagement::DIO::create_output_db()
 
 int* RVS::DataManagement::DIO::create_output_db(char* path)
 {
+	*RC = std::remove(path);
 	RC = open_db_connection(path, &outdb);
 	return RC;
 }
@@ -212,6 +213,16 @@ char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
 	std::copy(nstring.begin(), nstring.end(), str); // apparently this has been depreciated
 	str[nstring.size()] = '\0';
 	return str;
+}
+
+int* RVS::DataManagement::DIO::create_output_table()
+{
+	return 0;
+}
+
+int* RVS::DataManagement::DIO::create_intermediate_table()
+{
+	return 0;
 }
 
 int RVS::DataManagement::DIO::callback(void* nu, int argc, char** argv, char** azColName)

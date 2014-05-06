@@ -53,7 +53,10 @@ extern float* GROWTH_MULT;
 	#include <sqlext.h>
 #endif
 
-
+// Define multithreading environment
+#ifndef USEMULTIT
+	#define USEMULTIT 1
+#endif
 
 
 #endif

@@ -43,6 +43,8 @@ void RVS::Biomass::BiomassEVT::initialize_object()
 	PA3_Code = RVS::Biomass::VNUL;
 	PA3_Val = 0;
 	returnType = RVS::Biomass::RNUL;
+	shrubBiomass = 0;
+	herbBiomass = 0;
 }
 
 void RVS::Biomass::BiomassEVT::parseItem(sqlite3_stmt* stmt, int column)
@@ -58,6 +60,14 @@ void RVS::Biomass::BiomassEVT::parseItem(sqlite3_stmt* stmt, int column)
 	if (strcmp(colName, RET_CODE_FIELD) == 0)
 	{
 		this->parseReturnType(boost::any_cast<std::string>(aval));
+	}
+	else if (strcmp(colName, BIOMASS_HEIGHT_FIELD) == 0)
+	{
+		this->height = boost::any_cast<double>(aval);
+	}
+	else if (strcmp(colName, BIOMASS_COVER_FIELD) == 0)
+	{
+		this->cover = boost::any_cast<double>(aval);
 	}
 	else if (strcmp(colName, BIOMASS_PARAM_1_CODE_FIELD) == 0 || strcmp(colName, BIOMASS_PARAM_2_CODE_FIELD) == 0)
 	{

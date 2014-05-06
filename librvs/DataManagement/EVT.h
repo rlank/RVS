@@ -43,10 +43,13 @@ namespace DataManagement
 		virtual inline float COVER() { return cover; };
 		virtual inline int SAMPLEPLOTS() { return samplePlots; };
 		virtual inline int TOTALSAMPLEPLOTS() { return totalSamplePlots; };
+		virtual inline double STEMSPERACRE() { return stemsPerAcre; }
 
 		// General EVT public functions //
 		virtual void buildEVT(RVS::DataManagement::DataTable* dt);
 		virtual double expandCalculationToPlot(double singleAmount);
+		virtual double getNDVI(int year);
+		virtual double getPPT(int year);
 
 		const float EXPANSION_FACTOR = 4046.85942f;
 		                                                                                                                                                                                                                                                                                                                                                                                                                                                      
@@ -61,6 +64,8 @@ namespace DataManagement
 		float cover;
 		int samplePlots;
 		int totalSamplePlots;
+
+		float stemsPerAcre;
 
 		std::map<std::string, boost::any> vars_collection;
 	    

@@ -37,28 +37,33 @@ namespace DataManagement
 
 		/// Returns an array of unique analysis plot values. Use this array to control main driver
 		/// iteration. Each analysis plot can contain multiple records for different EVT/SPP combos
-		static std::vector<int> query_analysis_plots();
+		std::vector<int> query_analysis_plots();
 		
 		
 	protected:
-		static int* create_output_db();
-		static int* create_output_db(char* path);
-		static int* create_table(char* sql);
+		int* create_output_db();
+		int* create_output_db(char* path);
+		int* create_table(char* sql);
 		
-		static int* exec_sql(char* sql);
+		virtual int* create_output_table();
+		virtual int* create_intermediate_table();
+		//virtual int* write_output_record();
+		//virtual int* write_intermediate_record();
 
-		static inline sqlite3* get_outdb() { return outdb; }
+		int* exec_sql(char* sql);
+
+		inline sqlite3* get_outdb() { return outdb; }
 
 		// Converts a std::stringstream to a char pointer (array)
-		static char* streamToCharPtr(std::stringstream* stream);
+		char* streamToCharPtr(std::stringstream* stream);
 		// Opens the database connection. Will remain open until DIO destructs
-		static int* open_db_connection(char* pathToDb, sqlite3** db);
+		int* open_db_connection(char* pathToDb, sqlite3** db);
 
 		/// Base query function. All the public functions only define the selection string.
 		/// This function contains the actual OleDB stuff.
-		static sqlite3_stmt* query_base(char* selectString);
-		static sqlite3_stmt* query_base(char* table, char* field);
-		static sqlite3_stmt* query_base(char* table, char* field, boost::any whereclause);
+		sqlite3_stmt* query_base(char* selectString);
+		sqlite3_stmt* query_base(char* table, char* field);
+		sqlite3_stmt* query_base(char* table, char* field, boost::any whereclause);
 
 		static int callback(void* nu, int argc, char** argv, char** azColName);
 

@@ -48,6 +48,11 @@ namespace Biomass
 		inline Biomass::BiomassReturnType RETURN_TYPE() { return returnType; };
 		inline std::map<Biomass::BiomassVarUnits, std::string> PARAMETERS() { return parms; }
 
+		inline double SHRUBBIOMASS() { return shrubBiomass; }
+		inline double HERBBIOMASS() { return herbBiomass; }
+		inline void SET_SHRUBBIOMASS(double biomass) { shrubBiomass = biomass; }
+		inline void SET_HERBBIOMASS(double biomass) { herbBiomass = biomass; }
+
 		virtual std::string toString();
 
 	protected:
@@ -74,6 +79,9 @@ namespace Biomass
 		float PA3_Val;
 		Biomass::BiomassReturnType returnType;
 		std::map<RVS::Biomass::BiomassVarUnits, std::string> parms;
+
+		double shrubBiomass;
+		double herbBiomass;
 
 	private:
 

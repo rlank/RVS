@@ -25,16 +25,18 @@ namespace Fuels
 	class FuelsDriver
 	{
 	public:
-		FuelsDriver(bool suppress_messages = false, bool write_intermediate = false);
+		FuelsDriver(int plot_num, RVS::Fuels::FuelsDIO* fdio, bool suppress_messages = false, bool write_intermediate = false);
 		virtual ~FuelsDriver(void);
 
 		bool suppress_messages;
 		bool write_intermediate;
 		
 		int* FuelsMain(RVS::Biomass::BiomassEVT* bioEVT, int* plot_num, double* shrubBiomass, double* herbBiomass);
+		int* FuelsMain(int year, std::vector<RVS::Biomass::BiomassEVT*> bioEVTs);
 
 	private:
-		
+		int plot_num;
+		RVS::Fuels::FuelsDIO* fdio;
 	};
 }
 }

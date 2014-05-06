@@ -36,7 +36,7 @@ namespace Biomass
 		///
 		/// <param name="level">The lookup level to use for primary production (herb biomass)</param>
         /// <param name="suppress_messages">Optional. Toggle to 'true' to suppress console messages. Useful when threading.</param>
-		BiomassDriver(RVS::Biomass::BiomassLookupLevel level, bool suppress_messages = false, bool write_intermediate = false);
+		BiomassDriver(int plot_num, RVS::Biomass::BiomassDIO* bdio, RVS::Biomass::BiomassLookupLevel level, bool suppress_messages = false, bool write_intermediate = false);
 		virtual ~BiomassDriver(void);
 
 		bool suppress_messages;
@@ -48,19 +48,31 @@ namespace Biomass
         /// <param name="biomass_return_value">The calculated biomass of the plot.</param>
         /// <param name="biomass_return_type">The units of the calculated biomass.</param>
         /// <returns>Return code. 0 indicates a clean run.</returns>
-        int* BioMain(int plot_num, double* biomass_return_value, RVS::Biomass::BiomassReturnType* biomass_return_type);
+        int* BioMain(int year, double* retShrubBiomass, double* retHerbBiomass);
+
+		inline std::vector<RVS::Biomass::BiomassEVT*> pullRecords() { return evt_records; }
 
 	private:
+		int plot_num;
+		RVS::Biomass::BiomassDIO* bdio;
 		RVS::Biomass::BiomassLookupLevel level;
 		std::vector<RVS::Biomass::BiomassEVT*> evt_records;
+
+		const float INTERCEPT = -19.4346;
+		const float LN_PRECIP = 0.141;
+		const float LN_NDVI = 3.0056;
 
         /// This is the primary biomass calculator for herbs and the fallback for shrubs
         /// (used when shrub equation parsing fails). Loads the Bio_Herbs table and 
         /// looks up the respective biomass value.
         /// <param name="bps">5-digit BPS number (without map zone)</param>
         /// <returns>Biomass</returns>
-		double calcHerbBiomass(RVS::Biomass::BiomassEVT* evt);
+		double calcPrimaryProduction(RVS::Biomass::BiomassEVT* evt);
 		double calcShrubBiomass(RVS::Biomass::BiomassEVT* evt);
+		double calcHerbBiomass(RVS::Biomass::BiomassEVT* evt, int year);
+		double calcHerbReduction(double totalShrubCover);
+
+		void createEVTRecords(int plot_num);
 	};
 }
 }

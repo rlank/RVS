@@ -97,6 +97,20 @@ void EVT::parseLifeform(std::string sval)
 	}
 }
 
+double EVT::getNDVI(int year)
+{
+	year += 1;
+	std::string name = "NDVI_Y" + std::to_string(year);
+	return boost::any_cast<double>(vars_collection[name]);
+}
+
+double EVT::getPPT(int year)
+{
+	year += 1;
+	std::string name = "PPT_Y" + std::to_string(year);
+	return boost::any_cast<double>(vars_collection[name]);
+}
+
 void EVT::getVar(sqlite3_stmt* stmt, int column, boost::any* retval)
 {
 	// Get the column data type from sqlite

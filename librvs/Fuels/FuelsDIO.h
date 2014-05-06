@@ -30,11 +30,12 @@ namespace Fuels
 		FuelsDIO(void);
 		virtual ~FuelsDIO(void);
 
-
 		//## DB functins ##//
-		static int* create_fuel_output_table();
-		static int* create_fuel_intermediate_table();
-		static int* write_fuel_output_record(int* plot_num, int* evt_num, std::string* bps, double* fuel1Hr, double* fuel10Hr, double* fuel100Hr);
+		int* create_output_table();
+		int* create_intermediate_table();
+		int* write_fuel_output_record(int* plot_num, int* year, int* evt_num, std::string* bps, double* fuel1Hr, double* fuel10Hr, double* fuel100Hr);
+		int* write_fuel_intermediate_record(int* plot_num, int* year, int* evt_num, std::string* bps, std::string* dom_spp, std::string* spp_code, double* fuel1Hr, double* fuel10Hr, double* fuel100Hr);
+
 
 		//## Query functions ##//
 
