@@ -3,7 +3,7 @@
 /// Desc: (Test) driver for RVS. Build as execultable and      ///
 /// this becomes the program entry point                       ///
 /// Base Class(es): none                                       ///
-/// Last Modified: 5 Mar 14                                    ///
+/// Last Modified: 8 Mar 14                                    ///
 /// ********************************************************** ///
 
 #include <exception>
@@ -20,13 +20,12 @@
 #include "Fuels/FuelsDIO.h"
 
 int* RC = new int(SQLITE_OK);
-float* GROWTH_MULT = new float(0.0f);
 
 int main(int argc, char* argv[])
 {
     static bool SUPPRESS_MSG = false;
 	static bool WRITE_SHRUB = true;
-	static int STOPYEAR = 1;  //$$ TODO make this C def
+	static int STOPYEAR = 3;  //$$ TODO make this C def
     
 	///////////////////////////
 	/// User execution args ///
@@ -71,6 +70,7 @@ int main(int argc, char* argv[])
     
     std::vector<int> plotcounts = bdio->query_analysis_plots();
 	std::map<int, RVS::Biomass::BiomassDriver*> bioDrivers;
+	std::map<int, RVS::Fuels::FuelsDriver*> fuelsDrivers;
 
 	for (int year = 0; year < STOPYEAR; year++)
 	{
@@ -92,6 +92,7 @@ int main(int argc, char* argv[])
 			if (year == 0)
 			{
 				bioDrivers[plot_num] = new RVS::Biomass::BiomassDriver(runplot, bdio, RVS::Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG, WRITE_SHRUB);
+				fuelsDrivers[plot_num] = new RVS::Fuels::FuelsDriver(plot_num, fdio, SUPPRESS_MSG, WRITE_SHRUB);
 			}
 
 			double biomass = 0;
@@ -100,34 +101,32 @@ int main(int argc, char* argv[])
 
 			RC = bioDrivers[plot_num]->BioMain(year, &shrubBiomass, &herbBiomass);
 
-			//if (!SUPPRESS_MSG)
-			//{
-			//	std::cout << std::endl;
-			//	std::cout << "Primary Production: " << herbBiomass << std::endl;
-			//	std::cout << "Shrub Biomass: " << shrubBiomass << std::endl;
-			//	std::cout << "Herb Biomass: " << herbBiomass << std::endl;
-			//	std::cout << "Total Biomass: " << (shrubBiomass + herbBiomass) << std::endl;
-			//}
+			if (!SUPPRESS_MSG)
+			{
+				std::cout << std::endl;
+				std::cout << "Shrub Biomass: " << shrubBiomass << std::endl;
+				std::cout << "Herb Biomass: " << herbBiomass << std::endl;
+				std::cout << "Total Biomass: " << (shrubBiomass + herbBiomass) << std::endl;
+			}
 
-			//double fuel1Hr = 0;
-			//double fuel10Hr = 0;
-			//double fuel100Hr = 0;
+			double fuel1Hr = 0;
+			double fuel10Hr = 0;
+			double fuel100Hr = 0;
 
-			//RVS::Fuels::FuelsDriver fd(plot_num, fdio, SUPPRESS_MSG, WRITE_SHRUB);
-			//RC = fd.FuelsMain(year, bioDrivers[plot_num]->pullRecords());
+			
+			RC = fuelsDrivers[plot_num]->FuelsMain(year, bioDrivers[plot_num]->pullRecords());
 
-			//if (!SUPPRESS_MSG)
-			//{
-			//	std::cout << "1Hr Fuels:   " << fuel1Hr << std::endl;
-			//	std::cout << "10Hr Fuels:  " << fuel10Hr << std::endl;
-			//	std::cout << "100Hr Fuels: " << fuel100Hr << std::endl;
-			//}
+			if (!SUPPRESS_MSG)
+			{
+				std::cout << "1Hr Fuels:   " << fuel1Hr << std::endl;
+				std::cout << "10Hr Fuels:  " << fuel10Hr << std::endl;
+				std::cout << "100Hr Fuels: " << fuel100Hr << std::endl;
+			}
 		}
-
-		*GROWTH_MULT = *GROWTH_MULT + 0.01f;  // increase growth amount
 	}
 
 	bioDrivers.clear();
+	fuelsDrivers.clear();
 	delete bdio;
 	delete fdio;
 

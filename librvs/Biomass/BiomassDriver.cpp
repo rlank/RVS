@@ -45,22 +45,6 @@ int* BiomassDriver::BioMain(int year, double* retShrubBiomass, double* retHerbBi
 			*retShrubBiomass += singleBiomass;
 			totalShrubCover += bioEVT->COVER();
 
-			/* This switch no longer relevent to our model
-			// Branch biomass calculation to do either HERB or SHRUB
-			switch (bioEVT->LIFEFORM())
-			{
-				case RVS::DataManagement::shrub:
-					singleBiomass = this->calcShrubBiomass(bioEVT);
-					break;
-				case RVS::DataManagement::herb:
-					singleBiomass = this->calcHerbBiomass(bioEVT);
-					break;
-				default:
-					std::cout << "Lifeform not implemented." << std::endl;
-					break;
-			}
-			*/
-
 			// Write this result to the intermediate table
 			if (write_intermediate)
 			{
@@ -81,7 +65,7 @@ int* BiomassDriver::BioMain(int year, double* retShrubBiomass, double* retHerbBi
 		BIOMASS_RETURN_VAL = *retShrubBiomass + *retHerbBiomass;
 		BIOMASS_RET_TYPE = RVS::Biomass::PCH;
 
-		if (!suppress_messages)
+		/*if (!suppress_messages)
 		{
 			std::cout << std::endl;
 			std::cout << "Primary Production: " << production << std::endl;
@@ -90,7 +74,7 @@ int* BiomassDriver::BioMain(int year, double* retShrubBiomass, double* retHerbBi
 			std::cout << "Herb Reduction: " << reduction << std::endl;
 			std::cout << "Total Cover: " << totalShrubCover << std::endl;
 			std::cout << "Total Biomass: " << (*retShrubBiomass + *retHerbBiomass) << std::endl;
-		}
+		}*/
 
 		// Write output biomass record
 		RC = bdio->write_biomass_output_record(&plot_num, &year, &evt, &bps, ret_code, &BIOMASS_RETURN_VAL, retHerbBiomass, retShrubBiomass);

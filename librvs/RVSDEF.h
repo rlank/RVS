@@ -1,6 +1,6 @@
 //############################################//
 // Preproccessor directives for RVS 
-// Last Modified: 22 Jan 14
+// Last Modified: 8 May 14
 //############################################//
 
 #pragma once
@@ -9,7 +9,6 @@
 #define RVSDEF_H
 
 extern int* RC;
-extern float* GROWTH_MULT;
 //extern const char* RVS_DB_PATH;
 //extern const char* OUT_DB_PATH;
 

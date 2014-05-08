@@ -69,10 +69,6 @@ void RVS::Biomass::BiomassEVT::parseItem(sqlite3_stmt* stmt, int column)
 	{
 		this->cover = boost::any_cast<double>(aval);
 	}
-	else if (strcmp(colName, BIOMASS_PARAM_1_CODE_FIELD) == 0 || strcmp(colName, BIOMASS_PARAM_2_CODE_FIELD) == 0)
-	{
-		this->parseParameter(stmt, (char*)colName, column);
-	}
 
 	// Add the new data to the collection
 	std::string name = std::string((char*)colName);
@@ -91,6 +87,7 @@ void RVS::Biomass::BiomassEVT::parseReturnType(std::string rtype)
 	}
 }
 
+/*
 void RVS::Biomass::BiomassEVT::parseParameter(sqlite3_stmt* stmt, char* columnName, int column)
 {
 	//$$ TODO parseParameter really only works for PCH (expecting 1 of 2 input parameters, 
@@ -136,6 +133,7 @@ void RVS::Biomass::BiomassEVT::parseParameter(sqlite3_stmt* stmt, char* columnNa
 		}
 	}
 }
+*/
 
 std::string RVS::Biomass::BiomassEVT::toString()
 {

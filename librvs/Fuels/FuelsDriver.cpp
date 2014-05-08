@@ -21,13 +21,6 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(RVS::Biomass::BiomassEVT* bioEVT, int* p
 		double fuel10Hr = RVS::Fuels::FuelsEquations::calc10Hr(*shrubBiomass);
 		double fuel100Hr = RVS::Fuels::FuelsEquations::calc100Hr(*shrubBiomass);
 
-		if (!suppress_messages)
-		{
-			std::cout << "1Hr Fuels:   " << fuel1Hr << std::endl;
-			std::cout << "10Hr Fuels:  " << fuel10Hr << std::endl;
-			std::cout << "100Hr Fuels: " << fuel100Hr << std::endl;
-		}
-
 		int evt_num = bioEVT->EVT_NUM();
 		std::string bps = bioEVT->BPS_NUM();
 

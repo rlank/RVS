@@ -58,9 +58,11 @@ namespace Biomass
 		RVS::Biomass::BiomassLookupLevel level;
 		std::vector<RVS::Biomass::BiomassEVT*> evt_records;
 
-		const float INTERCEPT = -19.4346;
-		const float LN_PRECIP = 0.141;
-		const float LN_NDVI = 3.0056;
+		// Constants for herbaceous biomass calculation
+		//$$ TODO get these from DB, not const
+		const float INTERCEPT = -19.4346f;
+		const float LN_PRECIP = 0.141f;
+		const float LN_NDVI = 3.0056f;
 
         /// This is the primary biomass calculator for herbs and the fallback for shrubs
         /// (used when shrub equation parsing fails). Loads the Bio_Herbs table and 

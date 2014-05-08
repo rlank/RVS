@@ -20,6 +20,7 @@ RVS::DataManagement::DIO::DIO(void)
 // Destructor. Closes the connection with the db.
 RVS::DataManagement::DIO::~DIO(void)
 {
+	printf("\n\n");
 	if (rvsdb != NULL)
 	{
 		*RC = sqlite3_close(rvsdb);

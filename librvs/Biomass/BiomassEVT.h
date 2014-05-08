@@ -66,7 +66,7 @@ namespace Biomass
 		// Parses the return type to the enum
 		virtual void parseReturnType(std::string rtype);
 		// Parses a parameter code and value from the database
-		virtual void parseParameter(sqlite3_stmt* stmt, char* columnName, int column);
+		//virtual void parseParameter(sqlite3_stmt* stmt, char* columnName, int column);
 
 
 		// BIOMASS EVT variables //
