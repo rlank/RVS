@@ -12,8 +12,8 @@
 #include <iostream>
 #include <stdio.h>
 
+#include "../DataManagement/AnalysisPlot.h"
 #include "../DataManagement/RVS_TypeDefs.h"
-#include "../Biomass/BiomassEVT.h"
 #include "FuelsDIO.h"
 #include "FuelsEquations.h"
 
@@ -25,17 +25,15 @@ namespace Fuels
 	class FuelsDriver
 	{
 	public:
-		FuelsDriver(int plot_num, RVS::Fuels::FuelsDIO* fdio, bool suppress_messages = false, bool write_intermediate = false);
+		FuelsDriver(RVS::Fuels::FuelsDIO* fdio, bool suppress_messages = false, bool write_intermediate = false);
 		virtual ~FuelsDriver(void);
 
 		bool suppress_messages;
 		bool write_intermediate;
 		
-		int* FuelsMain(RVS::Biomass::BiomassEVT* bioEVT, int* plot_num, double* shrubBiomass, double* herbBiomass);
-		int* FuelsMain(int year, std::vector<RVS::Biomass::BiomassEVT*> bioEVTs);
+		int* FuelsMain(int year, RVS::DataManagement::AnalysisPlot* ap);
 
 	private:
-		int plot_num;
 		RVS::Fuels::FuelsDIO* fdio;
 	};
 }

@@ -10,18 +10,19 @@
 #define RVSDBNAMES_H
 
 // Primary table names. Replace with externs as needed
-#define RVS_INPUT_TABLE "RVS_Input_Use"
-#define BIOMASS_INPUT_TABLE "Biomass_Input"
+#define RVS_INPUT_TABLE "Plots"
+#define SHRUB_INPUT_TABLE "Shrub_Input"
 #define BIOMASS_CROSSWALK_TABLE "Bio_Crosswalk"
-#define BIOMASS_HERBS_TABLE "Bio_Herbs_KgH"
+#define BIOMASS_PRIMARYPRODUCTION_TABLE "Bio_PP_KgH"
 #define BIOMASS_EQUATION_TABLE "Bio_Equation_Import"
 #define BIOMASS_MACROGROUP_TABLE "Bio_Group_LUT"
 #define BIOMASS_GROUP_COEFS_TABLE "Bio_Group_Coef_Cross"
 // ********************
 
 // Field names (primarily from input)
-#define PLOT_NUM_FIELD "plot_num"
+#define PLOT_NUM_FIELD "PLOT_ID"
 #define EVT_NUM_FIELD "evt_num"
+#define EVT_NAME_FIELD "evt_name"
 #define BPS_NUM_FIELD "BPS"
 #define DOM_SPP_FIELD "dom_spp"
 #define SPP_CODE_FIELD "spp_code"
@@ -32,22 +33,19 @@
 #define GROUP_CONST_FIELD "GRP_ID_CONST"
 #define NDVI_INTERACT_FIELD "ln_NDVI_GRP_ID"
 #define PRCP_INTERACT_FIELD "ln_PPT_GRP_ID"
+#define BIOMASS_HEIGHT_FIELD "height"
+#define BIOMASS_COVER_FIELD "cover"
 // ********************
 
-// Biomass Input -specific input fields
-#define BIOMASS_PARAM_1_CODE_FIELD "pa1_code"
-#define BIOMASS_PARAM_1_VAL_FIELD "pa1_val"
-#define BIOMASS_PARAM_2_CODE_FIELD "pa2_code"
-#define BIOMASS_PARAM_2_VAL_FIELD "pa2_code"
-#define BIOMASS_HEIGHT_FIELD "height"
-#define BIOMASS_COVER_FIELD "pct_cov"
-// ********************
 
 // Biomass Equation -specific coefficient fields
 #define BIOMASS_EQN_COEF_1_FIELD "CF1"
 #define BIOMASS_EQN_COEF_2_FIELD "CF2"
 #define BIOMASS_EQN_COEF_3_FIELD "CF3"
 #define BIOMASS_EQN_COEF_4_FIELD "CF4"
+#define BIOMASS_EQN_P1_FIELD "PA1_CODE"
+#define BIOMASS_EQN_P2_FIELD "PA2_CODE"
+#define BIOMASS_EQN_P3_FIELD "PA3_CODE"
 // ********************
 
 // Output table names

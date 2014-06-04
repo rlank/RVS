@@ -15,6 +15,11 @@ RVS::DataManagement::DIO::DIO(void)
 	{
 		//$$ TODO throw bad input database exception here
 	}
+	RC = create_output_db();
+	if (*RC != 0)
+	{
+		//$$ TODO throw bad output database exception
+	}
 }
 
 // Destructor. Closes the connection with the db.
@@ -130,14 +135,13 @@ std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 	char* selectString = new char;
 	selectString = streamToCharPtr(selectStream);
 	sqlite3_stmt* stmt = query_base(selectString);
-	
+	*RC = sqlite3_step(stmt);
 	std::vector<int> items;
-	*RC = SQLITE_OK;
-	while (*RC == SQLITE_OK || *RC == SQLITE_ROW)
+	while (*RC == SQLITE_ROW)
 	{
-		*RC = sqlite3_step(stmt);
 		int plot = sqlite3_column_int(stmt, 0);
 		items.push_back(plot);
+		*RC = sqlite3_step(stmt);
 	}
 
 	*RC = sqlite3_finalize(stmt);
@@ -204,6 +208,95 @@ sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field, boo
 	return stmt;
 }
 
+RVS::DataManagement::DataTable* RVS::DataManagement::DIO::query_input_table(int plot_num)
+{
+	sqlite3_stmt* stmt = query_base(RVS_INPUT_TABLE, PLOT_NUM_FIELD, plot_num);
+	return new DataTable(stmt);
+}
+
+RVS::DataManagement::DataTable* RVS::DataManagement::DIO::query_shrubs_table(int plot_num)
+{
+	sqlite3_stmt* stmt = query_base(SHRUB_INPUT_TABLE, PLOT_NUM_FIELD, plot_num);
+	return new DataTable(stmt);
+}
+
+void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, boost::any* retval)
+{
+	// Get the column data type from sqlite
+	int colType = sqlite3_column_type(stmt, column);
+	// Parse the data based on the appropriate data type
+	switch (colType)
+	{
+	case SQLITE_INTEGER:
+		*retval = sqlite3_column_int(stmt, column);
+		break;
+	case SQLITE_FLOAT:
+		*retval = sqlite3_column_double(stmt, column);
+		break;
+	case SQLITE_BLOB:
+		*retval = 0.0;
+		break;
+	case SQLITE_NULL:
+		*retval = 0.0;
+		break;
+	case SQLITE3_TEXT:
+		*retval = std::string((char*)sqlite3_column_text(stmt, column));
+		break;
+		
+	}
+}
+
+void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, double* retVal)
+{
+	int colType = sqlite3_column_type(stmt, column);
+	if (colType == SQLITE_FLOAT)
+	{
+		*retVal = sqlite3_column_double(stmt, column);
+	}
+	else if (colType == SQLITE_NULL)
+	{
+		*retVal = 0.0;
+	}
+	else
+	{
+		//$$ TODO throw data mismatch exception
+	}
+}
+
+void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, std::string* retVal)
+{
+	int colType = sqlite3_column_type(stmt, column);
+	if (colType == SQLITE3_TEXT)
+	{
+		*retVal = std::string((char*)sqlite3_column_text(stmt, column));
+	}
+	else if (colType == SQLITE_NULL)
+	{
+		*retVal = "";
+	}
+	else
+	{
+		//$$ TODO throw data mismatch exception
+	}
+}
+
+void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, int* retVal)
+{
+	int colType = sqlite3_column_type(stmt, column);
+	if (colType == SQLITE_INTEGER)
+	{
+		*retVal = sqlite3_column_int(stmt, column);
+	}
+	else if (colType == SQLITE_NULL)
+	{
+		*retVal = 0;
+	}
+	else
+	{
+		//$$ TODO throw data mismatch exception
+	}
+}
+
 char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
 {
 	// Get the string representation of the stream
@@ -216,15 +309,8 @@ char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
 	return str;
 }
 
-int* RVS::DataManagement::DIO::create_output_table()
-{
-	return 0;
-}
 
-int* RVS::DataManagement::DIO::create_intermediate_table()
-{
-	return 0;
-}
+
 
 int RVS::DataManagement::DIO::callback(void* nu, int argc, char** argv, char** azColName)
 {
@@ -233,144 +319,7 @@ int RVS::DataManagement::DIO::callback(void* nu, int argc, char** argv, char** a
 
 
 #else
-RVS::DataManagement::DataTable RVS::DataManagement::DIO::query_base(std::string selectString)
-{
-	SQLHANDLE hEnv;
-	SQLRETURN retCode;
 
-	retCode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &hEnv);
-	RVS::DataManagement::DIO::CHECK(retCode, "allocate environment handle");
-
-	retCode = SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
-	RVS::DataManagement::DIO::CHECK(retCode, "setting the environment attribute setting to ODBC version 3");
-
-	SQLHANDLE hConn;
-
-	RVS::DataManagement::DIO::CHECK(SQLAllocHandle(SQL_HANDLE_DBC, hEnv, &hConn), "allocate handle");
-
-	SQLCHAR* dsnName = (SQLCHAR*)RVS::DataManagement::DIO::PATHTODB;
-	SQLCHAR* userid = (SQLCHAR*)"";
-	SQLCHAR* password = (SQLCHAR*)"";
-
-	retCode = SQLConnectA(hConn, dsnName, SQL_NTS, userid, SQL_NTS, password, SQL_NTS);
-
-	if (!RVS::DataManagement::DIO::CHECK(retCode, "SQLConnect", false))
-	{
-		RVS::DataManagement::DIO::status(SQL_HANDLE_DBC, hConn, __LINE__);
-	}
-
-	SQLHANDLE hStmt;
-	RVS::DataManagement::DIO::CHECK(SQLAllocHandle(SQL_HANDLE_STMT, hConn, &hStmt), "allocate handle for statement");
-
-	SQLCHAR* query = (SQLCHAR*)selectString.c_str();
-	RVS::DataManagement::DIO::CHECK(SQLExecDirect(hStmt, query, SQL_NTS), "execute query");
-
-	SQLSMALLINT numCols;
-	retCode = SQLNumResultCols(hStmt, &numCols);
-	SQLCHAR colName[256];
-
-	SQLSMALLINT colNameLen, dataType, numDecimalDigits, allowsNullValues;
-	SQLULEN columnSize;
-
-
-	/*  //## Column tester ##\\
-	for (int i = 1; i <= numCols; i++)
-	{
-	retCode = SQLDescribeCol(hStmt, i, colName, 255, &colNameLen, &dataType, &columnSize, &numDecimalDigits, &allowsNullValues);
-	if (RVS::DataManagement::DIO::CHECK(retCode, "SQLDescribeCol"))
-	{
-	printf("Column #%d: '%s', datatype=%d size=%d decimaldigits=%d nullable=%d\n",
-	i, colName, dataType, columnSize, numDecimalDigits, allowsNullValues);
-	}
-	}
-	*/
-
-
-	RVS::DataManagement::DataTable dt;
-
-	// This gets each row by calling SQLFetch until it fails
-	while (SQL_SUCCEEDED(SQLFetch(hStmt)))
-	{
-		char buf[256];
-		SQLLEN numBytes;
-
-		for (int j = 1; j <= numCols; j++)
-		{
-			retCode = SQLDescribeCol(hStmt, j, colName, 255, &colNameLen, &dataType, &columnSize, &numDecimalDigits, &allowsNullValues);
-			retCode = SQLGetData(hStmt, j, SQL_C_CHAR, buf, 255, &numBytes);
-
-			// Print this column's data
-			if (RVS::DataManagement::DIO::CHECK(retCode, "SQLGetData"))
-			{
-				printf("%s:\t%s", colName, buf);
-			}
-			puts("");
-			*buf = NULL;
-		}
-		puts("");
-	}
-
-	SQLFreeHandle(SQL_HANDLE_STMT, hStmt);
-	SQLFreeHandle(SQL_HANDLE_DBC, hConn);
-	SQLFreeHandle(SQL_HANDLE_ENV, hEnv);
-
-	return dt;
-}
-
-
-bool RVS::DataManagement::DIO::CHECK(SQLRETURN rc, char* msg, bool printSucceededMsg, bool quit)
-{
-	if (SQL_SUCCEEDED(rc))
-	{
-		if (printSucceededMsg)
-			printf("%s succeeded\n", msg);
-		return true;
-	}
-	else
-	{
-		printf("%s has FAILED!\n", msg);
-		if (quit)
-			FatalAppExitA(0, msg);
-		return false;
-	}
-}
-
-void RVS::DataManagement::DIO::status(SQLSMALLINT handleType, SQLHANDLE theHandle, int line)
-{
-	SQLCHAR sqlState[6];
-	SQLINTEGER nativeError;
-	SQLCHAR msgStr[256];
-	SQLSMALLINT overBy;  // number of characters that msgStr buffer was short by
-
-	SQLRETURN retCode;
-
-	for (int i = 1; i < 20; i++)
-	{
-		retCode = SQLGetDiagRecA(
-			handleType,		// The type of object you're checking the status of.
-			theHandle,		// Handle to the actual object you want the status of.
-			i,				// WHICH status message you want.
-			sqlState,		// OUT:  gives back 5 characters (the HY*** style error code).
-			&nativeError,	// Numerical error number.
-			msgStr,			// Buffer to store the DESCRIPTION OF THE ERROR.
-			255,			// The number of characters in msgStr.
-			&overBy			// Again in case the function has A LOT to tell you.
-			);
-
-
-		if (CHECK(retCode, "SQLGetDiagRecA"))
-		{
-			printf("Line %d: [%s][%d] %s\n", line, sqlState, nativeError, msgStr);
-		}
-		else
-		{
-			// Stop looping when retCode comes back
-			// as a failure, because it means there are
-			// no more messages to tell you
-			break;
-		}
-	}
-}
 #endif
 
 

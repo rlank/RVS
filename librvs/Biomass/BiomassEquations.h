@@ -10,7 +10,14 @@
 #define BIOMASSEQUATIONS_H
 
 #include <cmath>
+#include <map>
+#include <stack>
 #include <string>
+#include <vector>
+
+#include <boost/algorithm/string.hpp>
+
+using namespace std;
 
 namespace RVS
 {
@@ -19,10 +26,17 @@ namespace Biomass
 	class BiomassEquations
 	{
 	public:
-		static double eq_AFN(double cf1, double cf2, double dba);
-		static double eq_AFN(double cf1, double cf2, double cf3, double dba);
-
+		static double eq_BAT(int equationNumber, double* coefs, map<string, double>* params);
 		static double eq_PCH(double cf1, double cf2, double height);
+		
+	private:
+		static double eq_201(double cf1, double cf2, double cover);
+		static double eq_636(double cf1, double cf2, double length, double width, double height);
+		static double eq_999(double cf1, double cf2, double cf3, double length, double width);
+		static double eq_basicBAT(double cf1, double cf2, double length, double width);
+		static double eq_1153(double cf1, double cf2, double cf3, double length, double width, double height);
+
+		static double shunt(std::string equation, std::map<std::string, double> variables);
 	};
 }
 }

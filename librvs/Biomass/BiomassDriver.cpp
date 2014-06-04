@@ -3,14 +3,12 @@
 using RVS::Biomass::BiomassDriver;
 
 
-BiomassDriver::BiomassDriver(int plot_num, RVS::Biomass::BiomassDIO* bdio, RVS::Biomass::BiomassLookupLevel level, bool suppress_messages, bool write_intermediate)
+BiomassDriver::BiomassDriver(RVS::Biomass::BiomassDIO* bdio, RVS::Biomass::BiomassLookupLevel level, bool suppress_messages, bool write_intermediate)
 {
-	this->plot_num = plot_num;
 	this->bdio = bdio;
 	this->level = level;
 	this->suppress_messages = suppress_messages;
 	this->write_intermediate = write_intermediate;
-	this->createEVTRecords(plot_num);
 }
 
 
@@ -18,81 +16,48 @@ BiomassDriver::~BiomassDriver(void)
 {
 }
 
-int* BiomassDriver::BioMain(int year, double* retShrubBiomass, double* retHerbBiomass)
+int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, double* retShrubBiomass, double* retHerbBiomass)
 {
-	try
-	{
-		// declare local return vars
-		double BIOMASS_RETURN_VAL = 0;
-		RVS::Biomass::BiomassReturnType BIOMASS_RET_TYPE = RVS::Biomass::RNUL;
+	this->ap = ap;
+	int plot_num = ap->PLOT_ID();
 
-		double production = 0;
-		double totalShrubCover = 0;
+	std::vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
+	double totalShrubCover = 0;
+	RVS::DataManagement::SppRecord* record = NULL;
+	for (int r = 0; r < shrubs->size(); r++)
+	{	
+		record = shrubs->at(r);
+		double stemsPerAcre = calcStemsPerAcre(record);
+		record->SET_STEMSPERACRE(stemsPerAcre);
+		double singleBiomass = calcShrubBiomass(record);
+		record->SET_SHRUBBIOMASS(singleBiomass);
+		*retShrubBiomass += singleBiomass;
+		totalShrubCover += record->COVER();
 
-		RVS::Biomass::BiomassEVT* bioEVT = NULL;
-		for (int r = 0; r < evt_records.size(); r++)
-		{
-			bioEVT = evt_records.at(r);
-			// First item, get the primary production and herbaceous biomass.
-			// This is only done once per plot.
-			if (r == 0)
-			{
-				production = this->calcPrimaryProduction(bioEVT);
-				*retHerbBiomass = this->calcHerbBiomass(bioEVT, year);
-			}
-			
-			double singleBiomass = this->calcShrubBiomass(bioEVT);
-			*retShrubBiomass += singleBiomass;
-			totalShrubCover += bioEVT->COVER();
-
-			// Write this result to the intermediate table
-			if (write_intermediate)
-			{
-				RC = bdio->write_biomass_intermediate_record(bioEVT, &plot_num, &year, &singleBiomass);
-			}
-		}
-
-		double reduction = calcHerbReduction(totalShrubCover);
-		*retHerbBiomass = reduction * *retHerbBiomass;
-
-		bioEVT->SET_SHRUBBIOMASS(*retShrubBiomass);
-		bioEVT->SET_HERBBIOMASS(*retHerbBiomass);
-
-		int evt = bioEVT->EVT_NUM();
-		std::string bps = (char*)bioEVT->BPS_NUM().c_str();
-		char* ret_code = ENUMPARSE(bioEVT->RETURN_TYPE());
-
-		BIOMASS_RETURN_VAL = *retShrubBiomass + *retHerbBiomass;
-		BIOMASS_RET_TYPE = RVS::Biomass::PCH;
-
-		/*if (!suppress_messages)
-		{
-			std::cout << std::endl;
-			std::cout << "Primary Production: " << production << std::endl;
-			std::cout << "Shrub Biomass: " << *retShrubBiomass << std::endl;
-			std::cout << "Herb Biomass: " << *retHerbBiomass << std::endl;
-			std::cout << "Herb Reduction: " << reduction << std::endl;
-			std::cout << "Total Cover: " << totalShrubCover << std::endl;
-			std::cout << "Total Biomass: " << (*retShrubBiomass + *retHerbBiomass) << std::endl;
-		}*/
-
-		// Write output biomass record
-		RC = bdio->write_biomass_output_record(&plot_num, &year, &evt, &bps, ret_code, &BIOMASS_RETURN_VAL, retHerbBiomass, retShrubBiomass);
+		// Write this result to the intermediate table
+		RC = bdio->write_biomass_intermediate_record(ap, record, &plot_num, &year, &singleBiomass);
 	}
-	catch (std::exception& e)
-	{
-		std::cout << "Exception in BioMain: " << e.what() << std::endl;
-	}
+
+	double production = calcPrimaryProduction();
+	*retHerbBiomass = calcHerbBiomass(year);
+	double reduction = calcHerbReduction(totalShrubCover);
+	*retHerbBiomass = reduction * *retHerbBiomass;
+	ap->SET_HERBBIOMASS(*retHerbBiomass);
+
+	int evt = ap->EVT_NUM();
+	int bps = ap->BPS_NUM();
+
+	double totalBiomass = *retShrubBiomass + *retHerbBiomass;
+	ap->SET_TOTALBIOMASS(totalBiomass);
+
+	// Write output biomass record
+	RC = bdio->write_biomass_output_record(&plot_num, &year, &evt, &bps, &totalBiomass, retHerbBiomass, retShrubBiomass);
 
 	return RC;
 }
 
-double BiomassDriver::calcPrimaryProduction(RVS::Biomass::BiomassEVT* evt)
+double BiomassDriver::calcPrimaryProduction()
 {
-	// Strip the leading characters off the BPS (they're location)
-	std::string bps = evt->BPS_NUM().substr(2);
-	int baseBPS = std::stoi(bps);
-
 	// Get a text representation of the return level
 	char* clevel;
     switch (this->level)
@@ -111,40 +76,62 @@ double BiomassDriver::calcPrimaryProduction(RVS::Biomass::BiomassEVT* evt)
 			break;
     }
 
-	double biomass = bdio->query_biomass_herbs_table(baseBPS, clevel);
-    return biomass;
+	double primaryProduction = bdio->query_biomass_pp_table(ap->BPS_NUM(), clevel);
+	return primaryProduction;
 }
 
-double BiomassDriver::calcShrubBiomass(RVS::Biomass::BiomassEVT* evt)
+double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 {
-    double biomass = 0;
-
-	// Query the biomass crosswalk table for the equation for the requested return type
-    //std::string returnType = RVS::Biomass::ENUMPARSE(evt->RETURN_TYPE());
-	std::string returnType = "PCH";
-	int equationNumber = bdio->query_biomass_crosswalk_table(evt->SPP_CODE(), returnType);
-
-	float cf1 = 0;
-	float cf2 = 0;
-	float cf3 = 0;
-	float cf4 = 0;
+	// Get the equation number for BAT (total aboveground biomass)
+	int equationNumber = bdio->query_biomass_crosswalk_table(record->SPP_CODE(), "BAT");
 
 	// Populate the coefficients with values from the biomass equation table
-	bdio->query_biomass_equation_coefficients(equationNumber, &cf1, &cf2, &cf3, &cf4);
+	double* coefs = new double[4];
+	bdio->query_biomass_equation_coefficients(equationNumber, &coefs[0], &coefs[1], &coefs[2], &coefs[3]);
 
-    double height = evt->HEIGHT();
+	string* paramNames = new string[3];
+	bdio->query_biomass_equation_parameters(equationNumber, &paramNames[0], &paramNames[1], &paramNames[2]);
 
-	//$$ TODO set up "get shrub biomass" to return different types of (requested) biomass
-    double pch = RVS::Biomass::BiomassEquations::eq_PCH(cf1, cf2, height);
-	//double pch_acre = RVS::Biomass::BiomassEquations::eq_pch_acre(pch);
-	double pch_expanded = evt->expandCalculationToPlot(pch);
-            
-	biomass = pch_expanded * (evt->COVER() / 100);  // Return the expanded amount as a function of percent cover
+	std::map<string, double>* params = new std::map<string, double>();
 
-    return biomass;
+	double val = 0.0;
+	for (int i = 0; i < paramNames->size(); i++)
+	{
+		val = record->requestValue(paramNames[i]);
+		params->insert(pair<string, double>(paramNames[i], val));
+	}
+
+	double biomass = BiomassEquations::eq_BAT(equationNumber, coefs, params);
+	biomass *= record->STEMSPERACRE();
+	return biomass;
 }
 
-double BiomassDriver::calcHerbBiomass(RVS::Biomass::BiomassEVT* evt, int year)
+double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
+{
+	// Lookup the equation number from the crosswalk table
+	int equationNumber = bdio->query_biomass_crosswalk_table(record->SPP_CODE(), "PCH");
+
+	double cf1 = 0;
+	double cf2 = 0;
+	double dum = 0;
+
+	// Populate the coefficients with values from the biomass equation table
+	bdio->query_biomass_equation_coefficients(equationNumber, &cf1, &cf2, &dum, &dum);
+
+	double singleStem = BiomassEquations::eq_PCH(cf1, cf2, record->HEIGHT());
+
+	// While we're here, calculate width (singleStem is area)
+	double radius = std::sqrt(singleStem / 3.1415); // Use number for PI rather than constant cause it's the only thing needed out of CMATH
+	record->SET_WIDTH(radius * 2);
+
+	// Expand the single stem result
+	double expanded = (singleStem / 1000) * EXPANSION_FACTOR;
+	// Return the expanded amount as a function of percent cover
+	double stemsPerAcre = expanded * (record->COVER() / 100);
+	return stemsPerAcre;
+}
+
+double BiomassDriver::calcHerbBiomass(int year)
 {
 	// BASIC FORM:
 	// Intercept + ln_ndvi + ln_precip_mm + GRP_ID_CONST + (ln_ndvi*grp_id) + (ln_prcp_mm*grp_id)
@@ -153,11 +140,10 @@ double BiomassDriver::calcHerbBiomass(RVS::Biomass::BiomassEVT* evt, int year)
 	double* grp_id_const = new double;
 	double* ndvi_grp_interact = new double;
 	double* ppt_grp_interact = new double;
-	bdio->query_biogroup_coefs(evt->BPS_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact);
-	//bdio->query_biogroup_coefs("1111320", grp_id_const, ndvi_grp_interact, ppt_grp_interact);
+	bdio->query_biogroup_coefs(ap->BPS_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact);
 
-	double ndvi = evt->getNDVI(year);
-	double ppt = evt->getPPT(year);
+	double ndvi = ap->getNDVI(year);
+	double ppt = ap->getPPT(year);
 	double ln_ndvi = log(ndvi);
 	double ln_ppt = log(ppt);
 
@@ -167,24 +153,8 @@ double BiomassDriver::calcHerbBiomass(RVS::Biomass::BiomassEVT* evt, int year)
 
 double BiomassDriver::calcHerbReduction(double totalShrubCover)
 {
+	//$$ TODO OMG THE MAGIC NUMBERS
 	if (totalShrubCover > 85) totalShrubCover = 85;
 	double val = -0.0004 * pow(totalShrubCover, 3) + 0.0458 * pow(totalShrubCover, 2) + 4.5394;
 	return val / 100;
-}
-
-void BiomassDriver::createEVTRecords(int plot_num)
-{
-	// read in data. the query_biomass_input_table function returns a DataTable
-	// with only records for that plot number
-	RVS::DataManagement::DataTable* dt = bdio->query_biomass_input_table(plot_num);
-
-	*RC = sqlite3_step(dt->getStmt());
-	RVS::Biomass::BiomassEVT* bioEVT = NULL;
-	while (*RC == SQLITE_ROW)
-	{
-		bioEVT = new RVS::Biomass::BiomassEVT(dt);
-		evt_records.push_back(bioEVT);
-		*RC = sqlite3_step(dt->getStmt());
-	}
-	delete dt;
 }

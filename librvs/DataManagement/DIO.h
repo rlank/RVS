@@ -11,6 +11,7 @@
 #ifndef DIO_H
 #define DIO_H
 
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -38,15 +39,26 @@ namespace DataManagement
 		/// Returns an array of unique analysis plot values. Use this array to control main driver
 		/// iteration. Each analysis plot can contain multiple records for different EVT/SPP combos
 		std::vector<int> query_analysis_plots();
-		
+
+		/// Querys the main input table ("Plots")
+		DataTable* query_input_table(int plot_num);
+		/// Querys the shrub input table ("Shrubs")
+		DataTable* query_shrubs_table(int plot_num);
+
+		/// Returns a value from a specified column in a sqlite statement object
+		//template<typename double*>
+		virtual void getVal(sqlite3_stmt* stmt, int column, boost::any* retVal);
+		virtual void getVal(sqlite3_stmt* stmt, int column, double* retval);
+		virtual void getVal(sqlite3_stmt* stmt, int column, std::string* retVal);
+		virtual void getVal(sqlite3_stmt* stmt, int column, int* retVal);
 		
 	protected:
 		int* create_output_db();
 		int* create_output_db(char* path);
 		int* create_table(char* sql);
 		
-		virtual int* create_output_table();
-		virtual int* create_intermediate_table();
+		virtual int* create_output_table() = 0;
+		virtual int* create_intermediate_table() = 0;
 		//virtual int* write_output_record();
 		//virtual int* write_intermediate_record();
 
@@ -66,6 +78,8 @@ namespace DataManagement
 		sqlite3_stmt* query_base(char* table, char* field, boost::any whereclause);
 
 		static int callback(void* nu, int argc, char** argv, char** azColName);
+
+		
 
 	private:
 		static sqlite3* rvsdb;  // SQLite database object

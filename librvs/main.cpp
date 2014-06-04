@@ -15,17 +15,21 @@
 
 #include "RVSDEF.h"
 #include "DataManagement/DIO.h"
+#include "DataManagement/AnalysisPlot.h"
 #include "Biomass/BiomassDIO.h"
 #include "Biomass/BiomassDriver.h"
 #include "Fuels/FuelsDIO.h"
+
+using namespace std;
+using namespace RVS;
+using namespace RVS::DataManagement;
 
 int* RC = new int(SQLITE_OK);
 
 int main(int argc, char* argv[])
 {
     static bool SUPPRESS_MSG = false;
-	static bool WRITE_SHRUB = true;
-	static int STOPYEAR = 3;  //$$ TODO make this C def
+	static int STOPYEAR = 10;  //$$ TODO make this C def
     
 	///////////////////////////
 	/// User execution args ///
@@ -65,12 +69,23 @@ int main(int argc, char* argv[])
 	*/
 
 	// Get DIO ready for queries
-	RVS::Biomass::BiomassDIO* bdio = new RVS::Biomass::BiomassDIO();
-	RVS::Fuels::FuelsDIO* fdio = new RVS::Fuels::FuelsDIO();
+	Biomass::BiomassDIO* bdio = new Biomass::BiomassDIO();
+	//RVS::Fuels::FuelsDIO* fdio = new RVS::Fuels::FuelsDIO();
     
-    std::vector<int> plotcounts = bdio->query_analysis_plots();
-	std::map<int, RVS::Biomass::BiomassDriver*> bioDrivers;
-	std::map<int, RVS::Fuels::FuelsDriver*> fuelsDrivers;
+    vector<int> plotcounts = bdio->query_analysis_plots();
+	vector<AnalysisPlot*> aps = vector<AnalysisPlot*>();
+	
+	AnalysisPlot* currentPlot = NULL;
+	RVS::DataManagement::DataTable* dt = NULL;
+	for (int i = 0; i < plotcounts.size(); i++)
+	{
+		dt = bdio->query_input_table(plotcounts[i]);
+		*RC = sqlite3_step(dt->getStmt());
+		currentPlot = new AnalysisPlot(bdio, dt);
+		aps.push_back(currentPlot);
+	}
+
+	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, Biomass::BiomassLookupLevel::medium, true, true);
 
 	for (int year = 0; year < STOPYEAR; year++)
 	{
@@ -78,28 +93,22 @@ int main(int argc, char* argv[])
 		std::cout << "YEAR " << year << std::endl;
 		std::cout << "===================================\n" << std::endl;
 
-		for (int plot_num = 0; plot_num < (int)(plotcounts.size() - 1); plot_num++)  // full plots
-		//for (int plot_num = 0; plot_num < 1; plot_num++)  // single plot
+		for (int p = 0; p < plotcounts.size(); p++)
 		{
+			currentPlot = aps[p];
+
 			if (!SUPPRESS_MSG)
 			{
 				std::cout << std::endl;
-				std::cout << "Results for plot " << plot_num << std::endl;
+				std::cout << "Results for plot " << currentPlot->PLOT_ID() << std::endl;
 				std::cout << "====================" << std::endl;
 			}
-
-			int runplot = plotcounts[plot_num];
-			if (year == 0)
-			{
-				bioDrivers[plot_num] = new RVS::Biomass::BiomassDriver(runplot, bdio, RVS::Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG, WRITE_SHRUB);
-				fuelsDrivers[plot_num] = new RVS::Fuels::FuelsDriver(plot_num, fdio, SUPPRESS_MSG, WRITE_SHRUB);
-			}
-
+			
 			double biomass = 0;
 			double shrubBiomass = 0;
 			double herbBiomass = 0;
 
-			RC = bioDrivers[plot_num]->BioMain(year, &shrubBiomass, &herbBiomass);
+			RC = bd.BioMain(year, currentPlot, &shrubBiomass, &herbBiomass);
 
 			if (!SUPPRESS_MSG)
 			{
@@ -113,9 +122,6 @@ int main(int argc, char* argv[])
 			double fuel10Hr = 0;
 			double fuel100Hr = 0;
 
-			
-			RC = fuelsDrivers[plot_num]->FuelsMain(year, bioDrivers[plot_num]->pullRecords());
-
 			if (!SUPPRESS_MSG)
 			{
 				std::cout << "1Hr Fuels:   " << fuel1Hr << std::endl;
@@ -125,13 +131,10 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	bioDrivers.clear();
-	fuelsDrivers.clear();
 	delete bdio;
-	delete fdio;
+	//delete fdio;
 
 	std::cout << std::endl << "Ran to completion." << std::endl;
-	std::string endprogram; 
 
 	return (0);
 }

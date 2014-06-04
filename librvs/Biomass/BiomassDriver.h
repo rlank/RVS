@@ -12,16 +12,14 @@
 #ifndef BIOMASSDRIVER_H
 #define BIOMASSDRIVER_H
 
-#include <exception>
 #include <iostream>
 #include <stdio.h>
 
 #include "BiomassDIO.h"
-#include "BiomassEVT.h"
 #include "BiomassEquations.h"
+#include "../DataManagement/AnalysisPlot.h"
+#include "../DataManagement/SppRecord.h"
 #include "../DataManagement/RVS_TypeDefs.h"
-#include "../Fuels/FuelsDriver.h"
-
 
 namespace RVS
 {
@@ -36,11 +34,10 @@ namespace Biomass
 		///
 		/// <param name="level">The lookup level to use for primary production (herb biomass)</param>
         /// <param name="suppress_messages">Optional. Toggle to 'true' to suppress console messages. Useful when threading.</param>
-		BiomassDriver(int plot_num, RVS::Biomass::BiomassDIO* bdio, RVS::Biomass::BiomassLookupLevel level, bool suppress_messages = false, bool write_intermediate = false);
+		BiomassDriver(RVS::Biomass::BiomassDIO* bdio, RVS::Biomass::BiomassLookupLevel level, bool suppress_messages = false);
 		virtual ~BiomassDriver(void);
 
 		bool suppress_messages;
-		bool write_intermediate;
 
         /// Main function. Pass a return value and type reference, and BioMain sets them upon completion.
         /// No other function needs to be called to calculate biomass.
@@ -48,15 +45,14 @@ namespace Biomass
         /// <param name="biomass_return_value">The calculated biomass of the plot.</param>
         /// <param name="biomass_return_type">The units of the calculated biomass.</param>
         /// <returns>Return code. 0 indicates a clean run.</returns>
-        int* BioMain(int year, double* retShrubBiomass, double* retHerbBiomass);
+        int* BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, double* retShrubBiomass, double* retHerbBiomass);
 
-		inline std::vector<RVS::Biomass::BiomassEVT*> pullRecords() { return evt_records; }
+		const float EXPANSION_FACTOR = 4046.85942f;
 
 	private:
-		int plot_num;
 		RVS::Biomass::BiomassDIO* bdio;
 		RVS::Biomass::BiomassLookupLevel level;
-		std::vector<RVS::Biomass::BiomassEVT*> evt_records;
+		RVS::DataManagement::AnalysisPlot* ap;
 
 		// Constants for herbaceous biomass calculation
 		//$$ TODO get these from DB, not const
@@ -69,12 +65,11 @@ namespace Biomass
         /// looks up the respective biomass value.
         /// <param name="bps">5-digit BPS number (without map zone)</param>
         /// <returns>Biomass</returns>
-		double calcPrimaryProduction(RVS::Biomass::BiomassEVT* evt);
-		double calcShrubBiomass(RVS::Biomass::BiomassEVT* evt);
-		double calcHerbBiomass(RVS::Biomass::BiomassEVT* evt, int year);
+		double calcPrimaryProduction();
+		double calcShrubBiomass(RVS::DataManagement::SppRecord* record);
+		double calcStemsPerAcre(RVS::DataManagement::SppRecord* record);
+		double calcHerbBiomass(int year);
 		double calcHerbReduction(double totalShrubCover);
-
-		void createEVTRecords(int plot_num);
 	};
 }
 }
