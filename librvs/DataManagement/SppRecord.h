@@ -64,6 +64,9 @@ namespace DataManagement
 		// Biomass values
 		double shrubBiomass;
 
+
+		// Fuels collection
+		std::map<std::string, double> fuels;
 	};
 }
 }

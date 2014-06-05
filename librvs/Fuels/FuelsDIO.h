@@ -38,6 +38,12 @@ namespace Fuels
 
 		//## Query functions ##//
 
+		/// Queries Bio_Crosswalk for equation determination for species without
+		/// expicit equations in Bio_Equations.
+		RVS::DataManagement::DataTable* query_fuels_crosswalk_table(std::string spp);
+
+		void query_shrubs_equation_coefficients(int equation_number, double* cf1, double* cf2, double* cf3, double* cf4);
+		void query_shrubs_equation_parameters(int equation_number, std::string* p1name, std::string* p2name, std::string* p3name);
 	};
 }
 }

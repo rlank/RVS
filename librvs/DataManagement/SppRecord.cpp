@@ -80,7 +80,7 @@ double SppRecord::requestValue(std::string parameterName)
 	}
 	else if (parameterName.compare("LEN") == 0)
 	{
-		return 72.0;
+		return width; // we assume circles
 	}
 	else if (parameterName.compare("BIO") == 0)
 	{

@@ -25,11 +25,10 @@ namespace Fuels
 	class FuelsDriver
 	{
 	public:
-		FuelsDriver(RVS::Fuels::FuelsDIO* fdio, bool suppress_messages = false, bool write_intermediate = false);
+		FuelsDriver(RVS::Fuels::FuelsDIO* fdio, bool suppress_messages = false);
 		virtual ~FuelsDriver(void);
 
 		bool suppress_messages;
-		bool write_intermediate;
 		
 		int* FuelsMain(int year, RVS::DataManagement::AnalysisPlot* ap);
 

@@ -29,7 +29,7 @@ int* RC = new int(SQLITE_OK);
 int main(int argc, char* argv[])
 {
     static bool SUPPRESS_MSG = false;
-	static int STOPYEAR = 10;  //$$ TODO make this C def
+	static int STOPYEAR = 3;  //$$ TODO make this C def
     
 	///////////////////////////
 	/// User execution args ///
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 		aps.push_back(currentPlot);
 	}
 
-	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, Biomass::BiomassLookupLevel::medium, true, true);
+	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, Biomass::BiomassLookupLevel::medium, true);
 
 	for (int year = 0; year < STOPYEAR; year++)
 	{

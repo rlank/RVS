@@ -14,9 +14,11 @@
 #define SHRUB_INPUT_TABLE "Shrub_Input"
 #define BIOMASS_CROSSWALK_TABLE "Bio_Crosswalk"
 #define BIOMASS_PRIMARYPRODUCTION_TABLE "Bio_PP_KgH"
-#define BIOMASS_EQUATION_TABLE "Bio_Equation_Import"
+#define BIOMASS_EQUATION_TABLE "Bio_Equation"
 #define BIOMASS_MACROGROUP_TABLE "Bio_Group_LUT"
 #define BIOMASS_GROUP_COEFS_TABLE "Bio_Group_Coef_Cross"
+#define FUEL_CROSSWALK_TABLE "Fuel_Crosswalk"
+#define FUEL_EQUATION_TABLE "Fuel_Equation"
 // ********************
 
 // Field names (primarily from input)

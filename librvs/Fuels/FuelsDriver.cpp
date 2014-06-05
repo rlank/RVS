@@ -1,10 +1,9 @@
 #include "FuelsDriver.h"
 
-RVS::Fuels::FuelsDriver::FuelsDriver(RVS::Fuels::FuelsDIO* fdio, bool suppress_messages, bool write_intermediate)
+RVS::Fuels::FuelsDriver::FuelsDriver(RVS::Fuels::FuelsDIO* fdio, bool suppress_messages)
 {
 	this->fdio = fdio;
 	this->suppress_messages = suppress_messages;
-	this->write_intermediate = write_intermediate;
 }
 
 RVS::Fuels::FuelsDriver::~FuelsDriver()

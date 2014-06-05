@@ -3,12 +3,11 @@
 using RVS::Biomass::BiomassDriver;
 
 
-BiomassDriver::BiomassDriver(RVS::Biomass::BiomassDIO* bdio, RVS::Biomass::BiomassLookupLevel level, bool suppress_messages, bool write_intermediate)
+BiomassDriver::BiomassDriver(RVS::Biomass::BiomassDIO* bdio, RVS::Biomass::BiomassLookupLevel level, bool suppress_messages)
 {
 	this->bdio = bdio;
 	this->level = level;
 	this->suppress_messages = suppress_messages;
-	this->write_intermediate = write_intermediate;
 }
 
 
