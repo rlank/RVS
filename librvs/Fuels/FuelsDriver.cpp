@@ -13,42 +13,91 @@ RVS::Fuels::FuelsDriver::~FuelsDriver()
 
 int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisPlot* ap)
 {
-	int evt_num = 0;
-	std::string bps;
-	std::string dom_spp;
-	std::string spp_code;
+	vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 
-	double totalFuel1Hr = 0;
-	double totalFuel10Hr = 0;
-	double totalFuel100Hr = 0;
-	double fuel1Hr = 0;
-	double fuel10Hr = 0;
-	double fuel100Hr = 0;
+	ap->totalFuels.clear();  // Clear last year's fuels, if it exists
 
-	std::vector<SppRecord*>* shrubs = ap->SHRUB_RECORDS();
-	SppRecord* current = NULL;
+	int plot_num = ap->PLOT_ID();
+	int evt_num = ap->EVT_NUM();
+	int bps = ap->BPS_NUM();
+
+	RVS::DataManagement::SppRecord* current = NULL;
 	for (int b = 0; b < shrubs->size(); b++)
 	{
-		current  = shrubs->at(b);
-		if (b == 0)
+		current = shrubs->at(b);
+		current->fuels.clear();  // Clear last year's fuels
+
+		// Equation numbers for each fuels calculation
+		map<string, int> equationNumbers = fdio->query_crosswalk_table(current->SPP_CODE());  
+
+		// Datatable from FUEL_EQUATION_TABLE with each equation from the crosswalk
+		RVS::DataManagement::DataTable* dt = fdio->query_equation_table(equationNumbers);  
+		*RC = sqlite3_step(dt->getStmt());
+		
+		while (*RC == SQLITE_ROW)
 		{
-			evt_num = ap->EVT_NUM();
-			bps = ap->BPS_NUM();
-			dom_spp = current->DOM_SPP();
-			spp_code = current->SPP_CODE();
+			std::string fuelsReturnType;
+			fdio->getVal(dt->getStmt(), dt->Columns[RET_CODE_FIELD], &fuelsReturnType);
+			double fuel = calcShrubFuel(dt, current);
+			if (isnan<double>(fuel) || isinf<double>(fuel))
+			{
+				fuel = -9999.0;
+			}
+			else  // only add to total fuels if the value isn't bogus
+			{
+				ap->totalFuels[fuelsReturnType];
+			}
+
+			current->fuels[fuelsReturnType] = fuel;  // Always add individual fuel. Useful for debugging
+			
+			*RC = sqlite3_step(dt->getStmt());  // Advance cursor
 		}
 
-		fuel1Hr = RVS::Fuels::FuelsEquations::calc1Hr(current->SHRUBBIOMASS(), ap->HERBBIOMASS());
-		fuel10Hr = RVS::Fuels::FuelsEquations::calc10Hr(current->SHRUBBIOMASS());
-		fuel100Hr = RVS::Fuels::FuelsEquations::calc100Hr(current->SHRUBBIOMASS());
-			
-		//RC = fdio->write_fuel_intermediate_record(&plot_num, &year, &evt_num, &bps, &dom_spp, &spp_code, &fuel1Hr, &fuel10Hr, &fuel100Hr);
+		delete dt;
 
-		totalFuel1Hr += fuel1Hr;
-		totalFuel10Hr += fuel10Hr;
-		totalFuel100Hr += fuel100Hr;
+		string dom_spp = current->DOM_SPP();
+		string spp_code = current->SPP_CODE();
+
+		RC = fdio->write_fuel_intermediate_record(&plot_num, &year, &evt_num, &bps, &dom_spp, &spp_code, current->fuels);
 	}
 
-	//RC = fdio->write_fuel_output_record(&plot_num, &year, &evt_num, &bps, &totalFuel1Hr, &totalFuel10Hr, &totalFuel100Hr);
+	RC = fdio->write_fuel_output_record(&plot_num, &year, &evt_num, &bps, ap->totalFuels);
 	return RC;
+}
+
+double RVS::Fuels::FuelsDriver::calcPercentLive()
+{
+	return 0;
+}
+
+double RVS::Fuels::FuelsDriver::calcShrubFuel(RVS::DataManagement::DataTable* dt, RVS::DataManagement::SppRecord* spp)
+{
+	int equationType;
+	fdio->getVal(dt->getStmt(), dt->Columns[EQUATION_TYPE_FIELD], &equationType);
+	
+	std::string* paramNames = new std::string[3];
+	fdio->getVal(dt->getStmt(), dt->Columns[EQN_P1_FIELD], &paramNames[0]);
+	fdio->getVal(dt->getStmt(), dt->Columns[EQN_P2_FIELD], &paramNames[1]);
+	fdio->getVal(dt->getStmt(), dt->Columns[EQN_P3_FIELD], &paramNames[2]);
+
+	double* params = new double[3];
+	for (int i = 0; i < paramNames->size(); i++)
+	{
+		params[i] = spp->requestValue(paramNames[i]);
+	}
+
+	double* coefs = new double[4];
+	fdio->getVal(dt->getStmt(), dt->Columns[EQN_COEF_1_FIELD], &coefs[0]);
+	fdio->getVal(dt->getStmt(), dt->Columns[EQN_COEF_2_FIELD], &coefs[1]);
+	fdio->getVal(dt->getStmt(), dt->Columns[EQN_COEF_3_FIELD], &coefs[2]);
+	fdio->getVal(dt->getStmt(), dt->Columns[EQN_COEF_4_FIELD], &coefs[3]);
+
+
+	double fuel = RVS::Fuels::FuelsEquations::calcFuels(equationType, coefs, params);
+	fuel = fuel * spp->STEMSPERACRE();
+
+	delete[] paramNames;
+	delete params;
+
+	return fuel;
 }

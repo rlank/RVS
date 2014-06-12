@@ -13,7 +13,6 @@
 #define BIOMASSDRIVER_H
 
 #include <iostream>
-#include <stdio.h>
 
 #include "BiomassDIO.h"
 #include "BiomassEquations.h"
@@ -70,6 +69,7 @@ namespace Biomass
 		double calcStemsPerAcre(RVS::DataManagement::SppRecord* record);
 		double calcHerbBiomass(int year);
 		double calcHerbReduction(double totalShrubCover);
+
 	};
 }
 }

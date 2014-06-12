@@ -12,6 +12,8 @@
 #ifndef DATATABLE_H
 #define DATATABLE_H
 
+#include <map>
+
 #include <sqlite3.h>
 
 #include "../RVSDEF.h"
@@ -23,14 +25,22 @@ namespace DataManagement
 	class DataTable
 	{
 	public:
-		inline DataTable() {}
-		inline DataTable(sqlite3_stmt* stmt) { this->stmt = stmt; }
-		virtual inline ~DataTable(void) { *RC = sqlite3_finalize(stmt); }
+		DataTable(sqlite3_stmt* stmt);
+		virtual ~DataTable(void);
 
+		// Return the base sqlite3_stmt pointer
 		inline sqlite3_stmt* getStmt() { return stmt; }
+
+		// 
+		std::map<std::string, int> Columns;
+
+		inline int numCols() { return column_count; }
+		inline int numRows() { return row_count; }
 
 	private:
 		sqlite3_stmt* stmt;
+		int column_count;
+		int row_count;
 	};
 }
 }

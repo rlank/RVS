@@ -3,7 +3,7 @@
 /// Desc: (Test) driver for RVS. Build as execultable and      ///
 /// this becomes the program entry point                       ///
 /// Base Class(es): none                                       ///
-/// Last Modified: 8 Mar 14                                    ///
+/// Last Modified: 6 Jun 14                                    ///
 /// ********************************************************** ///
 
 #include <exception>
@@ -19,6 +19,7 @@
 #include "Biomass/BiomassDIO.h"
 #include "Biomass/BiomassDriver.h"
 #include "Fuels/FuelsDIO.h"
+#include "Fuels/FuelsDriver.h"
 
 using namespace std;
 using namespace RVS;
@@ -28,8 +29,8 @@ int* RC = new int(SQLITE_OK);
 
 int main(int argc, char* argv[])
 {
-    static bool SUPPRESS_MSG = false;
-	static int STOPYEAR = 3;  //$$ TODO make this C def
+    static bool SUPPRESS_MSG = true;
+	static int STOPYEAR = 2;  //$$ TODO make this C def
     
 	///////////////////////////
 	/// User execution args ///
@@ -70,7 +71,7 @@ int main(int argc, char* argv[])
 
 	// Get DIO ready for queries
 	Biomass::BiomassDIO* bdio = new Biomass::BiomassDIO();
-	//RVS::Fuels::FuelsDIO* fdio = new RVS::Fuels::FuelsDIO();
+	RVS::Fuels::FuelsDIO* fdio = new RVS::Fuels::FuelsDIO();
     
     vector<int> plotcounts = bdio->query_analysis_plots();
 	vector<AnalysisPlot*> aps = vector<AnalysisPlot*>();
@@ -83,13 +84,15 @@ int main(int argc, char* argv[])
 		*RC = sqlite3_step(dt->getStmt());
 		currentPlot = new AnalysisPlot(bdio, dt);
 		aps.push_back(currentPlot);
+		delete dt;
 	}
 
-	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, Biomass::BiomassLookupLevel::medium, true);
+	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG);
+	Fuels::FuelsDriver fd = Fuels::FuelsDriver(fdio, SUPPRESS_MSG);
 
 	for (int year = 0; year < STOPYEAR; year++)
 	{
-		std::cout << "\n==================================" << std::endl;
+		std::cout << "\n===================================" << std::endl;
 		std::cout << "YEAR " << year << std::endl;
 		std::cout << "===================================\n" << std::endl;
 
@@ -122,6 +125,8 @@ int main(int argc, char* argv[])
 			double fuel10Hr = 0;
 			double fuel100Hr = 0;
 
+			RC = fd.FuelsMain(year, currentPlot);
+
 			if (!SUPPRESS_MSG)
 			{
 				std::cout << "1Hr Fuels:   " << fuel1Hr << std::endl;
@@ -132,7 +137,7 @@ int main(int argc, char* argv[])
 	}
 
 	delete bdio;
-	//delete fdio;
+	delete fdio;
 
 	std::cout << std::endl << "Ran to completion." << std::endl;
 

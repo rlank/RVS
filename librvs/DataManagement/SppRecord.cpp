@@ -11,6 +11,7 @@ SppRecord::SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTab
 {
 	initialize_object();
 	buildRecord(dio, dt);
+	fuels = std::map<std::string, double>();
 }
 
 SppRecord::SppRecord(const SppRecord &old_evt)
@@ -37,34 +38,16 @@ void SppRecord::initialize_object()
 void SppRecord::buildRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt)
 {
 	sqlite3_stmt* stmt = dt->getStmt();
-	int colCount = sqlite3_column_count(stmt);
 
-	for (int i = 0; i < colCount; i++)
-	{
-		// Get the column name
-		const char* colName = sqlite3_column_name(stmt, i);
-		// Get the data out of the column using boost::any for type safety
-		boost::any aval;
-		dio->getVal(stmt, i, &aval);
-
-		if (strcmp(colName, DOM_SPP_FIELD) == 0)
-		{
-			dom_spp = boost::any_cast<std::string>(aval);
-		}
-		else if (strcmp(colName, SPP_CODE_FIELD) == 0)
-		{
-			spp_code = boost::any_cast<std::string>(aval);
-		}
-		else if (strcmp(colName, BIOMASS_HEIGHT_FIELD) == 0)
-		{
-			this->height = boost::any_cast<double>(aval);
-		}
-		else if (strcmp(colName, BIOMASS_COVER_FIELD) == 0)
-		{
-			this->cover = boost::any_cast<double>(aval);
-		}
-	}
-	return;
+	int column = 0;
+	column = dt->Columns[DOM_SPP_FIELD];
+	dio->getVal(stmt, dt->Columns[DOM_SPP_FIELD], &dom_spp);
+	column = dt->Columns[SPP_CODE_FIELD];
+	dio->getVal(stmt, dt->Columns[SPP_CODE_FIELD], &spp_code);
+	column = dt->Columns[BIOMASS_HEIGHT_FIELD];
+	dio->getVal(stmt, dt->Columns[BIOMASS_HEIGHT_FIELD], &height);
+	column = dt->Columns[BIOMASS_COVER_FIELD];
+	dio->getVal(stmt, dt->Columns[BIOMASS_COVER_FIELD], &cover);
 }
 
 double SppRecord::requestValue(std::string parameterName)
@@ -80,7 +63,7 @@ double SppRecord::requestValue(std::string parameterName)
 	}
 	else if (parameterName.compare("LEN") == 0)
 	{
-		return width; // we assume circles
+		ret = width; // we assume circles
 	}
 	else if (parameterName.compare("BIO") == 0)
 	{

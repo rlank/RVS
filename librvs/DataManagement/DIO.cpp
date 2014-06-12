@@ -10,12 +10,18 @@ sqlite3* RVS::DataManagement::DIO::outdb;
 // Constructor
 RVS::DataManagement::DIO::DIO(void)
 {
-	RC = open_db_connection(RVS_DB_PATH, &rvsdb);
+	if (rvsdb == NULL)
+	{
+		RC = open_db_connection(RVS_DB_PATH, &rvsdb);
+	}
 	if (*RC != 0)
 	{
 		//$$ TODO throw bad input database exception here
 	}
-	RC = create_output_db();
+	if (outdb == NULL)
+	{
+		RC = create_output_db();
+	}
 	if (*RC != 0)
 	{
 		//$$ TODO throw bad output database exception
@@ -34,6 +40,8 @@ RVS::DataManagement::DIO::~DIO(void)
 		if (*RC != 0)
 		{
 			printf("Warning: DB not closing properly.\n");
+			printf(sqlite3_errmsg(rvsdb));
+			printf("\n");
 		}
 		else
 		{
@@ -50,6 +58,8 @@ RVS::DataManagement::DIO::~DIO(void)
 		if (*RC != 0)
 		{
 			printf("Warning: Out DB not closing properly.\n");
+			printf(sqlite3_errmsg(outdb));
+			printf("\n");
 		}
 		else
 		{
@@ -150,9 +160,6 @@ std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 
 	return items;
 }
-
-
-#if USESQLITE
 
 sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* selectString)
 {
@@ -316,12 +323,4 @@ int RVS::DataManagement::DIO::callback(void* nu, int argc, char** argv, char** a
 {
 	return 0;
 }
-
-
-#else
-
-#endif
-
-
-
 

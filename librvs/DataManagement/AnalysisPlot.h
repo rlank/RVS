@@ -16,12 +16,18 @@
 #include "DIO.h"
 #include "SppRecord.h"
 
+namespace RVS { namespace Biomass { class BiomassDriver; } }
+namespace RVS { namespace Fuels   { class FuelsDriver;   } }
+
 namespace RVS
 {
 namespace DataManagement
 {
 	class AnalysisPlot
 	{
+		friend class RVS::Biomass::BiomassDriver;
+		friend class RVS::Fuels::FuelsDriver;
+
 	public:
 		AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
 		virtual ~AnalysisPlot(void);
@@ -33,10 +39,8 @@ namespace DataManagement
 		inline std::vector<RVS::DataManagement::SppRecord*>* SHRUB_RECORDS() { return &shrubRecords; }
 
 		inline double HERBBIOMASS() { return herbBiomass; }
-		inline void SET_HERBBIOMASS(double biomass) { herbBiomass = biomass; }
 		inline double TOTALBIOMASS() { return totalBiomass; }
-		inline void SET_TOTALBIOMASS(double biomass) { totalBiomass = biomass; }
-		
+
 		double getNDVI(int year);
 		double getPPT(int year);
 
@@ -46,8 +50,13 @@ namespace DataManagement
 		std::string evt_name;
 		int bps_num;
 
+		// Biomass stuff
 		double totalBiomass;
 		double herbBiomass;
+		inline void SET_HERBBIOMASS(double biomass) { herbBiomass = biomass; }
+		inline void SET_TOTALBIOMASS(double biomass) { totalBiomass = biomass; }
+
+		std::map<std::string, double> totalFuels;
 
 		std::vector<RVS::DataManagement::SppRecord*> shrubRecords;   // List of shrub records
 		std::vector<double> ndviValues;   // NDVI values for all years to be simulated

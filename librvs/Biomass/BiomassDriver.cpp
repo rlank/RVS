@@ -86,10 +86,10 @@ double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 
 	// Populate the coefficients with values from the biomass equation table
 	double* coefs = new double[4];
-	bdio->query_biomass_equation_coefficients(equationNumber, &coefs[0], &coefs[1], &coefs[2], &coefs[3]);
+	bdio->query_equation_coefficients(equationNumber, coefs);
 
 	string* paramNames = new string[3];
-	bdio->query_biomass_equation_parameters(equationNumber, &paramNames[0], &paramNames[1], &paramNames[2]);
+	bdio->query_equation_parameters(equationNumber, paramNames);
 
 	std::map<string, double>* params = new std::map<string, double>();
 
@@ -110,14 +110,12 @@ double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 	// Lookup the equation number from the crosswalk table
 	int equationNumber = bdio->query_biomass_crosswalk_table(record->SPP_CODE(), "PCH");
 
-	double cf1 = 0;
-	double cf2 = 0;
-	double dum = 0;
+	double* coefs = new double[4];
 
 	// Populate the coefficients with values from the biomass equation table
-	bdio->query_biomass_equation_coefficients(equationNumber, &cf1, &cf2, &dum, &dum);
+	bdio->query_equation_coefficients(equationNumber, coefs);
 
-	double singleStem = BiomassEquations::eq_PCH(cf1, cf2, record->HEIGHT());
+	double singleStem = BiomassEquations::eq_PCH(coefs[0], coefs[1], record->HEIGHT());
 
 	// While we're here, calculate width (singleStem is area)
 	double radius = std::sqrt(singleStem / 3.1415); // Use number for PI rather than constant cause it's the only thing needed out of CMATH

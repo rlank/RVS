@@ -23,6 +23,8 @@
 #include "../RVSDEF.h"
 #include "RVS_TypeDefs.h"
 
+using namespace std;
+
 namespace RVS
 {
 namespace DataManagement
@@ -52,6 +54,9 @@ namespace DataManagement
 		virtual void getVal(sqlite3_stmt* stmt, int column, std::string* retVal);
 		virtual void getVal(sqlite3_stmt* stmt, int column, int* retVal);
 		
+		virtual void query_equation_coefficients(int equation_number, double* coefs) = 0;
+		virtual void query_equation_parameters(int equation_number, string* params) = 0;
+
 	protected:
 		int* create_output_db();
 		int* create_output_db(char* path);

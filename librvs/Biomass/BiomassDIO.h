@@ -41,14 +41,11 @@ namespace Biomass
 
 		/// Queries Bio_Crosswalk for equation determination for species without
 		/// expicit equations in Bio_Equations.
-		RVS::DataManagement::DataTable* query_biomass_crosswalk_table(std::string spp);
 		int query_biomass_crosswalk_table(std::string spp, std::string returnType);
-		RVS::DataManagement::DataTable* query_biomass_equation_table(std::string spp_code);
 		RVS::DataManagement::DataTable* query_biomass_equation_table(int equation_number);
-		void query_biomass_equation_coefficients(int equation_number, double* cf1, double* cf2, double* cf3, double* cf4);
-		void query_biomass_equation_parameters(int equation_number, std::string* p1name, std::string* p2name, std::string* p3name);
+		void query_equation_coefficients(int equation_number, double* coefs);
+		void query_equation_parameters(int equation_number, std::string* params);
 		/// Queries Bio_Herbs table to lookup herbaceous biomass. Takes a BPS number to query against.
-		RVS::DataManagement::DataTable* query_biomass_pp_table(int baseBPS);
 		double query_biomass_pp_table(int baseBPS, char* level);
 
 

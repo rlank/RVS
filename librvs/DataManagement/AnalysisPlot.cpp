@@ -12,6 +12,7 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	shrubRecords = std::vector<SppRecord*>();
 	ndviValues = std::vector<double>();
 	precipValues = std::vector<double>();
+	totalFuels = std::map<std::string, double>();
 
 	buildAnalysisPlot(dio, dt);
 	buildShrubRecords(dio, plot_id);
@@ -26,6 +27,14 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 {
 	sqlite3_stmt* stmt = dt->getStmt();
 	
+	int column = 0;
+	column = dt->Columns[PLOT_NUM_FIELD];
+	dio->getVal(stmt, dt->Columns[PLOT_NUM_FIELD], &plot_id);
+	column = dt->Columns[EVT_NUM_FIELD];
+	dio->getVal(stmt, dt->Columns[EVT_NUM_FIELD], &evt_num);
+	column = dt->Columns[BPS_NUM_FIELD];
+	dio->getVal(stmt, dt->Columns[BPS_NUM_FIELD], &bps_num);
+
 	int colCount = sqlite3_column_count(stmt);
 	std::string ndvi = "NDVI";
 	std::string ppt = "PPT";
@@ -37,28 +46,16 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 		std::string colStr = std::string(colName);
 
 		// Get the data out of the column using boost::any for type safety
-		boost::any* aval = new boost::any();
+		double* aval = new double();
 		dio->getVal(stmt, i, aval);
 
-		if (strcmp(colName, PLOT_NUM_FIELD) == 0)
+		if (colStr.compare(0, ndvi.length(), ndvi) == 0)
 		{
-			plot_id = boost::any_cast<int>(*aval);
-		}
-		else if (strcmp(colName, EVT_NUM_FIELD) == 0)
-		{
-			evt_num = boost::any_cast<int>(*aval);
-		}
-		else if (strcmp(colName, BPS_NUM_FIELD) == 0)
-		{
-			bps_num = boost::any_cast<int>(*aval);
-		}
-		else if (colStr.compare(0, ndvi.length(), ndvi) == 0)
-		{
-			ndviValues.push_back(boost::any_cast<double>(*aval));
+			ndviValues.push_back(*aval);
 		}
 		else if (colStr.compare(0, ppt.length(), ppt) == 0)
 		{
-			precipValues.push_back(boost::any_cast<double>(*aval));
+			precipValues.push_back(*aval);
 		}
 
 	}

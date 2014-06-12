@@ -31,6 +31,7 @@
 #define LIFEFORM_FIELD "lifeform"
 #define RET_CODE_FIELD "ret_code"
 #define EQUATION_NUMBER_FIELD "EQN_NUM"
+#define EQUATION_TYPE_FIELD "eqn_type"
 #define GROUP_ID_FIELD "GRP_ID"
 #define GROUP_CONST_FIELD "GRP_ID_CONST"
 #define NDVI_INTERACT_FIELD "ln_NDVI_GRP_ID"
@@ -40,14 +41,14 @@
 // ********************
 
 
-// Biomass Equation -specific coefficient fields
-#define BIOMASS_EQN_COEF_1_FIELD "CF1"
-#define BIOMASS_EQN_COEF_2_FIELD "CF2"
-#define BIOMASS_EQN_COEF_3_FIELD "CF3"
-#define BIOMASS_EQN_COEF_4_FIELD "CF4"
-#define BIOMASS_EQN_P1_FIELD "PA1_CODE"
-#define BIOMASS_EQN_P2_FIELD "PA2_CODE"
-#define BIOMASS_EQN_P3_FIELD "PA3_CODE"
+// Equation -specific coefficient fields
+#define EQN_COEF_1_FIELD "CF1"
+#define EQN_COEF_2_FIELD "CF2"
+#define EQN_COEF_3_FIELD "CF3"
+#define EQN_COEF_4_FIELD "CF4"
+#define EQN_P1_FIELD "PA1_CODE"
+#define EQN_P2_FIELD "PA2_CODE"
+#define EQN_P3_FIELD "PA3_CODE"
 // ********************
 
 // Output table names
@@ -62,9 +63,15 @@
 #define BIOMASS_HERB_OUT_FIELD "herb_biomass"
 #define BIOMASS_SHRUB_OUT_FIELD "shrub_biomass"
 #define BIOMASS_TOTAL_OUT_FIELD "total_biomass"
-#define FUELS_1HR_OUT_FIELD "fuel_size_1hr"
-#define FUELS_10HR_OUT_FIELD "fuel_size_10hr"
-#define FUELS_100HR_OUT_FIELD "fuel_size_100hr"
+#define FUEL_1HR_OUT_FIELD "FS1"
+#define FUEL_10HR_OUT_FIELD "FS2"
+#define FUEL_100HR_OUT_FIELD "FS3"
+#define FUEL_1HRLIVE_OUT_FIELD "FL1"
+#define FUEL_10HRLIVE_OUT_FIELD "FL2"
+#define FUEL_100HRLIVE_OUT_FIELD "FL3"
+#define FUEL_1HRDEAD_OUT_FIELD "FD1"
+#define FUEL_10HRDEAD_OUT_FIELD "FD2"
+#define FUEL_100HRDEAD_OUT_FIELD "FD3"
 // ********************
 
 #endif

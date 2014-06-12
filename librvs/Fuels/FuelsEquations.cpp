@@ -1,35 +1,78 @@
 #include "FuelsEquations.h"
 
-double RVS::Fuels::FuelsEquations::calc1Hr(float height, float cover, float herbs)
+double RVS::Fuels::FuelsEquations::calcFuels(int equationType, double* coefs, double* params)
 {
-	return 0;
-}
+	double fuel = 0.0;
+	switch (equationType)
+	{
+	case 1:
+		fuel = fuels_eq_1(coefs[0], coefs[1], params[0]);
+		break;
+	case 2:
+		fuel = fuels_eq_2(coefs[0], coefs[1], params[0]);
+		break;
+	case 13:
+		fuel = fuels_eq_13(coefs[0], coefs[1], params[0]);
+		break;
+	case 15:
+		fuel = fuels_eq_15(coefs[0], coefs[1], params[0], params[1]);
+		break;
+	case 17:
+		fuel = fuels_eq_17(coefs[0], coefs[1], coefs[2], params[0], params[1]);
+		break;
+	case 42:
+		fuel = fuels_eq_42(coefs[0], coefs[1], coefs[2], coefs[3], params[0], params[1], params[2]);
+		break;
+	case 46:
+		fuel = fuels_eq_46(coefs[0], coefs[1], coefs[2], params[0], params[1]);
+		break;
+	}
 
-double RVS::Fuels::FuelsEquations::calc1Hr(double bio, float herbs)
-{
-	double fuel = 1.1515406 + 0.321030 * bio;
-	fuel += herbs;
 	return fuel;
 }
 
-double RVS::Fuels::FuelsEquations::calc10Hr(float height, float cover)
+double RVS::Fuels::FuelsEquations::fuels_eq_1(double cf1, double cf2, double p1)
 {
-	return 0;
-}
-
-double RVS::Fuels::FuelsEquations::calc10Hr(double bio)
-{
-	double fuel = -2.054662 + 0.448055 * bio;
+	double fuel = cf1 + cf2 * p1;
 	return fuel;
 }
 
-double RVS::Fuels::FuelsEquations::calc100Hr(float height, float cover)
+double RVS::Fuels::FuelsEquations::fuels_eq_2(double cf1, double cf2, double p1)
 {
-	return 0;
+	double fuel = cf1 + cf2 * log(p1);
+	fuel = log(fuel);
+	return fuel;
 }
 
-double RVS::Fuels::FuelsEquations::calc100Hr(double bio)
+double RVS::Fuels::FuelsEquations::fuels_eq_13(double cf1, double cf2, double p1)
 {
-	double fuel = 3.567246 + (-0.017713 * bio) + (bio * bio * 0.000169);
+	double fuel = cf1 + cf2 * p1;
+	fuel = log(fuel);
+	return fuel;
+}
+
+double RVS::Fuels::FuelsEquations::fuels_eq_15(double cf1, double cf2, double p1, double p2)
+{
+	double fuel = cf1 + cf2 * p1 * p2;
+	return fuel;
+}
+
+double RVS::Fuels::FuelsEquations::fuels_eq_17(double cf1, double cf2, double cf3, double p1, double p2)
+{
+	double fuel = cf1 + cf2 * log(p1) + cf3 * log(p2);
+	fuel = log(fuel);
+	return fuel;
+}
+
+double RVS::Fuels::FuelsEquations::fuels_eq_42(double cf1, double cf2, double cf3, double cf4, double p1, double p2, double p3)
+{
+	double fuel = cf1 + cf2 * log(p1) + cf3 * log(p2) + cf4 * log(p3);
+	fuel = log(fuel);
+	return fuel;
+}
+
+double RVS::Fuels::FuelsEquations::fuels_eq_46(double cf1, double cf2, double cf3, double p1, double p2)
+{
+	double fuel = cf1 + cf2 * p1 + cf3 * p2;
 	return fuel;
 }

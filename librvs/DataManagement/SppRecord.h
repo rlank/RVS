@@ -13,11 +13,12 @@
 #include <string>
 #include <vector>
 
-#include <boost/any.hpp>
-
 #include "../RVSDBNAMES.h"
 #include "DIO.h"
 #include "RVS_TypeDefs.h"
+
+namespace RVS { namespace Biomass { class BiomassDriver; } }
+namespace RVS { namespace Fuels   { class FuelsDriver; } }
 
 using namespace RVS::DataManagement;
 
@@ -27,6 +28,8 @@ namespace DataManagement
 {
 	class SppRecord
 	{
+		friend class RVS::Biomass::BiomassDriver;
+		friend class RVS::Fuels::FuelsDriver;
 	public:
 		SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
 		SppRecord(const SppRecord &old_evt);
@@ -38,13 +41,11 @@ namespace DataManagement
 		inline double HEIGHT() { return height; }
 		inline double COVER() { return cover; }
 		inline double WIDTH() { return width; }
-		inline void SET_WIDTH(double width) { this->width = width; }
+		inline double LENGTH() { return width; }
 		inline double STEMSPERACRE() { return stemsPerAcre; }
-		inline void SET_STEMSPERACRE(double stemsPerAcre) { this->stemsPerAcre = stemsPerAcre; }
-
+		
 		// Biomass getters/setters params (results)
 		inline double SHRUBBIOMASS() { return shrubBiomass; }
-		inline void SET_SHRUBBIOMASS(double biomass) { shrubBiomass = biomass; }
 		
 		double requestValue(std::string parameterName);
 		                                                                                                                                                                                                                                                                                                                                                                                                                                                      
@@ -63,7 +64,9 @@ namespace DataManagement
 
 		// Biomass values
 		double shrubBiomass;
-
+		inline void SET_SHRUBBIOMASS(double biomass) { shrubBiomass = biomass; }
+		inline void SET_WIDTH(double width) { this->width = width; }
+		inline void SET_STEMSPERACRE(double stemsPerAcre) { this->stemsPerAcre = stemsPerAcre; }
 
 		// Fuels collection
 		std::map<std::string, double> fuels;
