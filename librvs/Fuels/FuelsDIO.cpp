@@ -161,14 +161,10 @@ RVS::DataManagement::DataTable* RVS::Fuels::FuelsDIO::query_equation_table(std::
 	return dt;
 }
 
-void RVS::Fuels::FuelsDIO::query_equation_coefficients(int equation_number, double* coefs)
+RVS::DataManagement::DataTable* RVS::Fuels::FuelsDIO::query_equation_table(int equationNumber)
 {
-
+	sqlite3_stmt* stmt = query_base(FUEL_EQUATION_TABLE, EQUATION_NUMBER_FIELD, equationNumber);
+	DataManagement::DataTable* dt = new DataManagement::DataTable(stmt);
+	return dt;
 }
 
-void RVS::Fuels::FuelsDIO::query_equation_parameters(int equation_number, std::string* params)
-{
-	//getVal(dt->getStmt(), dt->Columns[EQN_P1_FIELD], &params[0]);
-	//getVal(dt->getStmt(), dt->Columns[EQN_P2_FIELD], &params[1]);
-	//getVal(dt->getStmt(), dt->Columns[EQN_P3_FIELD], &params[2]);
-}

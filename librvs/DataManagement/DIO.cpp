@@ -304,6 +304,102 @@ void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, int* retVa
 	}
 }
 
+void RVS::DataManagement::DIO::query_equation_coefficients(int equation_number, double* coefs)
+{
+	// Get the datatable object for the requested equation number
+	RVS::DataManagement::DataTable* dt = query_equation_table(equation_number);
+	// Initiate the query
+	*RC = sqlite3_step(dt->getStmt());
+
+	int column = 0;
+	column = dt->Columns[EQN_COEF_1_FIELD];
+	getVal(dt->getStmt(), column, &coefs[0]);
+	column = dt->Columns[EQN_COEF_2_FIELD];
+	getVal(dt->getStmt(), column, &coefs[1]);
+	column = dt->Columns[EQN_COEF_3_FIELD];
+	getVal(dt->getStmt(), column, &coefs[2]);
+	column = dt->Columns[EQN_COEF_4_FIELD];
+	getVal(dt->getStmt(), column, &coefs[3]);
+
+	delete dt;
+}
+
+void RVS::DataManagement::DIO::query_equation_parameters(int equation_number, std::string* params)
+{
+	// Get the datatable object for the requested equation number
+	RVS::DataManagement::DataTable* dt = query_equation_table(equation_number);
+	// Initiate the query
+	*RC = sqlite3_step(dt->getStmt());
+
+	int column = 0;
+	column = dt->Columns[EQN_P1_FIELD];
+	getVal(dt->getStmt(), column, &params[0]);
+	column = dt->Columns[EQN_P2_FIELD];
+	getVal(dt->getStmt(), column, &params[1]);
+	column = dt->Columns[EQN_P3_FIELD];
+	getVal(dt->getStmt(), column, &params[2]);
+
+	delete dt;
+}
+
+void RVS::DataManagement::DIO::query_equation_parameters(int equation_number, std::string* params, double* coefs)
+{
+	// Get the datatable object for the requested equation number
+	RVS::DataManagement::DataTable* dt = query_equation_table(equation_number);
+	// Initiate the query
+	*RC = sqlite3_step(dt->getStmt());
+
+	int column = 0;
+	column = dt->Columns[EQN_P1_FIELD];
+	getVal(dt->getStmt(), column, &params[0]);
+	column = dt->Columns[EQN_P2_FIELD];
+	getVal(dt->getStmt(), column, &params[1]);
+	column = dt->Columns[EQN_P3_FIELD];
+	getVal(dt->getStmt(), column, &params[2]);
+
+	column = dt->Columns[EQN_COEF_1_FIELD];
+	getVal(dt->getStmt(), column, &coefs[0]);
+	column = dt->Columns[EQN_COEF_2_FIELD];
+	getVal(dt->getStmt(), column, &coefs[1]);
+	column = dt->Columns[EQN_COEF_3_FIELD];
+	getVal(dt->getStmt(), column, &coefs[2]);
+	column = dt->Columns[EQN_COEF_4_FIELD];
+	getVal(dt->getStmt(), column, &coefs[3]);
+
+	delete dt;
+}
+
+
+void RVS::DataManagement::DIO::query_equation_parameters(int equation_number, std::string* params, double* coefs, int* equation_type)
+{
+	// Get the datatable object for the requested equation number
+	RVS::DataManagement::DataTable* dt = query_equation_table(equation_number);
+	// Initiate the query
+	*RC = sqlite3_step(dt->getStmt());
+
+	int column = 0;
+	column = dt->Columns[EQN_P1_FIELD];
+	getVal(dt->getStmt(), column, &params[0]);
+	column = dt->Columns[EQN_P2_FIELD];
+	getVal(dt->getStmt(), column, &params[1]);
+	column = dt->Columns[EQN_P3_FIELD];
+	getVal(dt->getStmt(), column, &params[2]);
+
+	column = dt->Columns[EQN_COEF_1_FIELD];
+	getVal(dt->getStmt(), column, &coefs[0]);
+	column = dt->Columns[EQN_COEF_2_FIELD];
+	getVal(dt->getStmt(), column, &coefs[1]);
+	column = dt->Columns[EQN_COEF_3_FIELD];
+	getVal(dt->getStmt(), column, &coefs[2]);
+	column = dt->Columns[EQN_COEF_4_FIELD];
+	getVal(dt->getStmt(), column, &coefs[3]);
+
+	column = dt->Columns[EQUATION_TYPE_FIELD];
+	getVal(dt->getStmt(), column, equation_type);
+
+	delete dt;
+}
+
 char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
 {
 	// Get the string representation of the stream

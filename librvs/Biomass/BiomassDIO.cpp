@@ -57,7 +57,9 @@ int* RVS::Biomass::BiomassDIO::create_intermediate_table()
 		BPS_NUM_FIELD << " INTEGER NOT NULL, " << \
 		DOM_SPP_FIELD << " char(255), " << \
 		SPP_CODE_FIELD << " char(8), " << \
-		BIOMASS_SHRUB_OUT_FIELD << " REAL);";
+		BIOMASS_SHRUB_OUT_FIELD << " REAL, " << \
+		BIOMASS_STEMS_PER_ACRE_FIELD << " REAL, " << \
+		"PCH_EQUATION_NUMBER INTEGER, BAT_EQUATION_NUMBER INTEGER);";
 
 	char* sql = new char; 
 	sql = streamToCharPtr(&sqlstream);
@@ -71,9 +73,11 @@ int* RVS::Biomass::BiomassDIO::write_biomass_intermediate_record(RVS::DataManage
 	std::stringstream sqlstream;
 	sqlstream << "INSERT INTO " << BIOMASS_INTERMEDIATE_TABLE << " (" << \
 		PLOT_NUM_FIELD << ", " << YEAR_OUT_FIELD << ", " << EVT_NUM_FIELD << ", " << BPS_NUM_FIELD << " ," << \
-		DOM_SPP_FIELD << ", " << SPP_CODE_FIELD << ", " << BIOMASS_SHRUB_OUT_FIELD << ") " << \
+		DOM_SPP_FIELD << ", " << SPP_CODE_FIELD << ", " << BIOMASS_SHRUB_OUT_FIELD << ", " << BIOMASS_STEMS_PER_ACRE_FIELD << " ," << \
+		"PCH_EQUATION_NUMBER, BAT_EQUATION_NUMBER ) " << \
 		"VALUES (" << *plot_num << "," << *year << "," << ap->EVT_NUM() << "," << ap->BPS_NUM() << ",\"" << \
-		record->DOM_SPP() << "\",\"" << record->SPP_CODE() << "\"," << *shrubBiomass << ");";
+		record->DOM_SPP() << "\",\"" << record->SPP_CODE() << "\"," << *shrubBiomass << "," << record->STEMSPERACRE() << ", " << \
+		record->PCHEQNUM() << "," << record->BATEQNUM() << ");";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
@@ -82,7 +86,7 @@ int* RVS::Biomass::BiomassDIO::write_biomass_intermediate_record(RVS::DataManage
 	return RC;
 }
 
-int RVS::Biomass::BiomassDIO::query_biomass_crosswalk_table(std::string spp, std::string returnType)
+int RVS::Biomass::BiomassDIO::query_crosswalk_table(std::string spp, std::string returnType)
 {
 	// Create the sqlite3 statment to query biomass crosswalk table on species
 	sqlite3_stmt* stmt = query_base(BIOMASS_CROSSWALK_TABLE, SPP_CODE_FIELD, spp);
@@ -104,49 +108,11 @@ int RVS::Biomass::BiomassDIO::query_biomass_crosswalk_table(std::string spp, std
 	return ret;
 }
 
-RVS::DataManagement::DataTable* RVS::Biomass::BiomassDIO::query_biomass_equation_table(int equation_number)
+RVS::DataManagement::DataTable* RVS::Biomass::BiomassDIO::query_equation_table(int equation_number)
 {
 	sqlite3_stmt* stmt = query_base(BIOMASS_EQUATION_TABLE, EQUATION_NUMBER_FIELD, equation_number);
 	DataManagement::DataTable* dt = new DataManagement::DataTable(stmt);
 	return dt;
-}
-
-void RVS::Biomass::BiomassDIO::query_equation_coefficients(int equation_number, double* coefs)
-{
-	// Get the datatable object for the requested equation number
-	RVS::DataManagement::DataTable* dt = query_biomass_equation_table(equation_number);
-	// Initiate the query
-	*RC = sqlite3_step(dt->getStmt());
-
-	int column = 0;
-	column = dt->Columns[EQN_COEF_1_FIELD];
-	getVal(dt->getStmt(), column, &coefs[0]);
-	column = dt->Columns[EQN_COEF_2_FIELD];
-	getVal(dt->getStmt(), column, &coefs[1]);
-	column = dt->Columns[EQN_COEF_3_FIELD];
-	getVal(dt->getStmt(), column, &coefs[2]);
-	column = dt->Columns[EQN_COEF_4_FIELD];
-	getVal(dt->getStmt(), column, &coefs[3]);
-	
-	delete dt;
-}
-
-void RVS::Biomass::BiomassDIO::query_equation_parameters(int equation_number, std::string* params)
-{
-	// Get the datatable object for the requested equation number
-	RVS::DataManagement::DataTable* dt = query_biomass_equation_table(equation_number);
-	// Initiate the query
-	*RC = sqlite3_step(dt->getStmt());
-
-	int column = 0;
-	column = dt->Columns[EQN_P1_FIELD];
-	getVal(dt->getStmt(), column, &params[0]);
-	column = dt->Columns[EQN_P2_FIELD];
-	getVal(dt->getStmt(), column, &params[1]);
-	column = dt->Columns[EQN_P3_FIELD];
-	getVal(dt->getStmt(), column, &params[2]);
-
-	delete dt;
 }
 
 double RVS::Biomass::BiomassDIO::query_biomass_pp_table(int baseBPS, char* level)

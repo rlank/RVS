@@ -40,14 +40,14 @@ double RVS::Fuels::FuelsEquations::fuels_eq_1(double cf1, double cf2, double p1)
 double RVS::Fuels::FuelsEquations::fuels_eq_2(double cf1, double cf2, double p1)
 {
 	double fuel = cf1 + cf2 * log(p1);
-	fuel = log(fuel);
+	fuel = exp(fuel);
 	return fuel;
 }
 
 double RVS::Fuels::FuelsEquations::fuels_eq_13(double cf1, double cf2, double p1)
 {
 	double fuel = cf1 + cf2 * p1;
-	fuel = log(fuel);
+	fuel = exp(fuel);
 	return fuel;
 }
 
@@ -60,14 +60,14 @@ double RVS::Fuels::FuelsEquations::fuels_eq_15(double cf1, double cf2, double p1
 double RVS::Fuels::FuelsEquations::fuels_eq_17(double cf1, double cf2, double cf3, double p1, double p2)
 {
 	double fuel = cf1 + cf2 * log(p1) + cf3 * log(p2);
-	fuel = log(fuel);
+	fuel = exp(fuel);
 	return fuel;
 }
 
 double RVS::Fuels::FuelsEquations::fuels_eq_42(double cf1, double cf2, double cf3, double cf4, double p1, double p2, double p3)
 {
 	double fuel = cf1 + cf2 * log(p1) + cf3 * log(p2) + cf4 * log(p3);
-	fuel = log(fuel);
+	fuel = exp(fuel);
 	return fuel;
 }
 

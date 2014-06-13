@@ -36,12 +36,15 @@ namespace DataManagement
 		inline int EVT_NUM() { return evt_num; }
 		inline int BPS_NUM() { return bps_num; }
 
+		// Collection of shrub records. Some plots will only have a single record, others many.
 		inline std::vector<RVS::DataManagement::SppRecord*>* SHRUB_RECORDS() { return &shrubRecords; }
 
 		inline double HERBBIOMASS() { return herbBiomass; }
 		inline double TOTALBIOMASS() { return totalBiomass; }
 
+		// Get NDVI for the requested year (starting at 0)
 		double getNDVI(int year);
+		// Get precipitation for the requested year (starting at 0)
 		double getPPT(int year);
 
 	private:
@@ -53,8 +56,6 @@ namespace DataManagement
 		// Biomass stuff
 		double totalBiomass;
 		double herbBiomass;
-		inline void SET_HERBBIOMASS(double biomass) { herbBiomass = biomass; }
-		inline void SET_TOTALBIOMASS(double biomass) { totalBiomass = biomass; }
 
 		std::map<std::string, double> totalFuels;
 

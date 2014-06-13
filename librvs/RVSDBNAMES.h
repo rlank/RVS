@@ -60,6 +60,7 @@
 
 // Output table fields
 #define YEAR_OUT_FIELD "year"
+#define BIOMASS_STEMS_PER_ACRE_FIELD "stems_per_acre"
 #define BIOMASS_HERB_OUT_FIELD "herb_biomass"
 #define BIOMASS_SHRUB_OUT_FIELD "shrub_biomass"
 #define BIOMASS_TOTAL_OUT_FIELD "total_biomass"

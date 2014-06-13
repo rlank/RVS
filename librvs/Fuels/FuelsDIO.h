@@ -11,8 +11,10 @@
 #include <map>
 #include <string>
 
+
 #include "../DataManagement/DataTable.h"
 #include "../DataManagement/DIO.h"
+#include "../DataManagement/SppRecord.h"
 #include "../RVSDBNAMES.h"
 #include "../RVSDEF.h"
 
@@ -37,14 +39,10 @@ namespace Fuels
 
 		//## Query functions ##//
 
-		/// Queries Bio_Crosswalk for equation determination for species without
-		/// expicit equations in Bio_Equations.
-		//int query_fuels_crosswalk_table(std::string spp, std::string returnType);
+		// Queries the fuels crosswalk table for all the equations available for a species.
 		std::map<std::string, int> query_crosswalk_table(std::string spp);
 		RVS::DataManagement::DataTable* query_equation_table(std::map<std::string, int> equationNumbers);
 		RVS::DataManagement::DataTable* query_equation_table(int equationNumber);
-		void query_equation_coefficients(int equation_number, double* coefs);
-		void query_equation_parameters(int equation_number, std::string* params);
 		
 	};
 }

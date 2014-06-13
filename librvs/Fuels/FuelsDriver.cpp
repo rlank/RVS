@@ -21,6 +21,11 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 	int evt_num = ap->EVT_NUM();
 	int bps = ap->BPS_NUM();
 
+	if (plot_num == 7)
+	{
+		int iii = 0;
+	}
+
 	RVS::DataManagement::SppRecord* current = NULL;
 	for (int b = 0; b < shrubs->size(); b++)
 	{
@@ -30,30 +35,28 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 		// Equation numbers for each fuels calculation
 		map<string, int> equationNumbers = fdio->query_crosswalk_table(current->SPP_CODE());  
 
-		// Datatable from FUEL_EQUATION_TABLE with each equation from the crosswalk
-		RVS::DataManagement::DataTable* dt = fdio->query_equation_table(equationNumbers);  
-		*RC = sqlite3_step(dt->getStmt());
-		
-		while (*RC == SQLITE_ROW)
+		// Get percent live for each fuel class (1=1hr, 2=10hr, 3=100hr)
+		current->crl1 = calcPercentLive(current, 1);
+		current->crl2 = calcPercentLive(current, 2);
+		current->crl3 = calcPercentLive(current, 3);
+
+		// Loop through the equations and calculate each fuel
+		for (map<string, int>::iterator et = equationNumbers.begin(); et != equationNumbers.end(); et++)
 		{
-			std::string fuelsReturnType;
-			fdio->getVal(dt->getStmt(), dt->Columns[RET_CODE_FIELD], &fuelsReturnType);
-			double fuel = calcShrubFuel(dt, current);
-			if (isnan<double>(fuel) || isinf<double>(fuel))
+			int equationNumber = et->second;
+			double fuel = calcShrubFuel(equationNumber, current);
+
+			if (isnan<double>(fuel) || isinf<double>(fuel) || fuel < 0)
 			{
 				fuel = -9999.0;
 			}
 			else  // only add to total fuels if the value isn't bogus
 			{
-				ap->totalFuels[fuelsReturnType];
+				ap->totalFuels[et->first] += fuel;
 			}
 
-			current->fuels[fuelsReturnType] = fuel;  // Always add individual fuel. Useful for debugging
-			
-			*RC = sqlite3_step(dt->getStmt());  // Advance cursor
+			current->fuels[et->first] = fuel;  // Always add individual fuel. Useful for debugging
 		}
-
-		delete dt;
 
 		string dom_spp = current->DOM_SPP();
 		string spp_code = current->SPP_CODE();
@@ -65,20 +68,87 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 	return RC;
 }
 
-double RVS::Fuels::FuelsDriver::calcPercentLive()
+double RVS::Fuels::FuelsDriver::calcPercentLive(RVS::DataManagement::SppRecord* spp, int fuelClass)
 {
-	return 0;
+	vector<int> liveEqList = makePercentLiveList(fuelClass);
+	vector<int> deadEqList = makePercentDeadList(fuelClass);
+
+	double liveResults = 0.0;
+	for (int e = 0; e < liveEqList.size(); e++)
+	{
+		liveResults += calcShrubFuel(liveEqList[e], spp);
+	}
+
+	liveResults = liveResults / liveEqList.size();
+
+	double deadResults = 0.0;
+	for (int e = 0; e < deadEqList.size(); e++)
+	{
+		deadResults += calcShrubFuel(deadEqList[e], spp);
+	}
+
+	deadResults = deadResults / deadEqList.size();
+
+	double ratio = liveResults / deadResults;
+
+	if (ratio > 1)	{ ratio = .9; }
+	else if (ratio < 0) { ratio = .1; }
+
+	return ratio * 100;
 }
 
-double RVS::Fuels::FuelsDriver::calcShrubFuel(RVS::DataManagement::DataTable* dt, RVS::DataManagement::SppRecord* spp)
+vector<int> RVS::Fuels::FuelsDriver::makePercentLiveList(int fuelClass)
 {
-	int equationType;
-	fdio->getVal(dt->getStmt(), dt->Columns[EQUATION_TYPE_FIELD], &equationType);
+	vector<int> eqList = vector<int>();
+	switch (fuelClass)
+	{
+	case 1:
+		eqList.push_back(6102);
+		eqList.push_back(6087);
+		break;
+	case 2:
+		eqList.push_back(6108);
+		eqList.push_back(6095);
+		eqList.push_back(6103);
+		break;
+	case 3:
+		eqList.push_back(6089);
+		eqList.push_back(6096);
+		eqList.push_back(6109);
+		break;
+	}
 	
-	std::string* paramNames = new std::string[3];
-	fdio->getVal(dt->getStmt(), dt->Columns[EQN_P1_FIELD], &paramNames[0]);
-	fdio->getVal(dt->getStmt(), dt->Columns[EQN_P2_FIELD], &paramNames[1]);
-	fdio->getVal(dt->getStmt(), dt->Columns[EQN_P3_FIELD], &paramNames[2]);
+	return eqList;
+}
+
+vector<int> RVS::Fuels::FuelsDriver::makePercentDeadList(int fuelClass)
+{
+	vector<int> eqList = vector<int>();
+	switch (fuelClass)
+	{
+	case 1:
+		eqList.push_back(6079);
+		eqList.push_back(6111);
+		break;
+	case 2:
+		eqList.push_back(6105);
+		break;
+	case 3:
+		eqList.push_back(6092);
+		eqList.push_back(6100);
+		break;
+	}
+
+	return eqList;
+}
+
+double RVS::Fuels::FuelsDriver::calcShrubFuel(int equationNumber, RVS::DataManagement::SppRecord* spp)
+{
+	string* paramNames = new string[3];
+	double* coefs = new double[4];
+	int* equationType = new int;
+
+	fdio->query_equation_parameters(equationNumber, paramNames, coefs, equationType);
 
 	double* params = new double[3];
 	for (int i = 0; i < paramNames->size(); i++)
@@ -86,18 +156,7 @@ double RVS::Fuels::FuelsDriver::calcShrubFuel(RVS::DataManagement::DataTable* dt
 		params[i] = spp->requestValue(paramNames[i]);
 	}
 
-	double* coefs = new double[4];
-	fdio->getVal(dt->getStmt(), dt->Columns[EQN_COEF_1_FIELD], &coefs[0]);
-	fdio->getVal(dt->getStmt(), dt->Columns[EQN_COEF_2_FIELD], &coefs[1]);
-	fdio->getVal(dt->getStmt(), dt->Columns[EQN_COEF_3_FIELD], &coefs[2]);
-	fdio->getVal(dt->getStmt(), dt->Columns[EQN_COEF_4_FIELD], &coefs[3]);
-
-
-	double fuel = RVS::Fuels::FuelsEquations::calcFuels(equationType, coefs, params);
-	fuel = fuel * spp->STEMSPERACRE();
-
-	delete[] paramNames;
-	delete params;
-
+	double fuel = RVS::Fuels::FuelsEquations::calcFuels(*equationType, coefs, params);
+	fuel = fuel * spp->stemsPerAcre;
 	return fuel;
 }

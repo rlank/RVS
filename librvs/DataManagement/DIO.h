@@ -54,8 +54,11 @@ namespace DataManagement
 		virtual void getVal(sqlite3_stmt* stmt, int column, std::string* retVal);
 		virtual void getVal(sqlite3_stmt* stmt, int column, int* retVal);
 		
-		virtual void query_equation_coefficients(int equation_number, double* coefs) = 0;
-		virtual void query_equation_parameters(int equation_number, string* params) = 0;
+		virtual DataTable* query_equation_table(int equation_number) = 0;
+		virtual void query_equation_coefficients(int equation_number, double* coefs);
+		virtual void query_equation_parameters(int equation_number, string* params);
+		virtual void query_equation_parameters(int equation_number, string* params, double* coefs);
+		virtual void query_equation_parameters(int equation_number, string* params, double* coefs, int* equation_type);
 
 	protected:
 		int* create_output_db();
@@ -67,6 +70,7 @@ namespace DataManagement
 		//virtual int* write_output_record();
 		//virtual int* write_intermediate_record();
 
+		// Directly execute a SQL statement against the input database
 		int* exec_sql(char* sql);
 
 		inline sqlite3* get_outdb() { return outdb; }
@@ -84,6 +88,7 @@ namespace DataManagement
 
 		static int callback(void* nu, int argc, char** argv, char** azColName);
 
+		
 		
 
 	private:

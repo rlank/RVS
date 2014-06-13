@@ -29,8 +29,8 @@ int* RC = new int(SQLITE_OK);
 
 int main(int argc, char* argv[])
 {
-    static bool SUPPRESS_MSG = true;
-	static int STOPYEAR = 2;  //$$ TODO make this C def
+    static bool SUPPRESS_MSG = false;
+	static int STOPYEAR = 1;  
     
 	///////////////////////////
 	/// User execution args ///
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 
 	// Get DIO ready for queries
 	Biomass::BiomassDIO* bdio = new Biomass::BiomassDIO();
-	RVS::Fuels::FuelsDIO* fdio = new RVS::Fuels::FuelsDIO();
+	Fuels::FuelsDIO* fdio = new Fuels::FuelsDIO();
     
     vector<int> plotcounts = bdio->query_analysis_plots();
 	vector<AnalysisPlot*> aps = vector<AnalysisPlot*>();
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG);
 	Fuels::FuelsDriver fd = Fuels::FuelsDriver(fdio, SUPPRESS_MSG);
 
-	for (int year = 0; year < STOPYEAR; year++)
+	for (int year = 3; year < 4; year++)
 	{
 		std::cout << "\n===================================" << std::endl;
 		std::cout << "YEAR " << year << std::endl;
@@ -99,6 +99,11 @@ int main(int argc, char* argv[])
 		for (int p = 0; p < plotcounts.size(); p++)
 		{
 			currentPlot = aps[p];
+
+			if (p == 6)
+			{
+				int ggg = 0;
+			}
 
 			if (!SUPPRESS_MSG)
 			{
@@ -138,8 +143,8 @@ int main(int argc, char* argv[])
 
 	delete bdio;
 	delete fdio;
-
+	
 	std::cout << std::endl << "Ran to completion." << std::endl;
 
-	return (0);
+	return (*RC);
 }

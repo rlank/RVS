@@ -14,16 +14,10 @@ SppRecord::SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTab
 	fuels = std::map<std::string, double>();
 }
 
-SppRecord::SppRecord(const SppRecord &old_evt)
-{
-    //copyData(old_evt);
-}
-
 SppRecord::~SppRecord(void)
 {
 }
 
-//## Functions ##//
 void SppRecord::initialize_object()
 {
 	dom_spp = "";
@@ -68,6 +62,30 @@ double SppRecord::requestValue(std::string parameterName)
 	else if (parameterName.compare("BIO") == 0)
 	{
 		ret = shrubBiomass;
+	}
+	else if (parameterName.compare("CRL1") == 0)
+	{
+		ret = crl1;
+	}
+	else if (parameterName.compare("CRL2") == 0)
+	{
+		ret = crl2;
+	}
+	else if (parameterName.compare("CRL3") == 0)
+	{
+		ret = crl3;
+	}
+	else if (parameterName.compare("CRD1") == 0)
+	{
+		ret = 100 - crl1;
+	}
+	else if (parameterName.compare("CRD2") == 0)
+	{
+		ret = 100 - crl2;
+	}
+	else if (parameterName.compare("CRD3") == 0)
+	{
+		ret = 100 - crl3;
 	}
 
 	return ret;

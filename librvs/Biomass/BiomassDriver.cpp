@@ -27,27 +27,28 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	{	
 		record = shrubs->at(r);
 		double stemsPerAcre = calcStemsPerAcre(record);
-		record->SET_STEMSPERACRE(stemsPerAcre);
+		record->stemsPerAcre = stemsPerAcre;
 		double singleBiomass = calcShrubBiomass(record);
-		record->SET_SHRUBBIOMASS(singleBiomass);
-		*retShrubBiomass += singleBiomass;
+		record->shrubBiomass = singleBiomass;
+		record->exShrubBiomass = singleBiomass * stemsPerAcre;
+		*retShrubBiomass += record->exShrubBiomass;
 		totalShrubCover += record->COVER();
 
 		// Write this result to the intermediate table
-		RC = bdio->write_biomass_intermediate_record(ap, record, &plot_num, &year, &singleBiomass);
+		RC = bdio->write_biomass_intermediate_record(ap, record, &plot_num, &year, &(record->exShrubBiomass));
 	}
 
 	double production = calcPrimaryProduction();
 	*retHerbBiomass = calcHerbBiomass(year);
 	double reduction = calcHerbReduction(totalShrubCover);
 	*retHerbBiomass = reduction * *retHerbBiomass;
-	ap->SET_HERBBIOMASS(*retHerbBiomass);
+	ap->herbBiomass = *retHerbBiomass;
 
 	int evt = ap->EVT_NUM();
 	int bps = ap->BPS_NUM();
 
 	double totalBiomass = *retShrubBiomass + *retHerbBiomass;
-	ap->SET_TOTALBIOMASS(totalBiomass);
+	ap->totalBiomass = totalBiomass;
 
 	// Write output biomass record
 	RC = bdio->write_biomass_output_record(&plot_num, &year, &evt, &bps, &totalBiomass, retHerbBiomass, retShrubBiomass);
@@ -82,14 +83,13 @@ double BiomassDriver::calcPrimaryProduction()
 double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 {
 	// Get the equation number for BAT (total aboveground biomass)
-	int equationNumber = bdio->query_biomass_crosswalk_table(record->SPP_CODE(), "BAT");
+	int equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "BAT");
+	record->batEqNum = equationNumber;
 
 	// Populate the coefficients with values from the biomass equation table
 	double* coefs = new double[4];
-	bdio->query_equation_coefficients(equationNumber, coefs);
-
 	string* paramNames = new string[3];
-	bdio->query_equation_parameters(equationNumber, paramNames);
+	bdio->query_equation_parameters(equationNumber, paramNames, coefs);
 
 	std::map<string, double>* params = new std::map<string, double>();
 
@@ -101,30 +101,35 @@ double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 	}
 
 	double biomass = BiomassEquations::eq_BAT(equationNumber, coefs, params);
-	biomass *= record->STEMSPERACRE();
 	return biomass;
 }
 
 double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 {
 	// Lookup the equation number from the crosswalk table
-	int equationNumber = bdio->query_biomass_crosswalk_table(record->SPP_CODE(), "PCH");
-
+	int equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "PCH");
+	equationNumber = 1155;  //$$ TODO the other PCH equation was producing bad results. hard-code for now
+	record->pchEqNum = equationNumber;
+	
 	double* coefs = new double[4];
 
 	// Populate the coefficients with values from the biomass equation table
 	bdio->query_equation_coefficients(equationNumber, coefs);
 
 	double singleStem = BiomassEquations::eq_PCH(coefs[0], coefs[1], record->HEIGHT());
+	//std::cout << record->SPP_CODE() << " PCH: " << singleStem << std::endl;
 
 	// While we're here, calculate width (singleStem is area)
 	double radius = std::sqrt(singleStem / 3.1415); // Use number for PI rather than constant cause it's the only thing needed out of CMATH
-	record->SET_WIDTH(radius * 2);
+	record->width = radius * 2;
 
 	// Expand the single stem result
-	double expanded = (singleStem / 1000) * EXPANSION_FACTOR;
+	// First convert the cm^2 to m^2, then to ACRES
+	double expanded = EXPANSION_FACTOR / (singleStem * .0001);
+	//std::cout << record->SPP_CODE() << " PCH expanded: " << expanded << std::endl;
 	// Return the expanded amount as a function of percent cover
 	double stemsPerAcre = expanded * (record->COVER() / 100);
+	//std::cout << record->SPP_CODE() << " PCH adjusted: " << stemsPerAcre << std::endl;
 	return stemsPerAcre;
 }
 

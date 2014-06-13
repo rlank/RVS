@@ -23,6 +23,9 @@ namespace Fuels
 	{
 	public:
 		static double calcFuels(int equationType, double* coefs, double* params);
+		static double calc1HrLivePercent();
+		static double calc10HrLivePercent();
+		static double calc100HrLivePercent();
 
 	private:
 		static double fuels_eq_1(double cf1, double cf2, double p1);
