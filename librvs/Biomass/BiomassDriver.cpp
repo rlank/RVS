@@ -3,10 +3,9 @@
 using RVS::Biomass::BiomassDriver;
 
 
-BiomassDriver::BiomassDriver(RVS::Biomass::BiomassDIO* bdio, RVS::Biomass::BiomassLookupLevel level, bool suppress_messages)
+BiomassDriver::BiomassDriver(RVS::Biomass::BiomassDIO* bdio, bool suppress_messages)
 {
 	this->bdio = bdio;
-	this->level = level;
 	this->suppress_messages = suppress_messages;
 }
 
@@ -24,7 +23,7 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	double totalShrubCover = 0;
 	RVS::DataManagement::SppRecord* record = NULL;
 	for (int r = 0; r < shrubs->size(); r++)
-	{	
+	{
 		record = shrubs->at(r);
 		double stemsPerAcre = calcStemsPerAcre(record);
 		record->stemsPerAcre = stemsPerAcre;
@@ -35,14 +34,22 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 		totalShrubCover += record->COVER();
 
 		// Write this result to the intermediate table
-		RC = bdio->write_biomass_intermediate_record(ap, record, &plot_num, &year, &(record->exShrubBiomass));
+		RC = bdio->write_intermediate_record(&year, ap, record);
 	}
 
 	double production = calcPrimaryProduction();
 	*retHerbBiomass = calcHerbBiomass(year);
 	double reduction = calcHerbReduction(totalShrubCover);
 	*retHerbBiomass = reduction * *retHerbBiomass;
+
+	if (isnan<double>(*retHerbBiomass) || isinf<double>(*retHerbBiomass))
+	{
+		*retHerbBiomass = 0;
+	}
+
 	ap->herbBiomass = *retHerbBiomass;
+	ap->shrubBiomass = *retShrubBiomass;
+	ap->shrubCover = totalShrubCover;
 
 	int evt = ap->EVT_NUM();
 	int bps = ap->BPS_NUM();
@@ -51,7 +58,7 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	ap->totalBiomass = totalBiomass;
 
 	// Write output biomass record
-	RC = bdio->write_biomass_output_record(&plot_num, &year, &evt, &bps, &totalBiomass, retHerbBiomass, retShrubBiomass);
+	RC = bdio->write_output_record(&year, ap);
 
 	return RC;
 }
@@ -59,6 +66,7 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 double BiomassDriver::calcPrimaryProduction()
 {
 	// Get a text representation of the return level
+	/*
 	char* clevel;
     switch (this->level)
     {
@@ -75,7 +83,8 @@ double BiomassDriver::calcPrimaryProduction()
 			clevel = "med_val";
 			break;
     }
-
+	*/
+	char* clevel = "med_val";
 	double primaryProduction = bdio->query_biomass_pp_table(ap->BPS_NUM(), clevel);
 	return primaryProduction;
 }
@@ -108,7 +117,6 @@ double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 {
 	// Lookup the equation number from the crosswalk table
 	int equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "PCH");
-	equationNumber = 1155;  //$$ TODO the other PCH equation was producing bad results. hard-code for now
 	record->pchEqNum = equationNumber;
 	
 	double* coefs = new double[4];
@@ -117,7 +125,6 @@ double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 	bdio->query_equation_coefficients(equationNumber, coefs);
 
 	double singleStem = BiomassEquations::eq_PCH(coefs[0], coefs[1], record->HEIGHT());
-	//std::cout << record->SPP_CODE() << " PCH: " << singleStem << std::endl;
 
 	// While we're here, calculate width (singleStem is area)
 	double radius = std::sqrt(singleStem / 3.1415); // Use number for PI rather than constant cause it's the only thing needed out of CMATH
@@ -126,10 +133,8 @@ double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 	// Expand the single stem result
 	// First convert the cm^2 to m^2, then to ACRES
 	double expanded = EXPANSION_FACTOR / (singleStem * .0001);
-	//std::cout << record->SPP_CODE() << " PCH expanded: " << expanded << std::endl;
 	// Return the expanded amount as a function of percent cover
 	double stemsPerAcre = expanded * (record->COVER() / 100);
-	//std::cout << record->SPP_CODE() << " PCH adjusted: " << stemsPerAcre << std::endl;
 	return stemsPerAcre;
 }
 

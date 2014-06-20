@@ -49,6 +49,9 @@ namespace Fuels
 		// Processes a record in the equation table to calculate a fuel value
 		double calcShrubFuel(int equationNumber, RVS::DataManagement::SppRecord* spp);
 
+		// Determine which FBFM classification table to use by checking rules
+		std::string determineFBFMClassTable(RVS::DataManagement::AnalysisPlot* ap);
+
 	};
 }
 }

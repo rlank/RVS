@@ -31,11 +31,11 @@ namespace DataManagement
 		// Return the base sqlite3_stmt pointer
 		inline sqlite3_stmt* getStmt() { return stmt; }
 
-		// 
+		// Maps column names to their index position
 		std::map<std::string, int> Columns;
 
 		inline int numCols() { return column_count; }
-		inline int numRows() { return row_count; }
+		inline int numRows() { return row_count; }  // Disabled
 
 	private:
 		sqlite3_stmt* stmt;

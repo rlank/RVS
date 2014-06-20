@@ -6,6 +6,8 @@
 /// Last Modified: 6 Jun 14                                    ///
 /// ********************************************************** ///
 
+#include <ctime>
+#include <fstream>
 #include <exception>
 #include <iostream>
 #include <string>
@@ -26,12 +28,19 @@ using namespace RVS;
 using namespace RVS::DataManagement;
 
 int* RC = new int(SQLITE_OK);
+const char* DEBUG_FILE = "RVS_Debug.txt";
 
 int main(int argc, char* argv[])
 {
     static bool SUPPRESS_MSG = false;
 	static int STOPYEAR = 1;  
     
+	time_t t = time(NULL);
+	ofstream dfile = ofstream(DEBUG_FILE, ios::out);
+	dfile << ctime(&t) << "\n";
+	dfile.close();
+
+
 	///////////////////////////
 	/// User execution args ///
 	///////////////////////////
@@ -39,37 +48,9 @@ int main(int argc, char* argv[])
 	// Args:
 	// 1: Input database path
 	// 2: Output database path
-	// 3: Write intermediate shrub biomass (true/false)
+	
 
-	/*
-	for (int i = 1; i < argc; i++)
-	{
-		
-		switch (i)
-		{
-		case 1:
-			#ifdef RVS_DB_PATH
-			#undef RVS_DB_PATH
-			#endif 
-			break;
-		case 2:
-			#ifdef OUT_DB_PATH
-			#undef OUT_DB_PATH
-			#endif
-			break;
-		case 3:
-			if (strcmp("false", argv[3]) == 0)
-			{
-				WRITE_SHRUB = false;
-			}
-			break;
-
-		}
-		
-	}
-	*/
-
-	// Get DIO ready for queries
+	/// Get DIO ready for queries
 	Biomass::BiomassDIO* bdio = new Biomass::BiomassDIO();
 	Fuels::FuelsDIO* fdio = new Fuels::FuelsDIO();
     
@@ -82,15 +63,15 @@ int main(int argc, char* argv[])
 	{
 		dt = bdio->query_input_table(plotcounts[i]);
 		*RC = sqlite3_step(dt->getStmt());
-		currentPlot = new AnalysisPlot(bdio, dt);
+		currentPlot = new AnalysisPlot(fdio, dt);
 		aps.push_back(currentPlot);
 		delete dt;
 	}
 
-	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, Biomass::BiomassLookupLevel::medium, SUPPRESS_MSG);
+	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, SUPPRESS_MSG);
 	Fuels::FuelsDriver fd = Fuels::FuelsDriver(fdio, SUPPRESS_MSG);
 
-	for (int year = 3; year < 4; year++)
+	for (int year = 0; year < STOPYEAR; year++)
 	{
 		std::cout << "\n===================================" << std::endl;
 		std::cout << "YEAR " << year << std::endl;
@@ -99,11 +80,6 @@ int main(int argc, char* argv[])
 		for (int p = 0; p < plotcounts.size(); p++)
 		{
 			currentPlot = aps[p];
-
-			if (p == 6)
-			{
-				int ggg = 0;
-			}
 
 			if (!SUPPRESS_MSG)
 			{
@@ -134,9 +110,11 @@ int main(int argc, char* argv[])
 
 			if (!SUPPRESS_MSG)
 			{
-				std::cout << "1Hr Fuels:   " << fuel1Hr << std::endl;
-				std::cout << "10Hr Fuels:  " << fuel10Hr << std::endl;
-				std::cout << "100Hr Fuels: " << fuel100Hr << std::endl;
+				std::map<std::string, double> fuels = currentPlot->TOTALFUELS();
+				for (std::map<std::string, double>::iterator it = fuels.begin(); it != fuels.end(); it++)
+				{
+					std::cout << it->first << ": " << it->second << std::endl;
+				}
 			}
 		}
 	}

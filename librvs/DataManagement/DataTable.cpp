@@ -16,14 +16,15 @@ RVS::DataManagement::DataTable::DataTable(sqlite3_stmt* stmt)
 
 	//$$ Comment the row count business out when released. For debugging only
 	row_count = 0;
+	/*
 	*RC = sqlite3_step(stmt);
 	while (*RC == SQLITE_ROW)
 	{
 		row_count++;
 		*RC = sqlite3_step(stmt);
 	}
-
 	*RC = sqlite3_reset(stmt);
+	*/
 }
 
 

@@ -1,6 +1,6 @@
 //############################################//
 // Preproccessor directives for RVS 
-// Last Modified: 8 May 14
+// Last Modified: 19 Jun 14
 //############################################//
 
 #pragma once
@@ -11,7 +11,7 @@
 extern int* RC;
 //extern const char* RVS_DB_PATH;
 //extern const char* OUT_DB_PATH;
-
+extern const char* DEBUG_FILE;
 
 // OS-specific includes
 #define WIN 0
@@ -27,8 +27,8 @@ extern int* RC;
 
 #if WIN
 	#ifndef RVS_DB_PATH
-	#define RVS_DB_PATH "C:/MCR/RVS/Data/rvs_bio.db"
-	#define OUT_DB_PATH "C:/MCR/RVS/Data/rvs_out.db"
+	#define RVS_DB_PATH "C:/Users/robb/Documents/GitHub/RVS/rvs_in.db"
+	#define OUT_DB_PATH "C:/Users/robb/Documents/GitHub/RVS/rvs_out.db"
 	#endif
 #else
 	#ifndef RVS_DB_PATH
@@ -37,24 +37,9 @@ extern int* RC;
 	#endif
 #endif
 
-// Define whether this will use sqlite or access
-#ifndef USESQLITE
-	#define USESQLITE 1
-#endif
-
-// Includes for either sqlite or access (odbc)
-#if USESQLITE
-	#include <sqlite3.h>
-#else
-	#include <Windows.h>
-	#include <sql.h>
-	#include <sqltypes.h>
-	#include <sqlext.h>
-#endif
-
-// Define multithreading environment
+//$$ TODO Define multithreading environment
 #ifndef USEMULTIT
-	#define USEMULTIT 1
+	#define USEMULTIT 0
 #endif
 
 

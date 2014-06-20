@@ -18,22 +18,18 @@
 #include "BiomassEquations.h"
 #include "../DataManagement/AnalysisPlot.h"
 #include "../DataManagement/SppRecord.h"
-#include "../DataManagement/RVS_TypeDefs.h"
 
 namespace RVS
 {
 namespace Biomass
 {
-    // BiomassDriver is the primary tool for calculating biomass. It expects an
-    // array of BiomassEVT for a single analysis plot. If the plot contains 
-    // only 1 EVT/DomSpp record, then it's just an array of 1.  
 	class BiomassDriver
 	{
 	public:
 		// Constructor
 		// <param name="level">The lookup level to use for primary production (herb biomass)</param>
         // <param name="suppress_messages">Optional. Toggle to 'true' to suppress console messages. Useful when threading.</param>
-		BiomassDriver(RVS::Biomass::BiomassDIO* bdio, RVS::Biomass::BiomassLookupLevel level, bool suppress_messages = false);
+		BiomassDriver(RVS::Biomass::BiomassDIO* bdio, bool suppress_messages = false);
 		virtual ~BiomassDriver(void);
 
         // Main function. Pass a return value and type reference, and BioMain sets them upon completion.
@@ -48,7 +44,6 @@ namespace Biomass
 
 	private:
 		RVS::Biomass::BiomassDIO* bdio;
-		RVS::Biomass::BiomassLookupLevel level;
 		RVS::DataManagement::AnalysisPlot* ap;
 		bool suppress_messages;
 

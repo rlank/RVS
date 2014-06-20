@@ -7,8 +7,13 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	plot_id = 0;
 	evt_num = 0;
 	bps_num = 0;
+	shrubCover = 0;
 	totalBiomass = 0;
 	herbBiomass = 0;
+	shrubBiomass = 0;
+	defaultFBFM = 0;
+	calcFBFM = 0;
+	dryClimate = false;
 	shrubRecords = std::vector<SppRecord*>();
 	ndviValues = std::vector<double>();
 	precipValues = std::vector<double>();
@@ -16,6 +21,7 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 
 	buildAnalysisPlot(dio, dt);
 	buildShrubRecords(dio, plot_id);
+	buildInitialFuels(dio);
 }
 
 AnalysisPlot::~AnalysisPlot(void)
@@ -62,7 +68,6 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 	return;
 }
 
-
 void AnalysisPlot::buildShrubRecords(RVS::DataManagement::DIO* dio, int plot_num)
 {
 	// read in data. the query_biomass_input_table function returns a DataTable
@@ -77,6 +82,12 @@ void AnalysisPlot::buildShrubRecords(RVS::DataManagement::DIO* dio, int plot_num
 		*RC = sqlite3_step(dt->getStmt());
 	}
 	delete dt;
+}
+
+void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
+{
+
+	dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
 }
 
 double AnalysisPlot::getNDVI(int year)

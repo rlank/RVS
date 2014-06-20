@@ -17,7 +17,6 @@
 
 #include "../RVSDBNAMES.h"
 #include "DIO.h"
-#include "RVS_TypeDefs.h"
 
 namespace RVS { namespace Biomass { class BiomassDriver; } }
 namespace RVS { namespace Fuels   { class FuelsDriver; } }
@@ -52,6 +51,9 @@ namespace DataManagement
 		
 		// Biomass result for shrub (individual biomass)
 		inline double SHRUBBIOMASS() { return shrubBiomass; }
+
+		// Fuels results
+		inline std::map<std::string, double> FUELS() { return fuels; }
 		
 		// Return a parameter (length, width, height) by name
 		double requestValue(std::string parameterName);
@@ -75,7 +77,6 @@ namespace DataManagement
 		double exShrubBiomass;  // lbs/ac
 		int pchEqNum;
 		int batEqNum;
-
 
 		// Fuels collection
 		std::map<std::string, double> fuels;

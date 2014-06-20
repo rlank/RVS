@@ -21,11 +21,6 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 	int evt_num = ap->EVT_NUM();
 	int bps = ap->BPS_NUM();
 
-	if (plot_num == 7)
-	{
-		int iii = 0;
-	}
-
 	RVS::DataManagement::SppRecord* current = NULL;
 	for (int b = 0; b < shrubs->size(); b++)
 	{
@@ -45,6 +40,7 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 		{
 			int equationNumber = et->second;
 			double fuel = calcShrubFuel(equationNumber, current);
+			current->fuels[et->first] = fuel;  // Always add individual fuel. Useful for debugging
 
 			if (isnan<double>(fuel) || isinf<double>(fuel) || fuel < 0)
 			{
@@ -54,17 +50,20 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 			{
 				ap->totalFuels[et->first] += fuel;
 			}
-
-			current->fuels[et->first] = fuel;  // Always add individual fuel. Useful for debugging
 		}
 
 		string dom_spp = current->DOM_SPP();
 		string spp_code = current->SPP_CODE();
 
-		RC = fdio->write_fuel_intermediate_record(&plot_num, &year, &evt_num, &bps, &dom_spp, &spp_code, current->fuels);
+		// Write out the individual (shrub) record
+		RC = fdio->write_intermediate_record(&year, ap, current);
 	}
 
-	RC = fdio->write_fuel_output_record(&plot_num, &year, &evt_num, &bps, ap->totalFuels);
+	string fuelClassTable = determineFBFMClassTable(ap);
+
+
+	// Write out the total fuels record
+	RC = fdio->write_output_record(&year, ap);
 	return RC;
 }
 
@@ -73,24 +72,27 @@ double RVS::Fuels::FuelsDriver::calcPercentLive(RVS::DataManagement::SppRecord* 
 	vector<int> liveEqList = makePercentLiveList(fuelClass);
 	vector<int> deadEqList = makePercentDeadList(fuelClass);
 
+	// Calculate the sum of the live fuels
 	double liveResults = 0.0;
 	for (int e = 0; e < liveEqList.size(); e++)
 	{
 		liveResults += calcShrubFuel(liveEqList[e], spp);
 	}
-
+	// Take the average
 	liveResults = liveResults / liveEqList.size();
 
+	// Calculate the sum of the dead fuels
 	double deadResults = 0.0;
 	for (int e = 0; e < deadEqList.size(); e++)
 	{
 		deadResults += calcShrubFuel(deadEqList[e], spp);
 	}
-
+	// Take the average
 	deadResults = deadResults / deadEqList.size();
-
+	// Give the ratio of live to dead
 	double ratio = liveResults / deadResults;
 
+	// Cap the ratio's upper and lower bounds
 	if (ratio > 1)	{ ratio = .9; }
 	else if (ratio < 0) { ratio = .1; }
 
@@ -144,19 +146,87 @@ vector<int> RVS::Fuels::FuelsDriver::makePercentDeadList(int fuelClass)
 
 double RVS::Fuels::FuelsDriver::calcShrubFuel(int equationNumber, RVS::DataManagement::SppRecord* spp)
 {
+	// Declare return objects
 	string* paramNames = new string[3];
 	double* coefs = new double[4];
 	int* equationType = new int;
-
+	// Populate the equation parameters
 	fdio->query_equation_parameters(equationNumber, paramNames, coefs, equationType);
-
+	// Get the values of the parameters from the shrub record
 	double* params = new double[3];
 	for (int i = 0; i < paramNames->size(); i++)
 	{
 		params[i] = spp->requestValue(paramNames[i]);
 	}
-
+	// Calculate fuels
 	double fuel = RVS::Fuels::FuelsEquations::calcFuels(*equationType, coefs, params);
 	fuel = fuel * spp->stemsPerAcre;
 	return fuel;
+}
+
+std::string RVS::Fuels::FuelsDriver::determineFBFMClassTable(RVS::DataManagement::AnalysisPlot* ap)
+{
+	RVS::DataManagement::DataTable* dt = fdio->query_fbfm_rules();
+	*RC = sqlite3_step(dt->getStmt());
+
+	std::string fuelClassTable;
+	double shrubCovLo = 0;
+	double shrubCovHi = 0;
+	double herbProdLo = 0;
+	double herbProdHi = 0;
+
+	int shrubCovLoCol = dt->Columns[FC_SHRUB_COV_LOWER];
+	int shrubCovHiCol = dt->Columns[FC_SHRUB_COV_UPPER];
+	int herbProdLoCol = dt->Columns[FC_HERB_PROD_LOWER];
+	int herbProdHiCol = dt->Columns[FC_HERB_PROD_UPPER];
+	int fuelClassTableCol = dt->Columns[FC_RULE_TABLE_FIELD];
+
+	bool pass = true;
+
+	while (*RC == SQLITE_ROW)
+	{
+		fdio->getVal(dt->getStmt(), shrubCovLoCol, &shrubCovLo);
+		fdio->getVal(dt->getStmt(), shrubCovHiCol, &shrubCovHi);
+		fdio->getVal(dt->getStmt(), herbProdLoCol, &herbProdLo);
+		fdio->getVal(dt->getStmt(), herbProdHiCol, &herbProdHi);
+
+		if (shrubCovLo != -1)
+		{
+			if (shrubCovLo > ap->shrubCover)
+			{
+				pass = false;
+			}
+		}
+		if (shrubCovHi != -1)
+		{
+			if (shrubCovHi < ap->shrubCover)
+			{
+				pass = false;
+			}
+		}
+		if (herbProdLo != -1)
+		{
+			if (herbProdLo > ap->herbBiomass)
+			{
+				pass = false;
+			}
+		}
+		if (herbProdHi != -1)
+		{
+			if (herbProdHi < ap->herbBiomass)
+			{
+				pass = false;
+			}
+		}
+
+		if (pass == true)
+		{
+			fdio->getVal(dt->getStmt(), fuelClassTableCol, &fuelClassTable);
+		}
+
+		*RC = sqlite3_step(dt->getStmt());
+		pass = true;
+	}
+
+	return fuelClassTable;
 }

@@ -21,18 +21,19 @@ int* RVS::Fuels::FuelsDIO::create_output_table()
 		BPS_NUM_FIELD << " INT NOT NULL," << \
 		FUEL_1HR_OUT_FIELD << " REAL, " << \
 		FUEL_10HR_OUT_FIELD << " REAL, " << \
-		FUEL_100HR_OUT_FIELD << " REAL, " \
-		FUEL_1HRLIVE_OUT_FIELD << " REAL, " \
-		FUEL_10HRLIVE_OUT_FIELD << " REAL, " \
-		FUEL_100HRLIVE_OUT_FIELD << " REAL, " \
-		FUEL_1HRDEAD_OUT_FIELD << " REAL, " \
-		FUEL_10HRDEAD_OUT_FIELD << " REAL, " \
-		FUEL_100HRDEAD_OUT_FIELD << " REAL); ";
+		FUEL_100HR_OUT_FIELD << " REAL, " << \
+		FUEL_1HRLIVE_OUT_FIELD << " REAL, " << \
+		FUEL_10HRLIVE_OUT_FIELD << " REAL, " << \
+		FUEL_100HRLIVE_OUT_FIELD << " REAL, " << \
+		FUEL_1HRDEAD_OUT_FIELD << " REAL, " << \
+		FUEL_10HRDEAD_OUT_FIELD << " REAL, " << \
+		FUEL_100HRDEAD_OUT_FIELD << " REAL, " << \
+		FC_FBFM_FIELD << " INTEGER); ";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
 	RC = create_table(sql);
-	delete[] sql;
+	delete sql;
 
 	return RC;
 }
@@ -49,43 +50,45 @@ int* RVS::Fuels::FuelsDIO::create_intermediate_table()
 		SPP_CODE_FIELD << " char(8), " << \
 		FUEL_1HR_OUT_FIELD << " REAL, " << \
 		FUEL_10HR_OUT_FIELD << " REAL, " << \
-		FUEL_100HR_OUT_FIELD << " REAL, " \
-		FUEL_1HRLIVE_OUT_FIELD << " REAL, " \
-		FUEL_10HRLIVE_OUT_FIELD << " REAL, " \
-		FUEL_100HRLIVE_OUT_FIELD << " REAL, " \
-		FUEL_1HRDEAD_OUT_FIELD << " REAL, " \
-		FUEL_10HRDEAD_OUT_FIELD << " REAL, " \
+		FUEL_100HR_OUT_FIELD << " REAL, " << \
+		FUEL_1HRLIVE_OUT_FIELD << " REAL, " << \
+		FUEL_10HRLIVE_OUT_FIELD << " REAL, " << \
+		FUEL_100HRLIVE_OUT_FIELD << " REAL, " << \
+		FUEL_1HRDEAD_OUT_FIELD << " REAL, " << \
+		FUEL_10HRDEAD_OUT_FIELD << " REAL, " << \
 		FUEL_100HRDEAD_OUT_FIELD << " REAL); ";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
 	RC = create_table(sql);
-	delete[] sql;
+	delete sql;
 
 	return RC;
 }
 
-int* RVS::Fuels::FuelsDIO::write_fuel_output_record(int* plot_num, int* year, int* evt_num, int* bps, std::map<std::string, double> fuelsValues)
+int* RVS::Fuels::FuelsDIO::write_output_record(int* year, RVS::DataManagement::AnalysisPlot* ap)
 {
 	std::stringstream sqlstream;
 	sqlstream << "INSERT INTO " << FUELS_OUTPUT_TABLE << " (" << \
 		PLOT_NUM_FIELD << ", " << YEAR_OUT_FIELD << ", " << EVT_NUM_FIELD << ", " << BPS_NUM_FIELD << ", " << \
 		FUEL_1HR_OUT_FIELD << ", " << 	FUEL_10HR_OUT_FIELD << ", " << FUEL_100HR_OUT_FIELD << ", " << \
 		FUEL_1HRLIVE_OUT_FIELD << ", " << FUEL_10HRLIVE_OUT_FIELD << ", " << FUEL_100HRLIVE_OUT_FIELD << ", " << \
-		FUEL_1HRDEAD_OUT_FIELD << ", " << FUEL_10HRDEAD_OUT_FIELD << ", " << FUEL_100HRDEAD_OUT_FIELD << ") " << \
-		"VALUES (" << *plot_num << "," << *year << "," << *evt_num << "," << *bps << "," << \
-		fuelsValues[FUEL_1HR_OUT_FIELD] << "," << fuelsValues[FUEL_10HR_OUT_FIELD] << "," << fuelsValues[FUEL_100HR_OUT_FIELD] << "," << \
-		fuelsValues[FUEL_1HRLIVE_OUT_FIELD] << "," << fuelsValues[FUEL_10HRLIVE_OUT_FIELD] << "," << fuelsValues[FUEL_100HRLIVE_OUT_FIELD] << "," << \
-		fuelsValues[FUEL_1HRDEAD_OUT_FIELD] << "," << fuelsValues[FUEL_10HRDEAD_OUT_FIELD] << "," << fuelsValues[FUEL_100HRDEAD_OUT_FIELD] << ");";
+		FUEL_1HRDEAD_OUT_FIELD << ", " << FUEL_10HRDEAD_OUT_FIELD << ", " << FUEL_100HRDEAD_OUT_FIELD << ", " <<
+		FC_FBFM_FIELD << ") " << \
+		"VALUES (" << ap->PLOT_ID() << "," << *year << "," << ap->EVT_NUM() << "," << ap->BPS_NUM() << "," << \
+		ap->TOTALFUELS()[FUEL_1HR_OUT_FIELD] << "," << ap->TOTALFUELS()[FUEL_10HR_OUT_FIELD] << "," << ap->TOTALFUELS()[FUEL_100HR_OUT_FIELD] << "," << \
+		ap->TOTALFUELS()[FUEL_1HRLIVE_OUT_FIELD] << "," << ap->TOTALFUELS()[FUEL_10HRLIVE_OUT_FIELD] << "," << ap->TOTALFUELS()[FUEL_100HRLIVE_OUT_FIELD] << "," << \
+		ap->TOTALFUELS()[FUEL_1HRDEAD_OUT_FIELD] << "," << ap->TOTALFUELS()[FUEL_10HRDEAD_OUT_FIELD] << "," << ap->TOTALFUELS()[FUEL_100HRDEAD_OUT_FIELD] << "," << \
+		ap->FBFM() << ");";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
 	RC = exec_sql(sql);
-	delete[] sql;
+	delete sql;
 	return RC;
 }
 
-int* RVS::Fuels::FuelsDIO::write_fuel_intermediate_record(int* plot_num, int* year, int* evt_num, int* bps, std::string* dom_spp, std::string* spp_code, std::map<std::string, double> fuelsValues)
+int* RVS::Fuels::FuelsDIO::write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* spp)
 {
 	std::stringstream sqlstream;
 	sqlstream << "INSERT INTO " << FUELS_INTERMEDIATE_TABLE << " (" << \
@@ -94,16 +97,16 @@ int* RVS::Fuels::FuelsDIO::write_fuel_intermediate_record(int* plot_num, int* ye
 		FUEL_1HR_OUT_FIELD << ", " << FUEL_10HR_OUT_FIELD << ", " << FUEL_100HR_OUT_FIELD << ", " << \
 		FUEL_1HRLIVE_OUT_FIELD << ", " << FUEL_10HRLIVE_OUT_FIELD << ", " << FUEL_100HRLIVE_OUT_FIELD << ", " << \
 		FUEL_1HRDEAD_OUT_FIELD << ", " << FUEL_10HRDEAD_OUT_FIELD << ", " << FUEL_100HRDEAD_OUT_FIELD << ") " << \
-		"VALUES (" << *plot_num << "," << *year << "," << *evt_num << "," << *bps << ",\"" << \
-		*dom_spp << "\", \"" << *spp_code << "\", " << \
-		fuelsValues[FUEL_1HR_OUT_FIELD] << "," << fuelsValues[FUEL_10HR_OUT_FIELD] << "," << fuelsValues[FUEL_100HR_OUT_FIELD] << "," << \
-		fuelsValues[FUEL_1HRLIVE_OUT_FIELD] << "," << fuelsValues[FUEL_10HRLIVE_OUT_FIELD] << "," << fuelsValues[FUEL_100HRLIVE_OUT_FIELD] << "," << \
-		fuelsValues[FUEL_1HRDEAD_OUT_FIELD] << "," << fuelsValues[FUEL_10HRDEAD_OUT_FIELD] << "," << fuelsValues[FUEL_100HRDEAD_OUT_FIELD] << ");";
+		"VALUES (" << ap->PLOT_ID() << "," << *year << "," << ap->EVT_NUM() << "," << ap->BPS_NUM() << ",\"" << \
+		spp->DOM_SPP() << "\", \"" << spp->SPP_CODE() << "\", " << \
+		spp->FUELS()[FUEL_1HR_OUT_FIELD] << "," << spp->FUELS()[FUEL_10HR_OUT_FIELD] << "," << spp->FUELS()[FUEL_100HR_OUT_FIELD] << "," << \
+		spp->FUELS()[FUEL_1HRLIVE_OUT_FIELD] << "," << spp->FUELS()[FUEL_10HRLIVE_OUT_FIELD] << "," << spp->FUELS()[FUEL_100HRLIVE_OUT_FIELD] << "," << \
+		spp->FUELS()[FUEL_1HRDEAD_OUT_FIELD] << "," << spp->FUELS()[FUEL_10HRDEAD_OUT_FIELD] << "," << spp->FUELS()[FUEL_100HRDEAD_OUT_FIELD] << ");";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
 	RC = exec_sql(sql);
-	delete[] sql;
+	delete sql;
 	return RC;
 }
 
@@ -168,3 +171,12 @@ RVS::DataManagement::DataTable* RVS::Fuels::FuelsDIO::query_equation_table(int e
 	return dt;
 }
 
+RVS::DataManagement::DataTable* RVS::Fuels::FuelsDIO::query_fbfm_rules(void)
+{
+	std::stringstream ss;
+	ss << "SELECT * FROM " << FUEL_CLASSRULES_TABLE << ";";
+	char* sql = streamToCharPtr(&ss);
+	sqlite3_stmt* stmt = query_base(sql);
+	RVS::DataManagement::DataTable* dt = new RVS::DataManagement::DataTable(stmt);
+	return dt;
+}

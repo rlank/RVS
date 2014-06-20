@@ -26,24 +26,24 @@ int* RVS::Biomass::BiomassDIO::create_output_table()
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
 	RC = create_table(sql);
-	delete[] sql;
+	delete sql;
 
 	return RC;
 }
 
-int* RVS::Biomass::BiomassDIO::write_biomass_output_record(int* plot_num, int* year, int* evt_num, int* bps, double* totalBiomass, double* herbBiomass, double* shrubBiomass)
+int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagement::AnalysisPlot* ap)
 {
 	std::stringstream sqlstream;
 	sqlstream << "INSERT INTO " << BIOMASS_OUTPUT_TABLE << " (" << \
 		PLOT_NUM_FIELD << ", " << YEAR_OUT_FIELD << ", " << EVT_NUM_FIELD << ", " << BPS_NUM_FIELD << ", " << \
 		BIOMASS_TOTAL_OUT_FIELD << ", " << BIOMASS_SHRUB_OUT_FIELD << ", " << BIOMASS_HERB_OUT_FIELD << ") " << \
-		"VALUES (" << *plot_num << "," << *year << "," << *evt_num << "," << *bps << "," << \
-		*totalBiomass << "," << *shrubBiomass << "," << *herbBiomass << ");";
+		"VALUES (" << ap->PLOT_ID() << "," << *year << "," << ap->EVT_NUM()<< "," << ap->BPS_NUM() << "," << \
+		ap->TOTALBIOMASS() << "," << ap->SHRUBBIOMASS() << "," << ap->HERBBIOMASS() << ");";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
 	RC = exec_sql(sql);
-	delete[] sql;
+	delete sql;
 	return RC;
 }
 
@@ -64,25 +64,25 @@ int* RVS::Biomass::BiomassDIO::create_intermediate_table()
 	char* sql = new char; 
 	sql = streamToCharPtr(&sqlstream);
 	RC = create_table(sql);
-	delete[] sql;
+	delete sql;
 	return RC;
 }
 
-int* RVS::Biomass::BiomassDIO::write_biomass_intermediate_record(RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* record, int* plot_num, int* year, double* shrubBiomass)
+int* RVS::Biomass::BiomassDIO::write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* record)
 {
 	std::stringstream sqlstream;
 	sqlstream << "INSERT INTO " << BIOMASS_INTERMEDIATE_TABLE << " (" << \
 		PLOT_NUM_FIELD << ", " << YEAR_OUT_FIELD << ", " << EVT_NUM_FIELD << ", " << BPS_NUM_FIELD << " ," << \
 		DOM_SPP_FIELD << ", " << SPP_CODE_FIELD << ", " << BIOMASS_SHRUB_OUT_FIELD << ", " << BIOMASS_STEMS_PER_ACRE_FIELD << " ," << \
 		"PCH_EQUATION_NUMBER, BAT_EQUATION_NUMBER ) " << \
-		"VALUES (" << *plot_num << "," << *year << "," << ap->EVT_NUM() << "," << ap->BPS_NUM() << ",\"" << \
-		record->DOM_SPP() << "\",\"" << record->SPP_CODE() << "\"," << *shrubBiomass << "," << record->STEMSPERACRE() << ", " << \
+		"VALUES (" << ap->PLOT_ID() << "," << *year << "," << ap->EVT_NUM() << "," << ap->BPS_NUM() << ",\"" << \
+		record->DOM_SPP() << "\",\"" << record->SPP_CODE() << "\"," << record->SHRUBBIOMASS() << "," << record->STEMSPERACRE() << ", " << \
 		record->PCHEQNUM() << "," << record->BATEQNUM() << ");";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
 	RC = exec_sql(sql);
-	delete[] sql;
+	delete sql;
 	return RC;
 }
 
@@ -194,7 +194,7 @@ void RVS::Biomass::BiomassDIO::query_biogroup_coefs(int bps, double* group_const
 		}
 	}
 
-	delete[] sql;
+	delete sql;
 	*RC = sqlite3_finalize(stmt1);
 	*RC = sqlite3_finalize(stmt2);
 }

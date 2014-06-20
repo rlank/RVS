@@ -34,8 +34,8 @@ namespace Biomass
 		//## DB functins ##//
 		int* create_output_table();
 		int* create_intermediate_table();
-		int* write_biomass_output_record(int* plot_num, int* year, int* evt_num,int* bps, double* totalBiomass, double* herbBiomass, double* shrubBiomass);
-		int* write_biomass_intermediate_record(RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* record, int* plot_num, int* year, double* shrubBiomass);
+		int* write_output_record(int* year, RVS::DataManagement::AnalysisPlot* ap);
+		int* write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* record);
 
 		//## Query functions ##//
 
@@ -53,10 +53,5 @@ namespace Biomass
 	};
 }
 }
-
-
-
-
-
 
 #endif

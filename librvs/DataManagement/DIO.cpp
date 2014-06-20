@@ -14,18 +14,15 @@ RVS::DataManagement::DIO::DIO(void)
 	{
 		RC = open_db_connection(RVS_DB_PATH, &rvsdb);
 	}
-	if (*RC != 0)
-	{
-		//$$ TODO throw bad input database exception here
-	}
+	
+	checkDBStatus(rvsdb);
+
 	if (outdb == NULL)
 	{
 		RC = create_output_db();
 	}
-	if (*RC != 0)
-	{
-		//$$ TODO throw bad output database exception
-	}
+	
+	checkDBStatus(outdb);
 }
 
 // Destructor. Closes the connection with the db.
@@ -73,6 +70,7 @@ int* RVS::DataManagement::DIO::open_db_connection(char* pathToDb, sqlite3** db)
 {
 	// Open the database
 	*RC = sqlite3_open(pathToDb, db);
+	checkDBStatus(*db);
 
 	if (*RC != SQLITE_OK)
 	{
@@ -102,21 +100,7 @@ int* RVS::DataManagement::DIO::create_table(char* sql)
 		RC = RVS::DataManagement::DIO::create_output_db();
 	}
 
-	if (*RC != 0)
-	{
-		//$$ TODO throw create output error
-	}
-
-	char* err;
-	int(*cb)(void*, int, char**, char**);
-	cb = &RVS::DataManagement::DIO::callback;
-
-	*RC = sqlite3_exec(outdb, sql, NULL, 0, &err);
-
-	if (*RC != SQLITE_OK)
-	{
-		sqlite3_free(err);
-	}
+	RC = exec_sql(sql);
 
 	return RC;
 }
@@ -129,11 +113,9 @@ int* RVS::DataManagement::DIO::exec_sql(char* sql)
 
 	*RC = sqlite3_exec(outdb, sql, cb, 0, &err);
 
-	if (*RC != SQLITE_OK)
-	{
-		sqlite3_free(err);
-	}
-
+	checkDBStatus(outdb, sql, err);
+	sqlite3_free(err);
+	
 	return RC;
 }
 
@@ -156,27 +138,24 @@ std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 
 	*RC = sqlite3_finalize(stmt);
 	delete selectStream;
-	delete[] selectString;
+	delete selectString;
 
 	return items;
 }
 
-sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* selectString)
+sqlite3_stmt* RVS::DataManagement::DIO::query_base(const char* selectString)
 {
 	int nByte = -1;
 	sqlite3_stmt* stmt;
 
 	// Prepare SQL query as object code
 	*RC = sqlite3_prepare_v2(rvsdb, selectString, nByte, &stmt, NULL);
-	if (*RC != SQLITE_OK)
-	{
-		fprintf(stderr, "DB Operation Error: %s\n", sqlite3_errmsg(rvsdb));
-	}
+	checkDBStatus(rvsdb, selectString);
 
 	return stmt;
 }
 
-sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field)
+sqlite3_stmt* RVS::DataManagement::DIO::query_base(const char* table, const char* field)
 {
 	std::stringstream* selectStream = new std::stringstream();
 	*selectStream << "SELECT " << field << " FROM " << table << "; ";
@@ -186,12 +165,12 @@ sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field)
 	sqlite3_stmt* stmt = query_base(selectString);
 
 	delete selectStream;
-	delete[] selectString;
+	delete selectString;
 
 	return stmt;
 }
 
-sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field, boost::any whereclause)
+sqlite3_stmt* RVS::DataManagement::DIO::query_base(const char* table, const char* field, boost::any whereclause)
 {
 	std::stringstream* selectStream = new std::stringstream();
 
@@ -210,7 +189,7 @@ sqlite3_stmt* RVS::DataManagement::DIO::query_base(char* table, char* field, boo
 	sqlite3_stmt* stmt = query_base(selectString);
 
 	delete selectStream;
-	delete[] selectString;
+	delete selectString;
 
 	return stmt;
 }
@@ -304,6 +283,36 @@ void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, int* retVa
 	}
 }
 
+void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, bool* retVal)
+{
+	// SQLITE does not use booleans.  Integer 1 == true, 0 == false
+	int colType = sqlite3_column_type(stmt, column);
+	if (colType == SQLITE_INTEGER)
+	{
+		int val = sqlite3_column_int(stmt, column);
+		if (val == 1)
+		{
+			*retVal = true;
+		}
+		else if (val == 0)
+		{
+			*retVal = false;
+		}
+		else
+		{
+			//$$ TODO throw data mismatch exception
+		}
+	}
+	else if (colType == SQLITE_NULL)
+	{
+		*retVal = 0;
+	}
+	else
+	{
+		//$$ TODO throw data mismatch exception
+	}
+}
+
 void RVS::DataManagement::DIO::query_equation_coefficients(int equation_number, double* coefs)
 {
 	// Get the datatable object for the requested equation number
@@ -369,7 +378,6 @@ void RVS::DataManagement::DIO::query_equation_parameters(int equation_number, st
 	delete dt;
 }
 
-
 void RVS::DataManagement::DIO::query_equation_parameters(int equation_number, std::string* params, double* coefs, int* equation_type)
 {
 	// Get the datatable object for the requested equation number
@@ -400,6 +408,20 @@ void RVS::DataManagement::DIO::query_equation_parameters(int equation_number, st
 	delete dt;
 }
 
+void RVS::DataManagement::DIO::query_fuels_basic_info(const int* bps, int* fbfm, bool* isDry)
+{
+	sqlite3_stmt* stmt = query_base(FUEL_BPS_ATTR_TABLE, BPS_NUM_FIELD, *bps);
+	RVS::DataManagement::DataTable* dt = new RVS::DataManagement::DataTable(stmt);
+	*RC = sqlite3_step(dt->getStmt());
+	int column = 0;
+	column = dt->Columns[FC_FBFM_FIELD];
+	getVal(dt->getStmt(), column, fbfm);
+	column = dt->Columns[FC_ISDRY_FIELD];
+	getVal(dt->getStmt(), column, isDry);
+
+	delete dt;
+}
+
 char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
 {
 	// Get the string representation of the stream
@@ -412,11 +434,22 @@ char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
 	return str;
 }
 
-
-
-
 int RVS::DataManagement::DIO::callback(void* nu, int argc, char** argv, char** azColName)
 {
 	return 0;
 }
 
+bool RVS::DataManagement::DIO::checkDBStatus(sqlite3* db, const char* sql, const char* err)
+{
+	bool state = true;
+	if (*RC != 0 && db != NULL)
+	{
+		state = false;
+		ofstream dfile = ofstream(DEBUG_FILE, ios::app);
+		dfile << sql << "\n";
+		dfile << sqlite3_errmsg(db) << "\n\n";
+		dfile.close();
+	}
+	
+	return state;
+}
