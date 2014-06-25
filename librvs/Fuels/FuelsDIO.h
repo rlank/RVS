@@ -42,7 +42,8 @@ namespace Fuels
 		std::map<std::string, int> query_crosswalk_table(std::string spp);
 		RVS::DataManagement::DataTable* query_equation_table(std::map<std::string, int> equationNumbers);
 		RVS::DataManagement::DataTable* query_equation_table(int equationNumber);
-		RVS::DataManagement::DataTable* query_fbfm_rules(void);
+		RVS::DataManagement::DataTable* query_fbfm_rules_selector(void);
+		RVS::DataManagement::DataTable* query_fbfm_rules(std::string classTable);
 		
 	};
 }

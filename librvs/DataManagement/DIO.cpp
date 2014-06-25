@@ -28,25 +28,25 @@ RVS::DataManagement::DIO::DIO(void)
 // Destructor. Closes the connection with the db.
 RVS::DataManagement::DIO::~DIO(void)
 {
+	ofstream dfile = ofstream(DEBUG_FILE, ios::app);
+
 	printf("\n\n");
 	if (rvsdb != NULL)
 	{
 		*RC = sqlite3_close(rvsdb);
 		rvsdb = NULL;
-
+		
 		if (*RC != 0)
 		{
-			printf("Warning: DB not closing properly.\n");
-			printf(sqlite3_errmsg(rvsdb));
-			printf("\n");
+			dfile << "Warning: DB not closing properly.\n";
+			dfile << sqlite3_errmsg(rvsdb) << "\n";
 		}
 		else
 		{
-			printf("Closing InputDB connection.\n");
+			dfile << "Closing InputDB connection.\n";
 		}
 	}
 	
-
 	if (outdb != NULL)
 	{
 		*RC = sqlite3_close(outdb);
@@ -54,15 +54,16 @@ RVS::DataManagement::DIO::~DIO(void)
 
 		if (*RC != 0)
 		{
-			printf("Warning: Out DB not closing properly.\n");
-			printf(sqlite3_errmsg(outdb));
-			printf("\n");
+			dfile << "Warning: Out DB not closing properly.\n";
+			dfile << sqlite3_errmsg(outdb) << "\n";
 		}
 		else
 		{
-			printf("Closing OutDB connection.\n");
+			dfile << "Closing OutDB connection.\n";
 		}
 	}
+
+	dfile.close();
 }
 
 // Opens an sqlite connection to the specified database

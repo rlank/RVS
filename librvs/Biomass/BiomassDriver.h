@@ -62,6 +62,7 @@ namespace Biomass
 		double calcShrubBiomass(RVS::DataManagement::SppRecord* record);
 		double calcStemsPerAcre(RVS::DataManagement::SppRecord* record);
 		double calcHerbBiomass(int year);
+		// Given cover, calculate the holdover amount
 		double calcHerbReduction(double totalShrubCover);
 
 	};

@@ -39,13 +39,22 @@ namespace DataManagement
 		// Collection of shrub records. Some plots will only have a single record, others many.
 		inline std::vector<RVS::DataManagement::SppRecord*>* SHRUB_RECORDS() { return &shrubRecords; }
 
+		// Average shrub height (cm)
+		inline double SHRUBHEIGHT() { return shrubHeight; }
+		// Total shrub cover (%)
 		inline double SHRUBCOVER() { return shrubCover; }
+		// Total herb biomass (lbs/ac)
 		inline double HERBBIOMASS() { return herbBiomass; }
-		inline double SHRUBBIOMASS() { return shrubBiomass; }
+		// Total shrub biomass (lbs/ac)
+		inline double SHRUBBIOMASS() { return shrubBiomass * GRAMS_TO_POUNDS; }
+		// Total biomass (shrubs + herbs) (lbs/ac)
 		inline double TOTALBIOMASS() { return totalBiomass; }
-		inline std::map<std::string, double> TOTALFUELS() { return totalFuels; }
+		// Collection of all calculated fuels values
+		inline std::map<std::string, double> TOTALFUELSCOLLECTION() { return totalFuels; }
+		// Fuel model for the plot
 		inline int FBFM() { return calcFBFM == 0 ? defaultFBFM : calcFBFM; }
 
+		const float GRAMS_TO_POUNDS = 0.00220462f;
 
 		// Get NDVI for the requested year (starting at 0)
 		double getNDVI(int year);
@@ -58,17 +67,27 @@ namespace DataManagement
 		std::string evt_name;
 		int bps_num;
 
-		// Total shrub cover
+		// Average cover-weighted shrub height
+		double shrubHeight;
+		// Total shrub cover 
 		double shrubCover;
-		// Total biomass (herbs + shrubs)
+		// Total biomass (herbs + shrubs) (lbs/ac)
 		double totalBiomass;
-		// Herb biomass for whole plot
+		// Herb biomass for whole plot, including holdover (lbs/ac)
 		double herbBiomass;
-		// Shrub biomass for whole plot
+		// Herb holdover biomass (standing dead)
+		double herbHoldoverBiomass;
+		// Primary production for the plot
+		double production;
+		// Shrub biomass for whole plot (g/ac)
 		double shrubBiomass;
 
 		// All calculated fuels records, mapped to the type
 		std::map<std::string, double> totalFuels;
+		// Sum of 1, 10, 100 hour shrub fuels (g)
+		double shrubFuels;
+		// Herb fuel of the plot. Calculation :: production + holdover (lbs/ac)
+		double herbFuels;
 		int defaultFBFM;	// Default FBFM. Used if FBFM calculation fails
 		int calcFBFM;		// Calculated FBFM
 		bool dryClimate;	// Dry or humid BPS (true = dry)
@@ -81,7 +100,7 @@ namespace DataManagement
 		void buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
 		// Create shrub records
 		void buildShrubRecords(RVS::DataManagement::DIO* dio, int plot_num);
-
+		// Get basic fuels information (FBFM, climate)
 		void buildInitialFuels(RVS::DataManagement::DIO* dio);
 	};
 }

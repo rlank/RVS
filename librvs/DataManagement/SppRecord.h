@@ -41,16 +41,22 @@ namespace DataManagement
 		inline std::string DOM_SPP() { return dom_spp; }
 		// Dominant species PLANTS code
 		inline std::string SPP_CODE() { return spp_code; }
-		inline double HEIGHT() { return height; }
-		inline double COVER() { return cover; }
-		inline double WIDTH() { return width; }
-		inline double LENGTH() { return width; }
-		inline double STEMSPERACRE() { return stemsPerAcre; }
+		// HT (cm)
+		inline double HEIGHT() { return height; } 
+		// COV (%)
+		inline double COVER() { return cover; } 
+		// WID (cm)
+		inline double WIDTH() { return width; } 
+		// LEN (cm)
+		inline double LENGTH() { return width; } 
+		// stems per acre (count)
+		inline double STEMSPERACRE() { return stemsPerAcre; } 
 		inline int PCHEQNUM() { return pchEqNum; }
 		inline int BATEQNUM() { return batEqNum; }
 		
-		// Biomass result for shrub (individual biomass)
-		inline double SHRUBBIOMASS() { return shrubBiomass; }
+		// Biomass result for shrub (individual biomass). coverts internal g/ac to lbs/ac
+		inline double SHRUBBIOMASS() { return shrubBiomass * GRAMS_TO_POUNDS; }
+		const float GRAMS_TO_POUNDS = 0.00220462f;
 
 		// Fuels results
 		inline std::map<std::string, double> FUELS() { return fuels; }

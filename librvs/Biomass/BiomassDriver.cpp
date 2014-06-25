@@ -21,6 +21,7 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 
 	std::vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 	double totalShrubCover = 0;
+	double runShrubHeight = 0;
 	RVS::DataManagement::SppRecord* record = NULL;
 	for (int r = 0; r < shrubs->size(); r++)
 	{
@@ -31,31 +32,32 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 		record->shrubBiomass = singleBiomass;
 		record->exShrubBiomass = singleBiomass * stemsPerAcre;
 		*retShrubBiomass += record->exShrubBiomass;
-		totalShrubCover += record->COVER();
+
+		totalShrubCover += record->cover;
+		runShrubHeight += record->height * record->cover;
 
 		// Write this result to the intermediate table
 		RC = bdio->write_intermediate_record(&year, ap, record);
 	}
 
-	double production = calcPrimaryProduction();
-	*retHerbBiomass = calcHerbBiomass(year);
-	double reduction = calcHerbReduction(totalShrubCover);
-	*retHerbBiomass = reduction * *retHerbBiomass;
-
-	if (isnan<double>(*retHerbBiomass) || isinf<double>(*retHerbBiomass))
+	// Apply holdover biomass if applicable
+	if (ap->herbBiomass != 0)
 	{
-		*retHerbBiomass = 0;
+		double holdover = calcHerbReduction(totalShrubCover);
+		ap->herbHoldoverBiomass = holdover * ap->herbBiomass;
 	}
 
-	ap->herbBiomass = *retHerbBiomass;
+	*retHerbBiomass = calcHerbBiomass(year);
+
+	double averageHeight = runShrubHeight / totalShrubCover;
+
+	ap->herbBiomass = *retHerbBiomass + ap->herbHoldoverBiomass;
 	ap->shrubBiomass = *retShrubBiomass;
 	ap->shrubCover = totalShrubCover;
+	ap->shrubHeight = averageHeight;
+	ap->production = calcPrimaryProduction();
 
-	int evt = ap->EVT_NUM();
-	int bps = ap->BPS_NUM();
-
-	double totalBiomass = *retShrubBiomass + *retHerbBiomass;
-	ap->totalBiomass = totalBiomass;
+	ap->totalBiomass = ap->SHRUBBIOMASS() + ap->HERBBIOMASS();
 
 	// Write output biomass record
 	RC = bdio->write_output_record(&year, ap);

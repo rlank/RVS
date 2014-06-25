@@ -7,10 +7,14 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	plot_id = 0;
 	evt_num = 0;
 	bps_num = 0;
+	shrubHeight = 0;
 	shrubCover = 0;
 	totalBiomass = 0;
 	herbBiomass = 0;
+	herbHoldoverBiomass = 0;
 	shrubBiomass = 0;
+	shrubFuels = 0;
+	herbFuels = 0;
 	defaultFBFM = 0;
 	calcFBFM = 0;
 	dryClimate = false;

@@ -52,6 +52,15 @@ namespace Fuels
 		// Determine which FBFM classification table to use by checking rules
 		std::string determineFBFMClassTable(RVS::DataManagement::AnalysisPlot* ap);
 
+		// Use class ruleset to determine FBFM
+		int calcFBFM(std::string classTable, RVS::DataManagement::AnalysisPlot* ap);
+
+		int calcFBFMGrass(std::string classTable, RVS::DataManagement::AnalysisPlot* ap);
+		int calcFBFMShrub(std::string classTable, RVS::DataManagement::AnalysisPlot* ap);
+		int calcFBFMMixed(std::string classTable, RVS::DataManagement::AnalysisPlot* ap);
+
+		int switchClimateFBFM(RVS::DataManagement::DataTable* dt, RVS::DataManagement::AnalysisPlot* ap);
+
 	};
 }
 }

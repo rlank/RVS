@@ -71,7 +71,7 @@ namespace RVS
 	static const char* FC_HERB_1HR_UPPER = "herb_1hrfuel_upper";
 	static const char* FC_HT_LOWER = "HT_lower";
 	static const char* FC_HT_UPPER = "HT_upper";
-	static const char* FC_SHURB_FUEL_LOWER = "shrub_fuel_lower";
+	static const char* FC_SHRUB_FUEL_LOWER = "shrub_fuel_lower";
 	static const char* FC_SHRUB_FUEL_UPPER = "shrub_fuel_upper";
 	static const char* FC_PROPORTION_LOWER = "proportion_lower";
 	static const char* FC_PROPORTION_UPPER = "proportion_upper";

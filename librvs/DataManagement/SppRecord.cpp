@@ -24,9 +24,13 @@ void SppRecord::initialize_object()
 	spp_code = "";
 	height = 0;
 	cover = 0;
-	shrubBiomass = 0;
 	width = 0;
+	shrubBiomass = 0;
 	stemsPerAcre = 0;
+	shrubBiomass = 0;
+	exShrubBiomass = 0;
+	pchEqNum = 0;
+	batEqNum = 0;
 }
 
 void SppRecord::buildRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt)

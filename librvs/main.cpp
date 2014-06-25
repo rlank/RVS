@@ -32,7 +32,7 @@ const char* DEBUG_FILE = "RVS_Debug.txt";
 
 int main(int argc, char* argv[])
 {
-    static bool SUPPRESS_MSG = false;
+    static bool SUPPRESS_MSG = true;
 	static int STOPYEAR = 1;  
     
 	time_t t = time(NULL);
@@ -78,6 +78,7 @@ int main(int argc, char* argv[])
 		std::cout << "===================================\n" << std::endl;
 
 		for (int p = 0; p < plotcounts.size(); p++)
+		//for (int p = 0; p < 1; p++)
 		{
 			currentPlot = aps[p];
 
@@ -102,15 +103,11 @@ int main(int argc, char* argv[])
 				std::cout << "Total Biomass: " << (shrubBiomass + herbBiomass) << std::endl;
 			}
 
-			double fuel1Hr = 0;
-			double fuel10Hr = 0;
-			double fuel100Hr = 0;
-
 			RC = fd.FuelsMain(year, currentPlot);
 
 			if (!SUPPRESS_MSG)
 			{
-				std::map<std::string, double> fuels = currentPlot->TOTALFUELS();
+				std::map<std::string, double> fuels = currentPlot->TOTALFUELSCOLLECTION();
 				for (std::map<std::string, double>::iterator it = fuels.begin(); it != fuels.end(); it++)
 				{
 					std::cout << it->first << ": " << it->second << std::endl;
@@ -123,6 +120,11 @@ int main(int argc, char* argv[])
 	delete fdio;
 	
 	std::cout << std::endl << "Ran to completion." << std::endl;
+
+	t = time(NULL);
+	dfile = ofstream(DEBUG_FILE, ios::app);
+	dfile << "\n" << ctime(&t) << "\n";
+	dfile.close();
 
 	return (*RC);
 }
