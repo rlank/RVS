@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+//#include <boost/thread.hpp>
 //#include <boost/exception/all.hpp>
 
 #include "RVSDEF.h"
@@ -28,13 +29,15 @@ using namespace RVS;
 using namespace RVS::DataManagement;
 
 int* RC = new int(SQLITE_OK);
+int* YEARS = new int(1);
+bool* SUPPRESS_MSG = new bool(true);
 const char* DEBUG_FILE = "RVS_Debug.txt";
+bool* USE_MEM = new bool(true);
+
+void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, Biomass::BiomassDriver* bd, Fuels::FuelsDriver* fd);
 
 int main(int argc, char* argv[])
-{
-    static bool SUPPRESS_MSG = true;
-	static int STOPYEAR = 1;  
-    
+{   
 	time_t t = time(NULL);
 	ofstream dfile = ofstream(DEBUG_FILE, ios::out);
 	dfile << ctime(&t) << "\n";
@@ -55,66 +58,66 @@ int main(int argc, char* argv[])
 	Fuels::FuelsDIO* fdio = new Fuels::FuelsDIO();
     
     vector<int> plotcounts = bdio->query_analysis_plots();
-	vector<AnalysisPlot*> aps = vector<AnalysisPlot*>();
+	map<int, AnalysisPlot*> aps = map<int, AnalysisPlot*>();
 	
+	///////////////////////////////////////////////////////////////////////
+	/// Load analysis plots and shrub records into a map keyed by plot id
+	///////////////////////////////////////////////////////////////////////
+
+	std::cout << SQLITE_VERSION << std::endl << SQLITE_SOURCE_ID << std::endl;
+	std::cout << "Loading records..." << std::endl;
 	AnalysisPlot* currentPlot = NULL;
-	RVS::DataManagement::DataTable* dt = NULL;
-	for (int i = 0; i < plotcounts.size(); i++)
+	
+	RVS::DataManagement::DataTable* plots_dt = bdio->query_input_table();
+
+	while (*RC == SQLITE_ROW)
 	{
-		dt = bdio->query_input_table(plotcounts[i]);
-		*RC = sqlite3_step(dt->getStmt());
-		currentPlot = new AnalysisPlot(fdio, dt);
-		aps.push_back(currentPlot);
-		delete dt;
+		currentPlot = new AnalysisPlot(fdio, plots_dt);
+		aps.insert(pair<int, AnalysisPlot*>(currentPlot->PLOT_ID(),	currentPlot));
+		*RC = sqlite3_step(plots_dt->getStmt());
 	}
 
-	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, SUPPRESS_MSG);
-	Fuels::FuelsDriver fd = Fuels::FuelsDriver(fdio, SUPPRESS_MSG);
+	RVS::DataManagement::DataTable* shrub_dt = bdio->query_shrubs_table();
+	int plot_id = 0;
+	while (*RC == SQLITE_ROW)
+	{
+		bdio->getVal(shrub_dt->getStmt(), shrub_dt->Columns[PLOT_NUM_FIELD], &plot_id);
+		currentPlot = aps[plot_id];
+		currentPlot->push_shrub(bdio, shrub_dt);
+		*RC = sqlite3_step(shrub_dt->getStmt());
+	}
 
-	for (int year = 0; year < STOPYEAR; year++)
+	std::cout << "Done." << std::endl;
+
+	///////////////////////////////
+	/// Prepare for simulation
+	///////////////////////////////
+
+	//vector<boost::thread> threads;
+
+	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, *SUPPRESS_MSG);
+	Fuels::FuelsDriver fd = Fuels::FuelsDriver(fdio, *SUPPRESS_MSG);
+
+	for (int year = 0; year < *YEARS; year++)
 	{
 		std::cout << "\n===================================" << std::endl;
 		std::cout << "YEAR " << year << std::endl;
 		std::cout << "===================================\n" << std::endl;
 
 		for (int p = 0; p < plotcounts.size(); p++)
-		//for (int p = 0; p < 1; p++)
 		{
-			currentPlot = aps[p];
-
-			if (!SUPPRESS_MSG)
-			{
-				std::cout << std::endl;
-				std::cout << "Results for plot " << currentPlot->PLOT_ID() << std::endl;
-				std::cout << "====================" << std::endl;
-			}
-			
-			double biomass = 0;
-			double shrubBiomass = 0;
-			double herbBiomass = 0;
-
-			RC = bd.BioMain(year, currentPlot, &shrubBiomass, &herbBiomass);
-
-			if (!SUPPRESS_MSG)
-			{
-				std::cout << std::endl;
-				std::cout << "Shrub Biomass: " << shrubBiomass << std::endl;
-				std::cout << "Herb Biomass: " << herbBiomass << std::endl;
-				std::cout << "Total Biomass: " << (shrubBiomass + herbBiomass) << std::endl;
-			}
-
-			RC = fd.FuelsMain(year, currentPlot);
-
-			if (!SUPPRESS_MSG)
-			{
-				std::map<std::string, double> fuels = currentPlot->TOTALFUELSCOLLECTION();
-				for (std::map<std::string, double>::iterator it = fuels.begin(); it != fuels.end(); it++)
-				{
-					std::cout << it->first << ": " << it->second << std::endl;
-				}
-			}
+			currentPlot = aps[plotcounts[p]];
+			//threads.push_back(boost::thread(simulate, year, currentPlot, &bd, &fd));
+			simulate(year, currentPlot, &bd, &fd);
 		}
+
+		t = time(NULL);
+		dfile = ofstream(DEBUG_FILE, ios::app);
+		dfile << ctime(&t) << ": Year " << year << " finished" << "\n";
+		dfile.close();
 	}
+
+	bdio->write_output();
 
 	delete bdio;
 	delete fdio;
@@ -123,8 +126,45 @@ int main(int argc, char* argv[])
 
 	t = time(NULL);
 	dfile = ofstream(DEBUG_FILE, ios::app);
-	dfile << "\n" << ctime(&t) << "\n";
+	dfile << ctime(&t) << "\n";
 	dfile.close();
 
 	return (*RC);
+}
+
+void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, Biomass::BiomassDriver* bd, Fuels::FuelsDriver* fd)
+{
+	//
+
+	if (!*SUPPRESS_MSG)
+	{
+		std::cout << std::endl;
+		std::cout << "Results for plot " << currentPlot->PLOT_ID() << std::endl;
+		std::cout << "====================" << std::endl;
+	}
+
+	double biomass = 0;
+	double shrubBiomass = 0;
+	double herbBiomass = 0;
+
+	RC = bd->BioMain(year, currentPlot, &shrubBiomass, &herbBiomass);
+
+	if (!*SUPPRESS_MSG)
+	{
+		std::cout << std::endl;
+		std::cout << "Shrub Biomass: " << shrubBiomass << std::endl;
+		std::cout << "Herb Biomass: " << herbBiomass << std::endl;
+		std::cout << "Total Biomass: " << (shrubBiomass + herbBiomass) << std::endl;
+	}
+
+	RC = fd->FuelsMain(year, currentPlot);
+
+	if (!*SUPPRESS_MSG)
+	{
+		std::map<std::string, double> fuels = currentPlot->TOTALFUELSCOLLECTION();
+		for (std::map<std::string, double>::iterator it = fuels.begin(); it != fuels.end(); it++)
+		{
+			std::cout << it->first << ": " << it->second << std::endl;
+		}
+	}
 }

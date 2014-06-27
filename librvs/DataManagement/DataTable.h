@@ -14,6 +14,7 @@
 
 #include <map>
 
+#include <boost\any.hpp>
 #include <sqlite3.h>
 
 #include "../RVSDEF.h"
@@ -28,11 +29,15 @@ namespace DataManagement
 		DataTable(sqlite3_stmt* stmt);
 		virtual ~DataTable(void);
 
+		const char* sql;
+
 		// Return the base sqlite3_stmt pointer
 		inline sqlite3_stmt* getStmt() { return stmt; }
 
 		// Maps column names to their index position
 		std::map<std::string, int> Columns;
+
+		std::map<int, boost::any> Data;
 
 		inline int numCols() { return column_count; }
 		inline int numRows() { return row_count; }  // Disabled

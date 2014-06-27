@@ -55,7 +55,6 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	ap->shrubBiomass = *retShrubBiomass;
 	ap->shrubCover = totalShrubCover;
 	ap->shrubHeight = averageHeight;
-	ap->production = calcPrimaryProduction();
 
 	ap->totalBiomass = ap->SHRUBBIOMASS() + ap->HERBBIOMASS();
 
@@ -63,32 +62,6 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	RC = bdio->write_output_record(&year, ap);
 
 	return RC;
-}
-
-double BiomassDriver::calcPrimaryProduction()
-{
-	// Get a text representation of the return level
-	/*
-	char* clevel;
-    switch (this->level)
-    {
-		case RVS::Biomass::low:
-			clevel = "low_val";
-            break;
-        case RVS::Biomass::medium:
-			clevel = "med_val";
-            break;
-        case RVS::Biomass::high:
-			clevel = "high_val";
-            break;
-		default:
-			clevel = "med_val";
-			break;
-    }
-	*/
-	char* clevel = "med_val";
-	double primaryProduction = bdio->query_biomass_pp_table(ap->BPS_NUM(), clevel);
-	return primaryProduction;
 }
 
 double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)

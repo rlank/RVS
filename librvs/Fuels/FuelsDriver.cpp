@@ -28,8 +28,6 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 		current = shrubs->at(b);
 		current->fuels.clear();  // Clear last year's fuels
 
-		std::cout << current->dom_spp.c_str() << std::endl;
-
 		// Equation numbers for each fuels calculation
 		map<string, int> equationNumbers = fdio->query_crosswalk_table(current->SPP_CODE());  
 
@@ -45,7 +43,6 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 		for (map<string, int>::iterator et = equationNumbers.begin(); et != equationNumbers.end(); et++)
 		{
 			int equationNumber = et->second;
-			std::cout <<et->first << ":" << equationNumber << std::endl;
 
 			double fuel = calcShrubFuel(equationNumber, current);
 			// Convert from grams to lbs
@@ -257,7 +254,7 @@ std::string RVS::Fuels::FuelsDriver::determineFBFMClassTable(RVS::DataManagement
 		*RC = sqlite3_step(dt->getStmt());
 		pass = true;
 	}
-
+	*RC = sqlite3_reset(dt->getStmt());
 	return fuelClassTable;
 }
 
@@ -305,9 +302,9 @@ int RVS::Fuels::FuelsDriver::calcFBFMGrass(std::string classTable, RVS::DataMana
 		}
 	}
 
-	int fbfm = switchClimateFBFM(dt, ap);
+	*RC = sqlite3_reset(dt->getStmt());
 
-	delete dt;
+	int fbfm = switchClimateFBFM(dt, ap);
 	return fbfm;
 }
 
@@ -368,8 +365,7 @@ int RVS::Fuels::FuelsDriver::calcFBFMShrub(std::string classTable, RVS::DataMana
 		pass = true;
 		*RC = sqlite3_step(dt->getStmt());
 	}
-	
-	delete dt;
+	*RC = sqlite3_reset(dt->getStmt());
 	return fbfm;
 }
 
@@ -433,8 +429,7 @@ int RVS::Fuels::FuelsDriver::calcFBFMMixed(std::string classTable, RVS::DataMana
 		pass = true;
 		*RC = sqlite3_step(dt->getStmt());
 	}
-
-	delete dt;
+	*RC = sqlite3_reset(dt->getStmt());
 	return fbfm;
 }
 

@@ -3,6 +3,8 @@
 RVS::DataManagement::DataTable::DataTable(sqlite3_stmt* stmt)
 {
 	this->stmt = stmt;
+	this->sql = sqlite3_sql(stmt);
+
 	Columns = std::map<std::string, int>();
 
 	int colCount = sqlite3_column_count(stmt);

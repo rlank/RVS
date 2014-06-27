@@ -43,8 +43,6 @@ namespace Biomass
 		int query_crosswalk_table(std::string spp, std::string returnType);
 		// Returns a record from the biomass equation table
 		RVS::DataManagement::DataTable* query_equation_table(int equation_number);
-		// Queries Bio_Herbs table to lookup herbaceous biomass. Takes a BPS number to query against.
-		double query_biomass_pp_table(int baseBPS, char* level);
 
 
 		// Return a collection of required values for herbaceous biomass calculation.

@@ -9,9 +9,12 @@
 #define RVSDEF_H
 
 extern int* RC;
+extern int* YEARS;
+extern bool* SUPPRESS_MSG;
 //extern const char* RVS_DB_PATH;
 //extern const char* OUT_DB_PATH;
 extern const char* DEBUG_FILE;
+extern bool* USE_MEM;
 
 // OS-specific includes
 #define WIN 0
@@ -27,7 +30,7 @@ extern const char* DEBUG_FILE;
 
 #if WIN
 	#ifndef RVS_DB_PATH
-	#define RVS_DB_PATH "C:/Users/robb/Documents/GitHub/RVS/rvs_in.db"
+	#define RVS_DB_PATH "C:/Users/robb/Documents/GitHub/RVS/rvs_in_30k.db"
 	#define OUT_DB_PATH "C:/Users/robb/Documents/GitHub/RVS/rvs_out.db"
 	#endif
 #else

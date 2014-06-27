@@ -53,12 +53,6 @@ namespace Biomass
 		const float LN_PRECIP = 0.141f;
 		const float LN_NDVI = 3.0056f;
 
-        // This is the primary biomass calculator for herbs and the fallback for shrubs
-        // (used when shrub equation parsing fails). Loads the Bio_Herbs table and 
-        // looks up the respective biomass value.
-        // <param name="bps">5-digit BPS number (without map zone)</param>
-        // <returns>Biomass</returns>
-		double calcPrimaryProduction();
 		double calcShrubBiomass(RVS::DataManagement::SppRecord* record);
 		double calcStemsPerAcre(RVS::DataManagement::SppRecord* record);
 		double calcHerbBiomass(int year);

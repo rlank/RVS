@@ -25,8 +25,7 @@ int* RVS::Biomass::BiomassDIO::create_output_table()
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
-	RC = create_table(sql);
-	delete sql;
+	queuedWrites.push_back(sql);
 
 	return RC;
 }
@@ -42,8 +41,8 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
-	RC = exec_sql(sql);
-	delete sql;
+	queuedWrites.push_back(sql);
+
 	return RC;
 }
 
@@ -63,8 +62,8 @@ int* RVS::Biomass::BiomassDIO::create_intermediate_table()
 
 	char* sql = new char; 
 	sql = streamToCharPtr(&sqlstream);
-	RC = create_table(sql);
-	delete sql;
+	queuedWrites.push_back(sql);
+
 	return RC;
 }
 
@@ -81,90 +80,55 @@ int* RVS::Biomass::BiomassDIO::write_intermediate_record(int* year, RVS::DataMan
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
-	RC = exec_sql(sql);
-	delete sql;
+	queuedWrites.push_back(sql);
+
 	return RC;
 }
 
 int RVS::Biomass::BiomassDIO::query_crosswalk_table(std::string spp, std::string returnType)
 {
 	// Create the sqlite3 statment to query biomass crosswalk table on species
-	sqlite3_stmt* stmt = query_base(BIOMASS_CROSSWALK_TABLE, SPP_CODE_FIELD, spp);
-	int colNum = sqlite3_column_count(stmt);
-	// Initiate the query
-	*RC = sqlite3_step(stmt);
+	const char* sql = query_base(BIOMASS_CROSSWALK_TABLE, SPP_CODE_FIELD, spp);
+	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
+
+	int colNum = dt->numCols();
+
 	// Step over the columns, looking for the requested return type
 	int ret = 0;
 	for (int i = 0; i < colNum; i++)
 	{
 		// If the column name matches the return type, return the equation number found there
-		if (strcmp(sqlite3_column_name(stmt, i), returnType.c_str()) == 0)
+		if (strcmp(sqlite3_column_name(dt->getStmt(), i), returnType.c_str()) == 0)
 		{
-			ret = sqlite3_column_int(stmt, i);
+			getVal(dt->getStmt(), i, &ret);
 		}
 	}
-	// Cleanup
-	*RC = sqlite3_finalize(stmt);
 	return ret;
 }
 
 RVS::DataManagement::DataTable* RVS::Biomass::BiomassDIO::query_equation_table(int equation_number)
 {
-	sqlite3_stmt* stmt = query_base(BIOMASS_EQUATION_TABLE, EQUATION_NUMBER_FIELD, equation_number);
-	DataManagement::DataTable* dt = new DataManagement::DataTable(stmt);
+	const char* sql = query_base(BIOMASS_EQUATION_TABLE, EQUATION_NUMBER_FIELD, equation_number);
+	DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
 	return dt;
-}
-
-double RVS::Biomass::BiomassDIO::query_biomass_pp_table(int baseBPS, char* level)
-{
-	// Get the datatable for the herb biomass
-	sqlite3_stmt* stmt = query_base(BIOMASS_PRIMARYPRODUCTION_TABLE, BPS_NUM_FIELD, baseBPS);
-	DataManagement::DataTable* dt = new DataManagement::DataTable(stmt);
-
-	double biomass = 0;
-
-	int colCount = sqlite3_column_count(dt->getStmt());
-	*RC = sqlite3_step(dt->getStmt());
-
-	// Step through the returned record set. Match the column name to the requested level
-	for (int i = 0; i < colCount; i++)
-	{
-		// If the column name matches the requested return level, get the value
-		// and stop iteration.
-		const char* colName = sqlite3_column_name(dt->getStmt(), i);
-		if (strcmp(colName, level) == 0)
-		{
-			biomass = sqlite3_column_int(dt->getStmt(), i);
-			break;
-		}
-	}
-
-	delete dt;
-	return biomass;
 }
 
 void RVS::Biomass::BiomassDIO::query_biogroup_coefs(int bps, double* group_const, double* ndvi_grp_interact, double* ppt_grp_interact)
 {
-	sqlite3_stmt* stmt1 = query_base(BIOMASS_MACROGROUP_TABLE, BPS_NUM_FIELD, bps);
+	const char* sql1 = query_base(BIOMASS_MACROGROUP_TABLE, BPS_NUM_FIELD, bps);
+	RVS::DataManagement::DataTable* dt1 = prep_datatable(sql1, rvsdb);
 
-	int colCount = sqlite3_column_count(stmt1);
-	*RC = sqlite3_step(stmt1);
-	char* groupID = NULL;
+	int colCount = dt1->numCols();
+	std::string groupID;
 
 	for (int i = 0; i < colCount; i++)
 	{
-		const char* colName = sqlite3_column_name(stmt1, i);
+		const char* colName = sqlite3_column_name(dt1->getStmt(), i);
 		if (strcmp(colName, GROUP_ID_FIELD) == 0)
 		{
-			groupID = (char*)sqlite3_column_text(stmt1, i);
+			getVal(dt1->getStmt(), i, &groupID);
 		}
 	}
-
-	if (groupID == NULL)
-	{
-		//$$ Throw new DATANOTFOUND error here
-	}
-
 	
 	std::stringstream sqlstream;
 	sqlstream << "SELECT * FROM " << BIOMASS_GROUP_COEFS_TABLE << \
@@ -172,29 +136,25 @@ void RVS::Biomass::BiomassDIO::query_biogroup_coefs(int bps, double* group_const
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
-	sqlite3_stmt* stmt2 = query_base(sql);
-	*RC = sqlite3_step(stmt2);
-	colCount = sqlite3_column_count(stmt2);
+	
+	RVS::DataManagement::DataTable* dt2 = prep_datatable(sql, rvsdb);
+
+	colCount = dt2->numCols();
 
 	for (int i = 0; i < colCount; i++)
 	{
-		const char* colName = sqlite3_column_name(stmt2, i);
+		const char* colName = sqlite3_column_name(dt2->getStmt(), i);
 		if (strcmp(colName, GROUP_CONST_FIELD) == 0)
 		{
-			double GC = sqlite3_column_double(stmt2, i);
-			*group_const = sqlite3_column_double(stmt2, i);
+			getVal(dt2->getStmt(), i, group_const);
 		}
 		else if (strcmp(colName, NDVI_INTERACT_FIELD) == 0)
 		{
-			*ndvi_grp_interact = sqlite3_column_double(stmt2, i);
+			getVal(dt2->getStmt(), i, ndvi_grp_interact);
 		}
 		else if (strcmp(colName, PRCP_INTERACT_FIELD) == 0)
 		{
-			*ppt_grp_interact = sqlite3_column_double(stmt2, i);
+			getVal(dt2->getStmt(), i, ppt_grp_interact);
 		}
 	}
-
-	delete sql;
-	*RC = sqlite3_finalize(stmt1);
-	*RC = sqlite3_finalize(stmt2);
 }

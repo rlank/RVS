@@ -24,7 +24,7 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	totalFuels = std::map<std::string, double>();
 
 	buildAnalysisPlot(dio, dt);
-	buildShrubRecords(dio, plot_id);
+	//buildShrubRecords(dio, plot_id);
 	buildInitialFuels(dio);
 }
 
@@ -72,25 +72,14 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 	return;
 }
 
-void AnalysisPlot::buildShrubRecords(RVS::DataManagement::DIO* dio, int plot_num)
+void AnalysisPlot::push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt)
 {
-	// read in data. the query_biomass_input_table function returns a DataTable
-	// with only records for that plot number
-	RVS::DataManagement::DataTable* dt = dio->query_shrubs_table(plot_num);
-	*RC = sqlite3_step(dt->getStmt());
-	RVS::DataManagement::SppRecord* spr = NULL;
-	while (*RC == SQLITE_ROW)
-	{
-		spr = new RVS::DataManagement::SppRecord(dio, dt);
-		shrubRecords.push_back(spr);
-		*RC = sqlite3_step(dt->getStmt());
-	}
-	delete dt;
+	RVS::DataManagement::SppRecord* record = new RVS::DataManagement::SppRecord(dio, dt);
+	shrubRecords.push_back(record);
 }
 
 void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 {
-
 	dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
 }
 

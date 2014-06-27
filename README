@@ -5,6 +5,8 @@ Rangeland Vegetation Simulator
 
 RVS provides a suite of modules which simulate non-forested project areas' vegetation conditions over time. RVS includes calculations for biomass, succession, disturbance, and fuel modelling. The RVS API is best used in conjunction with the Forest Vegetation Simulator, found at http://www.fs.fed.us/fmsc/fvs/ and https://code.google.com/p/open-fvs/
 
+One component of RVS will be a dataloader which creates a local database from location data provided by the user. This data can be manipulated and adjusted locally with "real" user data. Until this system is in place, if you're interested in running RVS, contact me and I can send you a sample input database. 
+
 Requirements:
 boost C++ v1.54+
 sqlite v3

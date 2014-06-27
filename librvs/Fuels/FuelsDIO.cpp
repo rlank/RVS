@@ -32,8 +32,7 @@ int* RVS::Fuels::FuelsDIO::create_output_table()
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
-	RC = create_table(sql);
-	delete sql;
+	queuedWrites.push_back(sql);
 
 	return RC;
 }
@@ -60,8 +59,7 @@ int* RVS::Fuels::FuelsDIO::create_intermediate_table()
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
-	RC = create_table(sql);
-	delete sql;
+	queuedWrites.push_back(sql);
 
 	return RC;
 }
@@ -83,8 +81,8 @@ int* RVS::Fuels::FuelsDIO::write_output_record(int* year, RVS::DataManagement::A
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
-	RC = exec_sql(sql);
-	delete sql;
+	queuedWrites.push_back(sql);
+
 	return RC;
 }
 
@@ -105,8 +103,8 @@ int* RVS::Fuels::FuelsDIO::write_intermediate_record(int* year, RVS::DataManagem
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
-	RC = exec_sql(sql);
-	delete sql;
+	queuedWrites.push_back(sql);
+
 	return RC;
 }
 
@@ -114,26 +112,24 @@ std::map<std::string, int> RVS::Fuels::FuelsDIO::query_crosswalk_table(std::stri
 {
 	std::map<std::string, int> equationNumbers = std::map<std::string, int>();
 	// Create the sqlite3 statment to query biomass crosswalk table on species
-	sqlite3_stmt* stmt = query_base(FUEL_CROSSWALK_TABLE, SPP_CODE_FIELD, spp);
-	int colNum = sqlite3_column_count(stmt);
-	// Initiate the query
-	*RC = sqlite3_step(stmt);
+	const char* sql = query_base(FUEL_CROSSWALK_TABLE, SPP_CODE_FIELD, spp);
+	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
+
+	int colNum = dt->numCols();
 	// Step over the columns, looking for the requested return type
 	int val = 0;
-
 	for (int i = 0; i < colNum; i++)
 	{
-		const char* colName = sqlite3_column_name(stmt, i);
+		const char* colName = sqlite3_column_name(dt->getStmt(), i);
 		std::string colStr = std::string(colName);
 		// If the column name matches the return type, return the equation number found there
 		if (colName[0] == 'F')
 		{
-			val = sqlite3_column_int(stmt, i);
+			getVal(dt->getStmt(), i, &val);
 			equationNumbers[colStr] = val;
 		}
 	}
-	// Cleanup
-	*RC = sqlite3_finalize(stmt);
+
 	return equationNumbers;
 }
 
@@ -158,16 +154,14 @@ RVS::DataManagement::DataTable* RVS::Fuels::FuelsDIO::query_equation_table(std::
 	}
 
 	char* sql = streamToCharPtr(&sqlstream);
-
-	sqlite3_stmt* stmt = query_base(sql);
-	RVS::DataManagement::DataTable* dt = new RVS::DataManagement::DataTable(stmt);
+	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
 	return dt;
 }
 
 RVS::DataManagement::DataTable* RVS::Fuels::FuelsDIO::query_equation_table(int equationNumber)
 {
-	sqlite3_stmt* stmt = query_base(FUEL_EQUATION_TABLE, EQUATION_NUMBER_FIELD, equationNumber);
-	DataManagement::DataTable* dt = new DataManagement::DataTable(stmt);
+	const char* sql = query_base(FUEL_EQUATION_TABLE, EQUATION_NUMBER_FIELD, equationNumber);
+	DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
 	return dt;
 }
 
@@ -176,8 +170,7 @@ RVS::DataManagement::DataTable* RVS::Fuels::FuelsDIO::query_fbfm_rules_selector(
 	std::stringstream ss;
 	ss << "SELECT * FROM " << FUEL_CLASSRULES_TABLE << ";";
 	char* sql = streamToCharPtr(&ss);
-	sqlite3_stmt* stmt = query_base(sql);
-	RVS::DataManagement::DataTable* dt = new RVS::DataManagement::DataTable(stmt);
+	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
 	return dt;
 }
 
@@ -186,7 +179,6 @@ RVS::DataManagement::DataTable* RVS::Fuels::FuelsDIO::query_fbfm_rules(std::stri
 	std::stringstream ss;
 	ss << "SELECT * FROM " << classTable << ";";
 	char* sql = streamToCharPtr(&ss);
-	sqlite3_stmt* stmt = query_base(sql);
-	RVS::DataManagement::DataTable* dt = new RVS::DataManagement::DataTable(stmt);
+	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
 	return dt;
 }

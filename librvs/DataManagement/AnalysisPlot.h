@@ -56,6 +56,8 @@ namespace DataManagement
 
 		const float GRAMS_TO_POUNDS = 0.00220462f;
 
+		void push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
+
 		// Get NDVI for the requested year (starting at 0)
 		double getNDVI(int year);
 		// Get precipitation for the requested year (starting at 0)
@@ -77,8 +79,6 @@ namespace DataManagement
 		double herbBiomass;
 		// Herb holdover biomass (standing dead)
 		double herbHoldoverBiomass;
-		// Primary production for the plot
-		double production;
 		// Shrub biomass for whole plot (g/ac)
 		double shrubBiomass;
 
@@ -98,8 +98,6 @@ namespace DataManagement
 
 		// Builds the AnalysisPlot by querying the appropriate tables(s) in the database
 		void buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
-		// Create shrub records
-		void buildShrubRecords(RVS::DataManagement::DIO* dio, int plot_num);
 		// Get basic fuels information (FBFM, climate)
 		void buildInitialFuels(RVS::DataManagement::DIO* dio);
 	};
