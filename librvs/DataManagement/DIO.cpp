@@ -40,7 +40,7 @@ RVS::DataManagement::DIO::DIO(void)
 // Destructor. Closes the connection with the db.
 RVS::DataManagement::DIO::~DIO(void)
 {
-	ofstream dfile = ofstream(DEBUG_FILE, ios::app);
+	ofstream* dfile = new ofstream(DEBUG_FILE, ios::app);
 
 	RC = finalizeQueries();
 
@@ -52,12 +52,12 @@ RVS::DataManagement::DIO::~DIO(void)
 		
 		if (*RC != 0)
 		{
-			dfile << "Warning: DB not closing properly.\n";
-			dfile << sqlite3_errmsg(rvsdb) << "\n";
+			*dfile << "Warning: DB not closing properly.\n";
+			*dfile << sqlite3_errmsg(rvsdb) << "\n";
 		}
 		else
 		{
-			dfile << "Closing InputDB connection.\n";
+			*dfile << "Closing InputDB connection.\n";
 		}
 	}
 	
@@ -68,16 +68,16 @@ RVS::DataManagement::DIO::~DIO(void)
 
 		if (*RC != 0)
 		{
-			dfile << "Warning: Out DB not closing properly.\n";
-			dfile << sqlite3_errmsg(outdb) << "\n";
+			*dfile << "Warning: Out DB not closing properly.\n";
+			*dfile << sqlite3_errmsg(outdb) << "\n";
 		}
 		else
 		{
-			dfile << "Closing OutDB connection.\n";
+			*dfile << "Closing OutDB connection.\n";
 		}
 	}
 
-	dfile.close();
+	dfile->close();
 }
 
 // Opens an sqlite connection to the specified database
@@ -134,7 +134,7 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const c
 		*RC = sqlite3_prepare_v2(db, sql, nByte, &stmt, NULL);
 		checkDBStatus(db, sql);
 		*RC = sqlite3_step(stmt);
-		checkDBStatus(db);
+		checkDBStatus(db, sql);
 		dt = new RVS::DataManagement::DataTable(stmt);
 		if (addToActive) { activeQueries.insert(pair<string, RVS::DataManagement::DataTable*>(sql, dt)); }
 	}
@@ -491,10 +491,17 @@ bool RVS::DataManagement::DIO::checkDBStatus(sqlite3* db, const char* sql, const
 	if (!(*RC == SQLITE_OK || *RC == SQLITE_ROW) && db != NULL)
 	{
 		state = false;
-		ofstream dfile = ofstream(DEBUG_FILE, ios::app);
-		dfile << sql << "\n";
-		dfile << sqlite3_errmsg(db) << "\n\n";
-		dfile.close();
+		ofstream* dfile = new ofstream(DEBUG_FILE, ios::app);
+		*dfile << sql << "\n";
+		if (*RC == SQLITE_DONE)
+		{
+			*dfile << "No records found." << "\n\n";
+		}
+		else
+		{
+			*dfile << sqlite3_errmsg(db) << "\n\n";
+		}
+		dfile->close();
 	}
 	
 	return state;

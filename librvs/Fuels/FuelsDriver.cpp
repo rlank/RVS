@@ -48,7 +48,7 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 			// Convert from grams to lbs
 			fuel = fuel * ap->GRAMS_TO_POUNDS;
 
-			if (isnan<double>(fuel) || isinf<double>(fuel) || fuel < 0)
+			if (std::isnan(fuel) || std::isinf(fuel) || fuel < 0)
 			{
 				fuel = -9999.0;
 			}
@@ -81,7 +81,7 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 	// Save the total shrub fuel
 	ap->shrubFuels = totalShrubFuel;
 	// Get herbaceous fuels and add it to total 1 hr fuels
-	ap->herbFuels = ap->production + ap->herbHoldoverBiomass;
+	ap->herbFuels = ap->herbBiomass + ap->herbHoldoverBiomass;
 	ap->totalFuels["FS1"] += ap->herbFuels;
 
 	string fuelClassTable = determineFBFMClassTable(ap);

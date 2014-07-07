@@ -39,9 +39,9 @@ void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, Biomass:
 int main(int argc, char* argv[])
 {   
 	time_t t = time(NULL);
-	ofstream dfile = ofstream(DEBUG_FILE, ios::out);
-	dfile << ctime(&t) << "\n";
-	dfile.close();
+	ofstream* dfile = new ofstream(DEBUG_FILE, ios::out);
+	*dfile << ctime(&t) << "\n";
+	dfile->close();
 
 
 	///////////////////////////
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 		std::cout << "YEAR " << year << std::endl;
 		std::cout << "===================================\n" << std::endl;
 
-		for (int p = 0; p < plotcounts.size(); p++)
+		for (int &p : plotcounts)
 		{
 			currentPlot = aps[plotcounts[p]];
 			//threads.push_back(boost::thread(simulate, year, currentPlot, &bd, &fd));
@@ -112,9 +112,9 @@ int main(int argc, char* argv[])
 		}
 
 		t = time(NULL);
-		dfile = ofstream(DEBUG_FILE, ios::app);
-		dfile << ctime(&t) << ": Year " << year << " finished" << "\n";
-		dfile.close();
+		dfile = new ofstream(DEBUG_FILE, ios::app);
+		*dfile << ctime(&t) << ": Year " << year << " finished" << "\n";
+		dfile->close();
 	}
 
 	bdio->write_output();
@@ -125,9 +125,9 @@ int main(int argc, char* argv[])
 	std::cout << std::endl << "Ran to completion." << std::endl;
 
 	t = time(NULL);
-	dfile = ofstream(DEBUG_FILE, ios::app);
-	dfile << ctime(&t) << "\n";
-	dfile.close();
+	dfile = new ofstream(DEBUG_FILE, ios::app);
+	*dfile << ctime(&t) << "\n";
+	dfile->close();
 
 	return (*RC);
 }

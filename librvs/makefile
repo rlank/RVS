@@ -1,21 +1,22 @@
 CC=gcc
 CP=g++
-CPflags=-g -std=c++11 -Wno-write-strings -Wall -pedantic -c
+CPflags=-g -std=c++11 -Wno-write-strings -pedantic -c
 SHAREFLAGS=-fPIC
 
-libver=0.2
+libver=0.3
 
 biopath:=Biomass
 dmpath:=DataManagement
+fuelpath:=Fuels
 buildpath:=build
 
-INCLUDES:=-I$(shell pwd)/Biomass/ -I$(shell pwd)/DataManagement/
+INCLUDES:=-I/usr/include/boost 
 
 ##########
 ## MAIN ##
 ##########
 
-sources := $(wildcard $(biopath)/*.cpp $(dmpath)/*.cpp)
+sources := $(wildcard $(biopath)/*.cpp $(dmpath)/*.cpp $(fuelpath)/*.cpp)
 objects := $(patsubst %.cpp,%.o, $(sources))
 
 all: lib exe
@@ -33,7 +34,7 @@ $(buildpath):
 	mkdir -p $(buildpath)
 
 %.o: 
-	$(CP) $(CPflags) $(SHAREFLAGS) $(@:.o=.cpp) -o $(buildpath)/$(notdir $@)
+	$(CP) $(CPflags) $(INCLUDES) $(SHAREFLAGS) $(@:.o=.cpp) -o $(buildpath)/$(notdir $@) -lboost_system
 	
 
 ###########
