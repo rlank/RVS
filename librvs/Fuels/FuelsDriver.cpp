@@ -29,7 +29,15 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 		current->fuels.clear();  // Clear last year's fuels
 
 		// Equation numbers for each fuels calculation
-		map<string, int> equationNumbers = fdio->query_crosswalk_table(current->SPP_CODE());  
+		map<string, int> equationNumbers;
+		try
+		{
+			equationNumbers = fdio->query_crosswalk_table(current->SPP_CODE());
+		}
+		catch (RVS::DataManagement::DataNotFoundException &ex)
+		{
+			equationNumbers = fdio->query_crosswalk_table("ARTRT");
+		}
 
 		// Get percent live for each fuel class (1=1hr, 2=10hr, 3=100hr)
 		//current->crl1 = calcPercentLive(current, 1);

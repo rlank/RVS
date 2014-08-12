@@ -29,6 +29,10 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 		double stemsPerAcre = calcStemsPerAcre(record);
 		record->stemsPerAcre = stemsPerAcre;
 		double singleBiomass = calcShrubBiomass(record);
+
+		//$$ TEMP fudging biomass
+		singleBiomass *= .08;
+
 		record->shrubBiomass = singleBiomass;
 		record->exShrubBiomass = singleBiomass * stemsPerAcre;
 		*retShrubBiomass += record->exShrubBiomass;
@@ -122,7 +126,14 @@ double BiomassDriver::calcHerbBiomass(int year)
 	double* grp_id_const = new double;
 	double* ndvi_grp_interact = new double;
 	double* ppt_grp_interact = new double;
-	bdio->query_biogroup_coefs(ap->BPS_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact);
+	try
+	{
+		bdio->query_biogroup_coefs(ap->BPS_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact);
+	}
+	catch (RVS::DataManagement::DataNotFoundException &ex)
+	{
+		bdio->query_biogroup_coefs(ap->BPS_NUM(true), grp_id_const, ndvi_grp_interact, ppt_grp_interact);
+	}
 
 	double ndvi = ap->getNDVI(year);
 	double ppt = ap->getPPT(year);

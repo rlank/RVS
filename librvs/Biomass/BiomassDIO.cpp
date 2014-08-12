@@ -52,12 +52,13 @@ int* RVS::Biomass::BiomassDIO::create_intermediate_table()
 	sqlstream << "CREATE TABLE " << BIOMASS_INTERMEDIATE_TABLE << " (" << \
 		PLOT_NUM_FIELD << " INTEGER NOT NULL, " << \
 		YEAR_OUT_FIELD << " INTEGER NOT NULL, " << \
-		EVT_NUM_FIELD << " INTEGER NOT NULL, " << \
+		EVT_NUM_FIELD << " INTEGER, " << \
 		BPS_NUM_FIELD << " INTEGER NOT NULL, " << \
 		DOM_SPP_FIELD << " char(255), " << \
 		SPP_CODE_FIELD << " char(8), " << \
 		BIOMASS_SHRUB_OUT_FIELD << " REAL, " << \
 		BIOMASS_STEMS_PER_ACRE_FIELD << " REAL, " << \
+		"PCH_VALUE REAL, " \
 		"PCH_EQUATION_NUMBER INTEGER, BAT_EQUATION_NUMBER INTEGER);";
 
 	char* sql = new char; 
@@ -73,10 +74,10 @@ int* RVS::Biomass::BiomassDIO::write_intermediate_record(int* year, RVS::DataMan
 	sqlstream << "INSERT INTO " << BIOMASS_INTERMEDIATE_TABLE << " (" << \
 		PLOT_NUM_FIELD << ", " << YEAR_OUT_FIELD << ", " << EVT_NUM_FIELD << ", " << BPS_NUM_FIELD << " ," << \
 		DOM_SPP_FIELD << ", " << SPP_CODE_FIELD << ", " << BIOMASS_SHRUB_OUT_FIELD << ", " << BIOMASS_STEMS_PER_ACRE_FIELD << " ," << \
-		"PCH_EQUATION_NUMBER, BAT_EQUATION_NUMBER ) " << \
+		"PCH_VALUE, PCH_EQUATION_NUMBER, BAT_EQUATION_NUMBER ) " << \
 		"VALUES (" << ap->PLOT_ID() << "," << *year << "," << ap->EVT_NUM() << "," << ap->BPS_NUM() << ",\"" << \
 		record->DOM_SPP() << "\",\"" << record->SPP_CODE() << "\"," << record->SHRUBBIOMASS() << "," << record->STEMSPERACRE() << ", " << \
-		record->PCHEQNUM() << "," << record->BATEQNUM() << ");";
+		record->WIDTH() << ", " << record->PCHEQNUM() << "," << record->BATEQNUM() << ");";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);

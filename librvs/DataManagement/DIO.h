@@ -2,8 +2,6 @@
 /// Name: DIO.h                                                ///
 /// Desc: Data Input/output class. Contains functions and      ///
 /// methods for access data (primarily from the RVSDB)         ///
-/// Base Class(es): none                                       ///
-/// Requires: string, RVS_TypeDefs                             ///
 /// ********************************************************** ///
 
 #pragma once
@@ -11,18 +9,22 @@
 #ifndef DIO_H
 #define DIO_H
 
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include <boost/any.hpp>
 
-#include "DataTable.h"
+
 #include "../RVSDBNAMES.h"
 #include "../RVSDEF.h"
+#include "DataTable.h"
+#include "RVSException.h"
 
 // Need to avoid circular reference here, so declare empty classes
 namespace RVS { namespace DataManagement { class AnalysisPlot; } }
@@ -34,7 +36,7 @@ namespace RVS
 {
 namespace DataManagement
 {
-	/// Class for querying the database (and eventually writing output database)
+	// Class for querying the database (and eventually writing output database)
 	class DIO
 	{
 	public:
@@ -53,7 +55,8 @@ namespace DataManagement
 		DataTable* query_input_table(int plot_num);
 		// Querys the shrub input table ("Shrubs")
 		DataTable* query_shrubs_table(void);
-		DataTable* query_shrubs_table(int plot_num);
+
+		int query_backup_bps(int huc);
 
 		// Returns a value from a specified column in a sqlite statement object
 		void getVal(sqlite3_stmt* stmt, int column, boost::any* retVal);
@@ -71,6 +74,7 @@ namespace DataManagement
 		virtual void query_fuels_basic_info(const int* bps, int* fbfm, bool* isDry);
 
 		int* write_output(void);
+		void write_debug_msg(const char* msg);
 
 	protected:
 		virtual int* create_output_table() = 0;
@@ -78,10 +82,7 @@ namespace DataManagement
 		virtual int* write_output_record(int* year, RVS::DataManagement::AnalysisPlot* ap) = 0;
 		virtual int* write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* spp) = 0;
 
-		// Directly execute a SQL statement against the OUTPUT database
-		int* exec_sql(const char* sql);
-
-		RVS::DataManagement::DataTable* prep_datatable(const char* sql, sqlite3* db, bool addToActive=true);
+		RVS::DataManagement::DataTable* prep_datatable(const char* sql, sqlite3* db, bool addToActive=true, bool reset=false);
 		
 		// Converts a std::stringstream to a char pointer (array)
 		char* streamToCharPtr(std::stringstream* stream);
@@ -102,7 +103,7 @@ namespace DataManagement
 		static sqlite3* outdb;  // SQLite output database object
 
 	private:
-		static map<string, RVS::DataManagement::DataTable*> activeQueries;
+		static map<string, shared_ptr<DataTable>> activeQueries;
 		static int buildInMemDB(sqlite3 *pInMemory, const char *zFilename, int isSave);
 
 		int* create_output_db();

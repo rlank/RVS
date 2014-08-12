@@ -19,6 +19,7 @@
 #include "RVSDEF.h"
 #include "DataManagement/DIO.h"
 #include "DataManagement/AnalysisPlot.h"
+#include "DataManagement/RVSException.h"
 #include "Biomass/BiomassDIO.h"
 #include "Biomass/BiomassDriver.h"
 #include "Fuels/FuelsDIO.h"
@@ -39,10 +40,9 @@ void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, Biomass:
 int main(int argc, char* argv[])
 {   
 	time_t t = time(NULL);
-	ofstream* dfile = new ofstream(DEBUG_FILE, ios::out);
+	unique_ptr<ofstream> dfile (new ofstream(DEBUG_FILE, ios::out));
 	*dfile << ctime(&t) << "\n";
 	dfile->close();
-
 
 	///////////////////////////
 	/// User execution args ///
@@ -51,14 +51,13 @@ int main(int argc, char* argv[])
 	// Args:
 	// 1: Input database path
 	// 2: Output database path
-	
 
 	/// Get DIO ready for queries
 	Biomass::BiomassDIO* bdio = new Biomass::BiomassDIO();
 	Fuels::FuelsDIO* fdio = new Fuels::FuelsDIO();
     
     vector<int> plotcounts = bdio->query_analysis_plots();
-	map<int, AnalysisPlot*> aps = map<int, AnalysisPlot*>();
+	map<int, AnalysisPlot*> aps;
 	
 	///////////////////////////////////////////////////////////////////////
 	/// Load analysis plots and shrub records into a map keyed by plot id
@@ -73,7 +72,7 @@ int main(int argc, char* argv[])
 	while (*RC == SQLITE_ROW)
 	{
 		currentPlot = new AnalysisPlot(fdio, plots_dt);
-		aps.insert(pair<int, AnalysisPlot*>(currentPlot->PLOT_ID(),	currentPlot));
+		aps.insert(pair<int, AnalysisPlot*>(currentPlot->PLOT_ID(), currentPlot));
 		*RC = sqlite3_step(plots_dt->getStmt());
 	}
 
@@ -106,15 +105,14 @@ int main(int argc, char* argv[])
 
 		for (int &p : plotcounts)
 		{
-			currentPlot = aps[plotcounts[p]];
+			currentPlot = aps[p];
 			//threads.push_back(boost::thread(simulate, year, currentPlot, &bd, &fd));
 			simulate(year, currentPlot, &bd, &fd);
 		}
 
-		t = time(NULL);
-		dfile = new ofstream(DEBUG_FILE, ios::app);
-		*dfile << ctime(&t) << ": Year " << year << " finished" << "\n";
-		dfile->close();
+		stringstream ss; 
+		ss << "Year " << year << " finished";
+		bdio->write_debug_msg(ss.str().c_str());
 	}
 
 	bdio->write_output();
@@ -125,7 +123,7 @@ int main(int argc, char* argv[])
 	std::cout << std::endl << "Ran to completion." << std::endl;
 
 	t = time(NULL);
-	dfile = new ofstream(DEBUG_FILE, ios::app);
+	dfile = unique_ptr<ofstream>(new ofstream(DEBUG_FILE, ios::app));
 	*dfile << ctime(&t) << "\n";
 	dfile->close();
 
@@ -134,8 +132,6 @@ int main(int argc, char* argv[])
 
 void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, Biomass::BiomassDriver* bd, Fuels::FuelsDriver* fd)
 {
-	//
-
 	if (!*SUPPRESS_MSG)
 	{
 		std::cout << std::endl;

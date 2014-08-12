@@ -22,9 +22,10 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	ndviValues = std::vector<double>();
 	precipValues = std::vector<double>();
 	totalFuels = std::map<std::string, double>();
-
+	
+	// Order matters here!
 	buildAnalysisPlot(dio, dt);
-	//buildShrubRecords(dio, plot_id);
+	fallback_bps_num = dio->query_backup_bps(huc);
 	buildInitialFuels(dio);
 }
 
@@ -37,13 +38,10 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 {
 	sqlite3_stmt* stmt = dt->getStmt();
 	
-	int column = 0;
-	column = dt->Columns[PLOT_NUM_FIELD];
 	dio->getVal(stmt, dt->Columns[PLOT_NUM_FIELD], &plot_id);
-	column = dt->Columns[EVT_NUM_FIELD];
 	dio->getVal(stmt, dt->Columns[EVT_NUM_FIELD], &evt_num);
-	column = dt->Columns[BPS_NUM_FIELD];
 	dio->getVal(stmt, dt->Columns[BPS_NUM_FIELD], &bps_num);
+	dio->getVal(stmt, dt->Columns[HUC_FIELD], &huc);
 
 	int colCount = sqlite3_column_count(stmt);
 	std::string ndvi = "NDVI";
@@ -80,7 +78,14 @@ void AnalysisPlot::push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement
 
 void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 {
-	dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
+	try
+	{
+		dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
+	}
+	catch (RVS::DataManagement::DataNotFoundException &ex)
+	{
+		dio->query_fuels_basic_info(&fallback_bps_num, &defaultFBFM, &dryClimate);
+	}
 }
 
 double AnalysisPlot::getNDVI(int year)

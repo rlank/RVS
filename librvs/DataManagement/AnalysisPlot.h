@@ -35,6 +35,8 @@ namespace DataManagement
 		inline int PLOT_ID() { return plot_id; }
 		inline int EVT_NUM() { return evt_num; }
 		inline int BPS_NUM() { return bps_num; }
+		inline int BPS_NUM(bool useFallback) { return useFallback ? fallback_bps_num : bps_num; }
+		inline int HUC() { return huc; }
 
 		// Collection of shrub records. Some plots will only have a single record, others many.
 		inline std::vector<RVS::DataManagement::SppRecord*>* SHRUB_RECORDS() { return &shrubRecords; }
@@ -68,6 +70,8 @@ namespace DataManagement
 		int evt_num;
 		std::string evt_name;
 		int bps_num;
+		int fallback_bps_num;
+		int huc;
 
 		// Average cover-weighted shrub height
 		double shrubHeight;
