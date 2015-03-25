@@ -11,7 +11,8 @@ SppRecord::SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTab
 {
 	initialize_object();
 	buildRecord(dio, dt);
-	fuels = std::map<std::string, double>();
+	fuelEqs = std::map<std::string, int>();
+	fuelValues = std::map<std::string, double>();
 }
 
 SppRecord::~SppRecord(void)

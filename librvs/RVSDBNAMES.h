@@ -14,8 +14,8 @@
 namespace RVS
 {
 	// Primary table names. Replace with externs as needed
-	static const char* RVS_INPUT_TABLE = "Plots_Real_edit";
-	static const char* SHRUB_INPUT_TABLE = "Shrub_Input_Real_edit";
+	static const char* RVS_INPUT_TABLE = "Plots_Real";
+	static const char* SHRUB_INPUT_TABLE = "Shrub_Input_Real";
 	static const char* BPS_HUC_TABLE = "BPS_HUC_Master";
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
 	static const char* BIOMASS_PRIMARYPRODUCTION_TABLE = "Bio_PP_KgH";
@@ -30,6 +30,7 @@ namespace RVS
 
 	// Field names (primarily from input)
 	static const char* PLOT_NUM_FIELD = "PLOT_ID";
+	static const char* PLOT_NAME_FIELD = "PLOT_NAME";
 	static const char* EVT_NUM_FIELD = "evt_num";
 	static const char* EVT_NAME_FIELD = "evt_name";
 	static const char* BPS_NUM_FIELD = "BPS";
@@ -91,10 +92,13 @@ namespace RVS
 
 	// Output table fields
 	static const char* YEAR_OUT_FIELD = "year";
+	static const char* AVG_SHRUB_HEIGHT_FIELD = "avg_shrub_ht";
+	static const char* TOT_SHRUB_COVER_FIELD = "tot_shrub_cov";
 	static const char* BIOMASS_STEMS_PER_ACRE_FIELD = "stems_per_acre";
 	static const char* BIOMASS_HERB_OUT_FIELD = "herb_biomass";
 	static const char* BIOMASS_SHRUB_OUT_FIELD = "shrub_biomass";
 	static const char* BIOMASS_TOTAL_OUT_FIELD = "total_biomass";
+	static const char* BIOMASS_SHRUB_CALC_FIELD = "biomass_calc";
 	static const char* FUEL_1HR_OUT_FIELD = "FS1";
 	static const char* FUEL_10HR_OUT_FIELD = "FS2";
 	static const char* FUEL_100HR_OUT_FIELD = "FS3";
@@ -104,6 +108,11 @@ namespace RVS
 	static const char* FUEL_1HRDEAD_OUT_FIELD = "FD1";
 	static const char* FUEL_10HRDEAD_OUT_FIELD = "FD2";
 	static const char* FUEL_100HRDEAD_OUT_FIELD = "FD3";
+
+	static const char* PCH_EQU_NUM = "pch_eq";
+	static const char* PCH_CALC_FIELD = "pch";
+	static const char* BIOMASS_EQU_NUM = "bio_eq";
+
 	// ********************
 }
 #endif

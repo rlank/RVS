@@ -5,6 +5,7 @@ using RVS::DataManagement::AnalysisPlot;
 AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt)
 {
 	plot_id = 0;
+	plot_name = "";
 	evt_num = 0;
 	bps_num = 0;
 	shrubHeight = 0;
@@ -39,6 +40,7 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 	sqlite3_stmt* stmt = dt->getStmt();
 	
 	dio->getVal(stmt, dt->Columns[PLOT_NUM_FIELD], &plot_id);
+	dio->getVal(stmt, dt->Columns[PLOT_NAME_FIELD], &plot_name);
 	dio->getVal(stmt, dt->Columns[EVT_NUM_FIELD], &evt_num);
 	dio->getVal(stmt, dt->Columns[BPS_NUM_FIELD], &bps_num);
 	dio->getVal(stmt, dt->Columns[HUC_FIELD], &huc);

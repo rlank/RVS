@@ -32,11 +32,14 @@ namespace DataManagement
 		AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
 		virtual ~AnalysisPlot(void);
 
-		inline int PLOT_ID() { return plot_id; }
-		inline int EVT_NUM() { return evt_num; }
-		inline int BPS_NUM() { return bps_num; }
-		inline int BPS_NUM(bool useFallback) { return useFallback ? fallback_bps_num : bps_num; }
-		inline int HUC() { return huc; }
+		inline const int PLOT_ID() { return plot_id; }
+		inline const std::string PLOT_NAME() { return plot_name; }
+		inline const int EVT_NUM() { return evt_num; }
+		inline const int BPS_NUM() { return bps_num; }
+		inline const int BPS_NUM(bool useFallback) { return useFallback ? fallback_bps_num : bps_num; }
+		inline const int HUC() { return huc; }
+		inline const std::string GRP_ID() { return grp_id; }
+		inline const bool ISDRY() { return dryClimate; }
 
 		// Collection of shrub records. Some plots will only have a single record, others many.
 		inline std::vector<RVS::DataManagement::SppRecord*>* SHRUB_RECORDS() { return &shrubRecords; }
@@ -67,11 +70,13 @@ namespace DataManagement
 
 	private:
 		int plot_id;
+		std::string plot_name;
 		int evt_num;
 		std::string evt_name;
 		int bps_num;
 		int fallback_bps_num;
 		int huc;
+		std::string grp_id;
 
 		// Average cover-weighted shrub height
 		double shrubHeight;

@@ -16,9 +16,10 @@ int* RVS::Fuels::FuelsDIO::create_output_table()
 	std::stringstream sqlstream;
 	sqlstream << "CREATE TABLE " << FUELS_OUTPUT_TABLE << "(" << \
 		PLOT_NUM_FIELD << " INT NOT NULL," << \
+		PLOT_NAME_FIELD << " TEXT, " << \
 		YEAR_OUT_FIELD << " INT NOT NULL," << \
-		EVT_NUM_FIELD << " INT NOT NULL," << \
 		BPS_NUM_FIELD << " INT NOT NULL," << \
+		FC_ISDRY_FIELD << " BOOLEAN, " << \
 		FUEL_1HR_OUT_FIELD << " REAL, " << \
 		FUEL_10HR_OUT_FIELD << " REAL, " << \
 		FUEL_100HR_OUT_FIELD << " REAL, " << \
@@ -37,46 +38,40 @@ int* RVS::Fuels::FuelsDIO::create_output_table()
 	return RC;
 }
 
-int* RVS::Fuels::FuelsDIO::create_intermediate_table()
-{
-	std::stringstream sqlstream;
-	sqlstream << "CREATE TABLE " << FUELS_INTERMEDIATE_TABLE << "(" << \
-		PLOT_NUM_FIELD << " INT NOT NULL, " << \
-		YEAR_OUT_FIELD << " INT NOT NULL, " << \
-		EVT_NUM_FIELD << " INT NOT NULL, " << \
-		BPS_NUM_FIELD << " INT NOT NULL, " << \
-		DOM_SPP_FIELD << " char(255), " << \
-		SPP_CODE_FIELD << " char(8), " << \
-		FUEL_1HR_OUT_FIELD << " REAL, " << \
-		FUEL_10HR_OUT_FIELD << " REAL, " << \
-		FUEL_100HR_OUT_FIELD << " REAL, " << \
-		FUEL_1HRLIVE_OUT_FIELD << " REAL, " << \
-		FUEL_10HRLIVE_OUT_FIELD << " REAL, " << \
-		FUEL_100HRLIVE_OUT_FIELD << " REAL, " << \
-		FUEL_1HRDEAD_OUT_FIELD << " REAL, " << \
-		FUEL_10HRDEAD_OUT_FIELD << " REAL, " << \
-		FUEL_100HRDEAD_OUT_FIELD << " REAL); ";
-
-	char* sql = new char;
-	sql = streamToCharPtr(&sqlstream);
-	queuedWrites.push_back(sql);
-
-	return RC;
-}
-
 int* RVS::Fuels::FuelsDIO::write_output_record(int* year, RVS::DataManagement::AnalysisPlot* ap)
 {
 	std::stringstream sqlstream;
 	sqlstream << "INSERT INTO " << FUELS_OUTPUT_TABLE << " (" << \
-		PLOT_NUM_FIELD << ", " << YEAR_OUT_FIELD << ", " << EVT_NUM_FIELD << ", " << BPS_NUM_FIELD << ", " << \
-		FUEL_1HR_OUT_FIELD << ", " << 	FUEL_10HR_OUT_FIELD << ", " << FUEL_100HR_OUT_FIELD << ", " << \
-		FUEL_1HRLIVE_OUT_FIELD << ", " << FUEL_10HRLIVE_OUT_FIELD << ", " << FUEL_100HRLIVE_OUT_FIELD << ", " << \
-		FUEL_1HRDEAD_OUT_FIELD << ", " << FUEL_10HRDEAD_OUT_FIELD << ", " << FUEL_100HRDEAD_OUT_FIELD << ", " <<
+		PLOT_NUM_FIELD << ", " << \
+		PLOT_NAME_FIELD << ", " << \
+		YEAR_OUT_FIELD << ", " << \
+		BPS_NUM_FIELD << ", " << \
+		FC_ISDRY_FIELD << ", " << \
+		FUEL_1HR_OUT_FIELD << ", " << \
+		FUEL_10HR_OUT_FIELD << ", " << \
+		FUEL_100HR_OUT_FIELD << ", " << \
+		FUEL_1HRLIVE_OUT_FIELD << ", " << \
+		FUEL_10HRLIVE_OUT_FIELD << ", " << \
+		FUEL_100HRLIVE_OUT_FIELD << ", " << \
+		FUEL_1HRDEAD_OUT_FIELD << ", " << \
+		FUEL_10HRDEAD_OUT_FIELD << ", " << \
+		FUEL_100HRDEAD_OUT_FIELD << ", " << \
 		FC_FBFM_FIELD << ") " << \
-		"VALUES (" << ap->PLOT_ID() << "," << *year << "," << ap->EVT_NUM() << "," << ap->BPS_NUM() << "," << \
-		ap->TOTALFUELSCOLLECTION()[FUEL_1HR_OUT_FIELD] / 2000 << "," << ap->TOTALFUELSCOLLECTION()[FUEL_10HR_OUT_FIELD] / 2000 << "," << ap->TOTALFUELSCOLLECTION()[FUEL_100HR_OUT_FIELD] / 2000 << "," << \
-		ap->TOTALFUELSCOLLECTION()[FUEL_1HRLIVE_OUT_FIELD] / 2000 << "," << ap->TOTALFUELSCOLLECTION()[FUEL_10HRLIVE_OUT_FIELD] / 2000 << "," << ap->TOTALFUELSCOLLECTION()[FUEL_100HRLIVE_OUT_FIELD] / 2000 << "," << \
-		ap->TOTALFUELSCOLLECTION()[FUEL_1HRDEAD_OUT_FIELD] / 2000 << "," << ap->TOTALFUELSCOLLECTION()[FUEL_10HRDEAD_OUT_FIELD] / 2000 << "," << ap->TOTALFUELSCOLLECTION()[FUEL_100HRDEAD_OUT_FIELD] / 2000 << "," << \
+		"VALUES (" << \
+		ap->PLOT_ID() << ",\"" << \
+		ap->PLOT_NAME() << "\"," << \
+		*year << "," << \
+		ap->BPS_NUM() << "," << \
+		ap->ISDRY() << ", " << \
+		ap->TOTALFUELSCOLLECTION()[FUEL_1HR_OUT_FIELD] / 2000 << "," << \
+		ap->TOTALFUELSCOLLECTION()[FUEL_10HR_OUT_FIELD] / 2000 << "," << \
+		ap->TOTALFUELSCOLLECTION()[FUEL_100HR_OUT_FIELD] / 2000 << "," << \
+		ap->TOTALFUELSCOLLECTION()[FUEL_1HRLIVE_OUT_FIELD] / 2000 << "," << \
+		ap->TOTALFUELSCOLLECTION()[FUEL_10HRLIVE_OUT_FIELD] / 2000 << "," << \
+		ap->TOTALFUELSCOLLECTION()[FUEL_100HRLIVE_OUT_FIELD] / 2000 << "," << \
+		ap->TOTALFUELSCOLLECTION()[FUEL_1HRDEAD_OUT_FIELD] / 2000 << "," << \
+		ap->TOTALFUELSCOLLECTION()[FUEL_10HRDEAD_OUT_FIELD] / 2000 << "," << \
+		ap->TOTALFUELSCOLLECTION()[FUEL_100HRDEAD_OUT_FIELD] / 2000 << "," << \
 		ap->FBFM() << ");";
 
 	char* sql = new char;
@@ -86,20 +81,77 @@ int* RVS::Fuels::FuelsDIO::write_output_record(int* year, RVS::DataManagement::A
 	return RC;
 }
 
-int* RVS::Fuels::FuelsDIO::write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* spp)
+int* RVS::Fuels::FuelsDIO::create_intermediate_table()
 {
 	std::stringstream sqlstream;
-	sqlstream << "INSERT INTO " << FUELS_INTERMEDIATE_TABLE << " (" << \
-		PLOT_NUM_FIELD << ", " << YEAR_OUT_FIELD << ", " << EVT_NUM_FIELD << ", " << \
-		BPS_NUM_FIELD << ", " << DOM_SPP_FIELD << ", " << SPP_CODE_FIELD << ", " << \
-		FUEL_1HR_OUT_FIELD << ", " << FUEL_10HR_OUT_FIELD << ", " << FUEL_100HR_OUT_FIELD << ", " << \
-		FUEL_1HRLIVE_OUT_FIELD << ", " << FUEL_10HRLIVE_OUT_FIELD << ", " << FUEL_100HRLIVE_OUT_FIELD << ", " << \
-		FUEL_1HRDEAD_OUT_FIELD << ", " << FUEL_10HRDEAD_OUT_FIELD << ", " << FUEL_100HRDEAD_OUT_FIELD << ") " << \
-		"VALUES (" << ap->PLOT_ID() << "," << *year << "," << ap->EVT_NUM() << "," << ap->BPS_NUM() << ",\"" << \
-		spp->DOM_SPP() << "\", \"" << spp->SPP_CODE() << "\", " << \
-		spp->FUELS()[FUEL_1HR_OUT_FIELD] / 2000 << "," << spp->FUELS()[FUEL_10HR_OUT_FIELD] / 2000 << "," << spp->FUELS()[FUEL_100HR_OUT_FIELD] / 2000 << "," << \
-		spp->FUELS()[FUEL_1HRLIVE_OUT_FIELD] / 2000 << "," << spp->FUELS()[FUEL_10HRLIVE_OUT_FIELD] / 2000 << "," << spp->FUELS()[FUEL_100HRLIVE_OUT_FIELD] / 2000 << "," << \
-		spp->FUELS()[FUEL_1HRDEAD_OUT_FIELD] / 2000 << "," << spp->FUELS()[FUEL_10HRDEAD_OUT_FIELD] / 2000 << "," << spp->FUELS()[FUEL_100HRDEAD_OUT_FIELD] / 2000 << ");";
+	sqlstream << "CREATE TABLE " << FUELS_INTERMEDIATE_TABLE << "(" << \
+		PLOT_NUM_FIELD << " INT NOT NULL, " << \
+		PLOT_NAME_FIELD << " TEXT, " << \
+		YEAR_OUT_FIELD << " INT NOT NULL, " << \
+		BPS_NUM_FIELD << " INT NOT NULL, " << \
+		FC_ISDRY_FIELD << " BOOLEAN, " << \
+		DOM_SPP_FIELD << " TEXT, " << \
+		SPP_CODE_FIELD << " TEXT, " << \
+		FUEL_1HR_OUT_FIELD << "_EQ INT, " << \
+		FUEL_1HR_OUT_FIELD << " REAL, " << \
+		FUEL_10HR_OUT_FIELD << "_EQ INT, " << \
+		FUEL_10HR_OUT_FIELD << " REAL, " << \
+		FUEL_100HR_OUT_FIELD << "_EQ INT, " << \
+		FUEL_100HR_OUT_FIELD << " REAL, " << \
+		FUEL_1HRLIVE_OUT_FIELD << "_EQ INT, " << \
+		FUEL_1HRLIVE_OUT_FIELD << " REAL, " << \
+		FUEL_10HRLIVE_OUT_FIELD << "_EQ INT, " << \
+		FUEL_10HRLIVE_OUT_FIELD << " REAL, " << \
+		FUEL_100HRLIVE_OUT_FIELD << "_EQ INT, " << \
+		FUEL_100HRLIVE_OUT_FIELD << " REAL, " << \
+		FUEL_1HRDEAD_OUT_FIELD << "_EQ INT, " << \
+		FUEL_1HRDEAD_OUT_FIELD << " REAL, " << \
+		FUEL_10HRDEAD_OUT_FIELD << "_EQ INT, " << \
+		FUEL_10HRDEAD_OUT_FIELD << " REAL, " << \
+		FUEL_100HRDEAD_OUT_FIELD << "_EQ INT, " << \
+		FUEL_100HRDEAD_OUT_FIELD << " REAL); ";
+
+	char* sql = new char;
+	sql = streamToCharPtr(&sqlstream);
+	queuedWrites.push_back(sql);
+
+	return RC;
+}
+
+
+int* RVS::Fuels::FuelsDIO::write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* spp)
+{
+	std::map<std::string, int> fuelsEqs = spp->FUEL_EQUS();
+	std::map<std::string, double> fuelsVals = spp->FUEL_VALUES();
+
+	std::stringstream sqlstream;
+	sqlstream << "INSERT INTO " << FUELS_INTERMEDIATE_TABLE << \
+		" VALUES (" << \
+		ap->PLOT_ID() << ",\"" << \
+		ap->PLOT_NAME() << "\"," << \
+		*year << "," << \
+		ap->BPS_NUM() << "," << \
+		ap->ISDRY() << ",\"" << \
+		spp->DOM_SPP() << "\", \"" << \
+		spp->SPP_CODE() << "\"," << \
+		fuelsEqs[FUEL_1HR_OUT_FIELD] << "," << \
+		fuelsVals[FUEL_1HR_OUT_FIELD] / 2000 << "," << \
+		fuelsEqs[FUEL_10HR_OUT_FIELD] << "," << \
+		fuelsVals[FUEL_10HR_OUT_FIELD] / 2000 << "," << \
+		fuelsEqs[FUEL_100HR_OUT_FIELD] << "," << \
+		fuelsVals[FUEL_100HR_OUT_FIELD] / 2000 << "," << \
+		fuelsEqs[FUEL_1HRLIVE_OUT_FIELD] << "," << \
+		fuelsVals[FUEL_1HRLIVE_OUT_FIELD] / 2000 << "," << \
+		fuelsEqs[FUEL_10HRLIVE_OUT_FIELD] << "," << \
+		fuelsVals[FUEL_10HRLIVE_OUT_FIELD] / 2000 << "," << \
+		fuelsEqs[FUEL_100HRLIVE_OUT_FIELD] << "," << \
+		fuelsVals[FUEL_100HRLIVE_OUT_FIELD] / 2000 << "," << \
+		fuelsEqs[FUEL_1HRDEAD_OUT_FIELD] << "," << \
+		fuelsVals[FUEL_1HRDEAD_OUT_FIELD] / 2000 << "," << \
+		fuelsEqs[FUEL_10HRDEAD_OUT_FIELD] << "," << \
+		fuelsVals[FUEL_10HRDEAD_OUT_FIELD] / 2000 << "," << \
+		fuelsEqs[FUEL_100HRDEAD_OUT_FIELD] << "," << \
+		fuelsVals[FUEL_100HRDEAD_OUT_FIELD] / 2000 << ");";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);

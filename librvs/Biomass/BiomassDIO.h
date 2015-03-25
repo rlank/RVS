@@ -47,7 +47,7 @@ namespace Biomass
 
 		// Return a collection of required values for herbaceous biomass calculation.
 		// Takes the macro group ID as parameter
-		void query_biogroup_coefs(int bps, double* group_const, double* ndvi_grp_interact, double* ppt_grp_interact);
+		void query_biogroup_coefs(int bps, double* group_const, double* ndvi_grp_interact, double* ppt_grp_interact, std::string* grp_id);
 	};
 }
 }

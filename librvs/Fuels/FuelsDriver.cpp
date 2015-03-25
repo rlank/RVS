@@ -26,7 +26,7 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 	for (int b = 0; b < shrubs->size(); b++)
 	{
 		current = shrubs->at(b);
-		current->fuels.clear();  // Clear last year's fuels
+		current->fuelValues.clear();  // Clear last year's fuels
 
 		// Equation numbers for each fuels calculation
 		map<string, int> equationNumbers;
@@ -38,6 +38,8 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 		{
 			equationNumbers = fdio->query_crosswalk_table("ARTRT");
 		}
+
+		current->fuelEqs = equationNumbers;
 
 		// Get percent live for each fuel class (1=1hr, 2=10hr, 3=100hr)
 		//current->crl1 = calcPercentLive(current, 1);
@@ -65,7 +67,7 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 				ap->totalFuels[et->first] += fuel;
 			}
 
-			current->fuels[et->first] = fuel;
+			current->fuelValues[et->first] = fuel;
 			if (et->first.compare("FS1") == 0 || et->first.compare("FS2") == 0 || et->first.compare("FS3") == 0)
 			{
 				totalShrubFuel += fuel;
@@ -73,14 +75,13 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 			
 		}
 
-		string dom_spp = current->DOM_SPP();
-		string spp_code = current->SPP_CODE();
-
-		if (current->FUELS()["FL3"] < 0)
+		/*
+		if (current->FUEL_VALUES()["FL3"] < 0)
 		{
-			current->fuels["FL3"] = 0;
-			current->fuels["FD3"] = 0;
+			current->fuelValues["FL3"] = 0;
+			current->fuelValues["FD3"] = 0;
 		}
+		*/
 
 		// Write out the individual (shrub) record
 		RC = fdio->write_intermediate_record(&year, ap, current);
@@ -89,7 +90,7 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 	// Save the total shrub fuel
 	ap->shrubFuels = totalShrubFuel;
 	// Get herbaceous fuels and add it to total 1 hr fuels
-	ap->herbFuels = ap->herbBiomass + ap->herbHoldoverBiomass;
+	ap->herbFuels = ap->herbBiomass;
 	ap->totalFuels["FS1"] += ap->herbFuels;
 
 	string fuelClassTable = determineFBFMClassTable(ap);

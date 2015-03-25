@@ -31,7 +31,7 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 		double singleBiomass = calcShrubBiomass(record);
 
 		//$$ TEMP fudging biomass
-		singleBiomass *= .08;
+		//singleBiomass *= .08;
 
 		record->shrubBiomass = singleBiomass;
 		record->exShrubBiomass = singleBiomass * stemsPerAcre;
@@ -45,17 +45,21 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	}
 
 	// Apply holdover biomass if applicable
-	if (ap->herbBiomass != 0)
-	{
-		double holdover = calcHerbReduction(totalShrubCover);
-		ap->herbHoldoverBiomass = holdover * ap->herbBiomass;
-	}
+	//if (ap->herbBiomass != 0)
+	//{
+	//	double holdover = calcHerbReduction(totalShrubCover);
+	//	ap->herbHoldoverBiomass = holdover * ap->herbBiomass;
+	//	//ap->herbHoldoverBiomass = 0;
+	//}
+
+	double holdover = calcHerbReduction(totalShrubCover);
 
 	*retHerbBiomass = calcHerbBiomass(year);
 
 	double averageHeight = runShrubHeight / totalShrubCover;
 
-	ap->herbBiomass = *retHerbBiomass + ap->herbHoldoverBiomass;
+	//ap->herbBiomass = *retHerbBiomass + ap->herbHoldoverBiomass;
+	ap->herbBiomass = *retHerbBiomass * holdover;
 	ap->shrubBiomass = *retShrubBiomass;
 	ap->shrubCover = totalShrubCover;
 	ap->shrubHeight = averageHeight;
@@ -126,14 +130,19 @@ double BiomassDriver::calcHerbBiomass(int year)
 	double* grp_id_const = new double;
 	double* ndvi_grp_interact = new double;
 	double* ppt_grp_interact = new double;
+
+	string* grp_id = new string;
+
 	try
 	{
-		bdio->query_biogroup_coefs(ap->BPS_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact);
+		bdio->query_biogroup_coefs(ap->BPS_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id);
 	}
 	catch (RVS::DataManagement::DataNotFoundException &ex)
 	{
-		bdio->query_biogroup_coefs(ap->BPS_NUM(true), grp_id_const, ndvi_grp_interact, ppt_grp_interact);
+		bdio->query_biogroup_coefs(ap->BPS_NUM(true), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id);
 	}
+
+	ap->grp_id = *grp_id;
 
 	double ndvi = ap->getNDVI(year);
 	double ppt = ap->getPPT(year);
@@ -147,7 +156,8 @@ double BiomassDriver::calcHerbBiomass(int year)
 double BiomassDriver::calcHerbReduction(double totalShrubCover)
 {
 	//$$ TODO OMG THE MAGIC NUMBERS
-	if (totalShrubCover > 85) totalShrubCover = 85;
-	double val = -0.0004 * pow(totalShrubCover, 3) + 0.0458 * pow(totalShrubCover, 2) + 4.5394;
-	return val / 100;
+	//if (totalShrubCover > 85) totalShrubCover = 85;
+	//double val = -0.0004 * pow(totalShrubCover, 3) + 0.0458 * pow(totalShrubCover, 2) + 4.5394;
+	double val = -.214 * log(100 - totalShrubCover) + 1.15;
+	return val;
 }
