@@ -14,8 +14,8 @@
 namespace RVS
 {
 	// Primary table names. Replace with externs as needed
-	static const char* RVS_INPUT_TABLE = "Plots_Real";
-	static const char* SHRUB_INPUT_TABLE = "Shrub_Input_Real";
+	static const char* RVS_INPUT_TABLE = "Plots_h";
+	static const char* SHRUB_INPUT_TABLE = "Shrub_Input_cv";
 	static const char* BPS_HUC_TABLE = "BPS_HUC_Master";
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
 	static const char* BIOMASS_PRIMARYPRODUCTION_TABLE = "Bio_PP_KgH";
@@ -33,6 +33,8 @@ namespace RVS
 	static const char* PLOT_NAME_FIELD = "PLOT_NAME";
 	static const char* EVT_NUM_FIELD = "evt_num";
 	static const char* EVT_NAME_FIELD = "evt_name";
+	static const char* HERB_COVER_FIELD = "herb_cover";
+	static const char* HERB_HEIGHT_FIELD = "herb_height";
 	static const char* BPS_NUM_FIELD = "BPS";
 	static const char* HUC_FIELD = "HUC";
 	static const char* DOM_SPP_FIELD = "dom_spp";

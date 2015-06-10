@@ -47,6 +47,7 @@ void SppRecord::buildRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::
 	dio->getVal(stmt, dt->Columns[BIOMASS_HEIGHT_FIELD], &height);
 	column = dt->Columns[BIOMASS_COVER_FIELD];
 	dio->getVal(stmt, dt->Columns[BIOMASS_COVER_FIELD], &cover);
+
 }
 
 double SppRecord::requestValue(std::string parameterName)
@@ -91,6 +92,10 @@ double SppRecord::requestValue(std::string parameterName)
 	else if (parameterName.compare("CRD3") == 0)
 	{
 		ret = 100 - crl3;
+	}
+	else if (parameterName.compare("VOL") == 0)
+	{
+		ret = width * width * height;
 	}
 
 	return ret;

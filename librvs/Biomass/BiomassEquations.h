@@ -32,6 +32,7 @@ namespace Biomass
 	private:
 		static double eq_201(double cf1, double cf2, double cover);
 		static double eq_636(double cf1, double cf2, double length, double width, double height);
+		static double RVS::Biomass::BiomassEquations::eq_636_2(double cf1, double cf2, double vol);
 		static double eq_999(double cf1, double cf2, double cf3, double length, double width);
 		static double eq_basicBAT(double cf1, double cf2, double length, double width);
 		static double eq_1153(double cf1, double cf2, double cf3, double length, double width, double height);

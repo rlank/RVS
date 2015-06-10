@@ -1,0 +1,27 @@
+# RVS Init file
+#
+# To use init file, launch RVS with:
+# ./librvs(.exe) /path/to/this/init/file
+
+# lines beginning with '#' are ignored
+# remove '#' to use variables
+
+
+## Input database
+INDBPATH=/home/robb/RVS/data/rvs.db
+
+## Output database
+OUTDBPATH=/home/robb/RVS/data/out.db
+
+## Allow overwrite of existing database (otherwise data is appended)
+#OVERWRITE=TRUE
+
+## Number of years to simulate. If more years are simulated than RVS finds 
+## PPT and NDVI data for it will reuse old data
+YEARS=13
+
+## Disturbance list. Comment out for no disturbance
+#DISTURB=GRAZE
+
+## Disturbance interval list. Match intervals with disturbance type
+#DISTURB_INT=4

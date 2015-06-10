@@ -23,9 +23,21 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	double totalShrubCover = 0;
 	double runShrubHeight = 0;
 	RVS::DataManagement::SppRecord* record = NULL;
+
+	if (strcmp(ap->PLOT_NAME().c_str(), "EOSG 05") == 0)
+	{
+		int i = 123;
+	}
+
 	for (int r = 0; r < shrubs->size(); r++)
 	{
 		record = shrubs->at(r);
+
+		if (strcmp(record->spp_code.c_str(), "ARTRW8") == 0)
+		{
+			int i = 123;
+		}
+
 		double stemsPerAcre = calcStemsPerAcre(record);
 		record->stemsPerAcre = stemsPerAcre;
 		double singleBiomass = calcShrubBiomass(record);
@@ -52,18 +64,22 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	//	//ap->herbHoldoverBiomass = 0;
 	//}
 
-	double holdover = calcHerbReduction(totalShrubCover);
+	//double holdover = calcHerbReduction(totalShrubCover);
 
 	*retHerbBiomass = calcHerbBiomass(year);
 
 	double averageHeight = runShrubHeight / totalShrubCover;
 
+
 	//ap->herbBiomass = *retHerbBiomass + ap->herbHoldoverBiomass;
-	ap->herbBiomass = *retHerbBiomass * holdover;
-	ap->shrubBiomass = *retShrubBiomass;
+	
 	ap->shrubCover = totalShrubCover;
 	ap->shrubHeight = averageHeight;
 
+	*retHerbBiomass = calcAttenuation(*retHerbBiomass);
+
+	ap->herbBiomass = *retHerbBiomass;
+	ap->shrubBiomass = *retShrubBiomass;
 	ap->totalBiomass = ap->SHRUBBIOMASS() + ap->HERBBIOMASS();
 
 	// Write output biomass record
@@ -75,7 +91,17 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 {
 	// Get the equation number for BAT (total aboveground biomass)
-	int equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "BAT");
+	int equationNumber = 0;
+	
+	try
+	{
+		equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "BAT2");
+	}
+	catch (RVS::DataManagement::DataNotFoundException dex)
+	{
+		equationNumber = bdio->query_crosswalk_table("ARTR2", "BAT2");
+	}
+
 	record->batEqNum = equationNumber;
 
 	// Populate the coefficients with values from the biomass equation table
@@ -99,7 +125,16 @@ double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 {
 	// Lookup the equation number from the crosswalk table
-	int equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "PCH");
+	int equationNumber = 0;
+	try
+	{
+		equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "PCH");
+	}
+	catch (RVS::DataManagement::DataNotFoundException dex)
+	{
+		equationNumber = bdio->query_crosswalk_table("ARTR2", "PCH");
+	}
+	
 	record->pchEqNum = equationNumber;
 	
 	double* coefs = new double[4];
@@ -121,6 +156,7 @@ double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 	return stemsPerAcre;
 }
 
+/*
 double BiomassDriver::calcHerbBiomass(int year)
 {
 	// BASIC FORM:
@@ -145,13 +181,42 @@ double BiomassDriver::calcHerbBiomass(int year)
 	ap->grp_id = *grp_id;
 
 	double ndvi = ap->getNDVI(year);
+
+	if (ndvi == 0.0)
+	{
+		ndvi = .00000000000001;
+	}
+
 	double ppt = ap->getPPT(year);
+
+	if (ndvi == 0.0)
+	{
+		ppt = .00000000000001;
+	}
+
 	double ln_ndvi = log(ndvi);
 	double ln_ppt = log(ppt);
 
 	double biomass = INTERCEPT + *grp_id_const + (ln_ndvi * LN_NDVI) + (ln_ppt * LN_PRECIP) + (ln_ndvi * *ndvi_grp_interact) + (ln_ppt * *ppt_grp_interact);
 	return exp(biomass);
 }
+*/
+
+double BiomassDriver::calcHerbBiomass(int year)
+{
+
+	double ndvi = ap->getNDVI(year);
+
+	if (ndvi == 0.0)
+	{
+		ndvi = .0000000000001;
+	}
+
+	double biomass = 139.07 * exp(0.0004 * ndvi);
+	//double biomass = 152.03 * exp(0.0004 * ndvi);
+	return biomass;
+}
+
 
 double BiomassDriver::calcHerbReduction(double totalShrubCover)
 {
@@ -160,4 +225,20 @@ double BiomassDriver::calcHerbReduction(double totalShrubCover)
 	//double val = -0.0004 * pow(totalShrubCover, 3) + 0.0458 * pow(totalShrubCover, 2) + 4.5394;
 	double val = -.214 * log(100 - totalShrubCover) + 1.15;
 	return val;
+}
+
+double BiomassDriver::calcAttenuation(double herbBiomass)
+{
+	double herbIndex = ap->herbCover * ap->herbHeight;
+	double shrubIndex = ap->shrubCover * ap->shrubHeight;
+
+	//double herbIndex = ap->herbCover;
+	//double shrubIndex = ap->shrubCover;
+
+	double ratio = herbIndex / shrubIndex;
+	if (ratio > 1)
+	{
+		ratio = 1 / ratio;
+	}
+	return herbBiomass * ratio;
 }

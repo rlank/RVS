@@ -82,6 +82,10 @@ namespace DataManagement
 		double shrubHeight;
 		// Total shrub cover 
 		double shrubCover;
+		// Average herb height
+		double herbHeight;
+		// Total herb cover 
+		double herbCover;
 		// Total biomass (herbs + shrubs) (lbs/ac)
 		double totalBiomass;
 		// Herb biomass for whole plot, including holdover (lbs/ac)

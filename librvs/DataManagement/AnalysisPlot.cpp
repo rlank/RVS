@@ -44,6 +44,8 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 	dio->getVal(stmt, dt->Columns[EVT_NUM_FIELD], &evt_num);
 	dio->getVal(stmt, dt->Columns[BPS_NUM_FIELD], &bps_num);
 	dio->getVal(stmt, dt->Columns[HUC_FIELD], &huc);
+	dio->getVal(stmt, dt->Columns[HERB_COVER_FIELD], &herbCover);
+	dio->getVal(stmt, dt->Columns[HERB_HEIGHT_FIELD], &herbHeight);
 
 	int colCount = sqlite3_column_count(stmt);
 	std::string ndvi = "NDVI";

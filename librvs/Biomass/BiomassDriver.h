@@ -58,6 +58,7 @@ namespace Biomass
 		double calcHerbBiomass(int year);
 		// Given cover, calculate the holdover amount
 		double calcHerbReduction(double totalShrubCover);
+		double calcAttenuation(double herbBiomass);
 
 	};
 }
