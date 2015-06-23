@@ -14,7 +14,6 @@
 
 #include <map>
 
-#include <boost\any.hpp>
 #include <sqlite3.h>
 
 #include "../RVSDEF.h"
@@ -34,10 +33,12 @@ namespace DataManagement
 		// Return the base sqlite3_stmt pointer
 		inline sqlite3_stmt* getStmt() { return stmt; }
 
+		inline int* STATUS() { return &sqlStatus; }
+
 		// Maps column names to their index position
 		std::map<std::string, int> Columns;
 
-		std::map<int, boost::any> Data;
+		// std::map<int, boost::any> Data;
 
 		inline int numCols() { return column_count; }
 		inline int numRows() { return row_count; }  // Disabled
@@ -46,6 +47,7 @@ namespace DataManagement
 		sqlite3_stmt* stmt;
 		int column_count;
 		int row_count;
+		int sqlStatus;
 	};
 }
 }

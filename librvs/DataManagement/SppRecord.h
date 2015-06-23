@@ -55,11 +55,13 @@ namespace DataManagement
 		inline int BATEQNUM() { return batEqNum; }
 		
 		// Biomass result for shrub (individual biomass). coverts internal g/ac to lbs/ac
-		inline double SHRUBBIOMASS() { return shrubBiomass * GRAMS_TO_POUNDS; }
+		inline double SHRUB_SINGLE_BIOMASS() { return shrubBiomass * GRAMS_TO_POUNDS; }
+		inline double SHRUB_EX_BIOMASS() { return exShrubBiomass * GRAMS_TO_POUNDS; }
 		const float GRAMS_TO_POUNDS = 0.00220462f;
 
 		// Fuels results
-		inline std::map<std::string, double> FUELS() { return fuels; }
+		inline std::map<std::string, int> FUEL_EQUS() { return fuelEqs; }
+		inline std::map<std::string, double> FUEL_VALUES() { return fuelValues; }
 		
 		// Return a parameter (length, width, height) by name
 		double requestValue(std::string parameterName);
@@ -85,7 +87,8 @@ namespace DataManagement
 		int batEqNum;
 
 		// Fuels collection
-		std::map<std::string, double> fuels;
+		std::map<std::string, int> fuelEqs;
+		std::map<std::string, double> fuelValues;
 		double crl1;  // Percent live, 1hr, calculated value (in Fuels) (0-100)
 		double crl2;  // Percent live, 10hr, calculated value (in Fuels) (0-100)
 		double crl3;  // Percent live, 100hr, calculated value (in Fuels) (0-100)

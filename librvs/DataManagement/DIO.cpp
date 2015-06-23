@@ -7,7 +7,8 @@ sqlite3* RVS::DataManagement::DIO::rvsdb;
 // RVS ouput database
 sqlite3* RVS::DataManagement::DIO::outdb;
 
-map<string, RVS::DataManagement::DataTable*> RVS::DataManagement::DIO::activeQueries;
+//map<string, RVS::DataManagement::DataTable*> RVS::DataManagement::DIO::activeQueries;
+map<string, shared_ptr<RVS::DataManagement::DataTable>> RVS::DataManagement::DIO::activeQueries;
 vector<const char*> RVS::DataManagement::DIO::queuedWrites;
 
 // Constructor
@@ -40,11 +41,7 @@ RVS::DataManagement::DIO::DIO(void)
 // Destructor. Closes the connection with the db.
 RVS::DataManagement::DIO::~DIO(void)
 {
-	ofstream dfile = ofstream(DEBUG_FILE, ios::app);
-
 	RC = finalizeQueries();
-
-	printf("\n\n");
 	if (rvsdb != NULL)
 	{
 		*RC = sqlite3_close(rvsdb);
@@ -52,12 +49,12 @@ RVS::DataManagement::DIO::~DIO(void)
 		
 		if (*RC != 0)
 		{
-			dfile << "Warning: DB not closing properly.\n";
-			dfile << sqlite3_errmsg(rvsdb) << "\n";
+			write_debug_msg("Warning: DB not closing properly.");
+			write_debug_msg(sqlite3_errmsg(rvsdb));
 		}
 		else
 		{
-			dfile << "Closing InputDB connection.\n";
+			write_debug_msg("Closing InputDB connection");
 		}
 	}
 	
@@ -68,16 +65,14 @@ RVS::DataManagement::DIO::~DIO(void)
 
 		if (*RC != 0)
 		{
-			dfile << "Warning: Out DB not closing properly.\n";
-			dfile << sqlite3_errmsg(outdb) << "\n";
+			write_debug_msg("Warning: DB not closing properly.");
+			write_debug_msg(sqlite3_errmsg(outdb));
 		}
 		else
 		{
-			dfile << "Closing OutDB connection.\n";
+			write_debug_msg("Closing InputDB connection");
 		}
 	}
-
-	dfile.close();
 }
 
 // Opens an sqlite connection to the specified database
@@ -112,18 +107,18 @@ int* RVS::DataManagement::DIO::create_output_db(char* path)
 	return RC;
 }
 
-int* RVS::DataManagement::DIO::exec_sql(const char* sql)
+RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const char* sql, sqlite3* db, bool addToActive, bool reset)
 {
-	return NULL;
-}
-
-RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const char* sql, sqlite3* db, bool addToActive)
-{
-	RVS::DataManagement::DataTable* dt;
+	shared_ptr<DataTable> dt;
 	if (isQueryActive(sql))
 	{
 		dt = activeQueries[sql];
-		checkDBStatus(db, sql);
+		if (reset)
+		{
+			*RC = sqlite3_reset(dt->getStmt());
+			*RC = sqlite3_step(dt->getStmt());
+			checkDBStatus(db, sql);
+		}
 	}
 	else
 	{
@@ -134,12 +129,16 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const c
 		*RC = sqlite3_prepare_v2(db, sql, nByte, &stmt, NULL);
 		checkDBStatus(db, sql);
 		*RC = sqlite3_step(stmt);
-		checkDBStatus(db);
-		dt = new RVS::DataManagement::DataTable(stmt);
-		if (addToActive) { activeQueries.insert(pair<string, RVS::DataManagement::DataTable*>(sql, dt)); }
+		checkDBStatus(db, sql);
+		dt = shared_ptr<DataTable>(new DataTable(stmt));
+		
+		if (addToActive) { activeQueries.insert(pair<string, shared_ptr<DataTable>>(sql, dt)); }
+		
+		int* rc = dt->STATUS();
+		*rc = *RC;
 	}
 
-	return dt;
+	return dt.get();
 }
 
 int* RVS::DataManagement::DIO::write_output(void)
@@ -160,6 +159,17 @@ int* RVS::DataManagement::DIO::write_output(void)
 	sqlite3_free(err);
 
 	return RC;
+}
+
+void RVS::DataManagement::DIO::write_debug_msg(const char* msg)
+{
+	time_t t = time(NULL);
+	char strTime[25];
+	strftime(strTime, 25, "%d/%m/%y %H:%M:%S", localtime(&t));
+
+	ofstream* dfile = new ofstream(DEBUG_FILE, ios::app);
+	*dfile << strTime << " " << msg << std::endl;
+	dfile->close();
 }
 
 std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
@@ -237,15 +247,18 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::query_shrubs_table(voi
 	std::stringstream* sqlStream = new std::stringstream();
 	*sqlStream << "SELECT * FROM " << SHRUB_INPUT_TABLE << ";";
 	const char* sql = streamToCharPtr(sqlStream);
-	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb, false);
+	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb, true);
 	return dt;
 }
 
-RVS::DataManagement::DataTable* RVS::DataManagement::DIO::query_shrubs_table(int plot_num)
+int RVS::DataManagement::DIO::query_backup_bps(int huc)
 {
-	const char* sql = query_base(SHRUB_INPUT_TABLE, PLOT_NUM_FIELD, plot_num);
-	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
-	return dt;
+	const char* sql = query_base(BPS_HUC_TABLE, HUC_FIELD, huc);
+	DataTable* dt = prep_datatable(sql, rvsdb);
+
+	int backupBps;
+	getVal(dt->getStmt(), dt->Columns[BPS_NUM_FIELD], &backupBps);
+	return backupBps;
 }
 
 void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, boost::any* retval)
@@ -287,7 +300,7 @@ void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, double* re
 	}
 	else
 	{
-		//$$ TODO throw data mismatch exception
+		//throw RVS::DataManagement::DataTypeMismatchException(sqlite3_sql(stmt));
 	}
 }
 
@@ -304,7 +317,7 @@ void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, std::strin
 	}
 	else
 	{
-		//$$ TODO throw data mismatch exception
+		//throw RVS::DataManagement::DataTypeMismatchException(sqlite3_sql(stmt));
 	}
 }
 
@@ -321,7 +334,7 @@ void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, int* retVa
 	}
 	else
 	{
-		//$$ TODO throw data mismatch exception
+		//throw RVS::DataManagement::DataTypeMismatchException(sqlite3_sql(stmt));
 	}
 }
 
@@ -342,7 +355,7 @@ void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, bool* retV
 		}
 		else
 		{
-			//$$ TODO throw data mismatch exception
+			//throw RVS::DataManagement::DataTypeMismatchException(sqlite3_sql(stmt));
 		}
 	}
 	else if (colType == SQLITE_NULL)
@@ -351,7 +364,7 @@ void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, bool* retV
 	}
 	else
 	{
-		//$$ TODO throw data mismatch exception
+		//throw RVS::DataManagement::DataTypeMismatchException(sqlite3_sql(stmt));
 	}
 }
 
@@ -437,7 +450,7 @@ void RVS::DataManagement::DIO::query_equation_parameters(int equation_number, st
 void RVS::DataManagement::DIO::query_fuels_basic_info(const int* bps, int* fbfm, bool* isDry)
 {
 	const char* sql = query_base(FUEL_BPS_ATTR_TABLE, BPS_NUM_FIELD, *bps);
-	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
+	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb, true, true);
 
 	int column = 0;
 	column = dt->Columns[FC_FBFM_FIELD];
@@ -448,12 +461,12 @@ void RVS::DataManagement::DIO::query_fuels_basic_info(const int* bps, int* fbfm,
 
 int* RVS::DataManagement::DIO::finalizeQueries(void)
 {
-	RVS::DataManagement::DataTable* dt;
-	for (map<string, RVS::DataManagement::DataTable*>::iterator it = activeQueries.begin(); it != activeQueries.end(); it++)
+	for (map<string, shared_ptr<DataTable>>::iterator it = activeQueries.begin(); it != activeQueries.end(); it++)
 	{
-		dt = it->second;
-		//delete dt;
+		it->second.reset();
 	}
+	activeQueries.clear();
+
 	return RC;
 }
 
@@ -477,7 +490,7 @@ int RVS::DataManagement::DIO::callback(void* nu, int argc, char** argv, char** a
 bool RVS::DataManagement::DIO::isQueryActive(string sql)
 {
 	bool ret = false;
-	map<string, RVS::DataManagement::DataTable*>::iterator it = activeQueries.find(sql);
+	map<string, shared_ptr<DataTable>>::iterator it = activeQueries.find(sql);
 	if (it != activeQueries.end())
 	{
 		ret = true;
@@ -491,15 +504,22 @@ bool RVS::DataManagement::DIO::checkDBStatus(sqlite3* db, const char* sql, const
 	if (!(*RC == SQLITE_OK || *RC == SQLITE_ROW) && db != NULL)
 	{
 		state = false;
-		ofstream dfile = ofstream(DEBUG_FILE, ios::app);
-		dfile << sql << "\n";
-		dfile << sqlite3_errmsg(db) << "\n\n";
-		dfile.close();
+		write_debug_msg(sql);
+		if (*RC == SQLITE_DONE)
+		{
+			write_debug_msg("Data not found");
+			throw RVS::DataManagement::DataNotFoundException(sql);
+		}
+		else
+		{
+			write_debug_msg(sqlite3_errmsg(db));
+		}
 	}
 	
 	return state;
 }
 
+// Lifted straight from sqlite website
 int RVS::DataManagement::DIO::buildInMemDB(sqlite3 *pInMemory, const char *zFilename, int isSave)
 {
 	int rc;                   /* Function return code */

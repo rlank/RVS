@@ -15,7 +15,15 @@ double RVS::Biomass::BiomassEquations::eq_BAT(int equationNumber, double* coefs,
 		biomass = eq_basicBAT(coefs[0], coefs[1], params->at("LEN"), params->at("WID"));
 		break;
 	case 636:
-		biomass = eq_636(coefs[0], coefs[1], params->at("LEN"), params->at("WID"), params->at("HT"));
+		
+		try
+		{
+			biomass = eq_636(coefs[0], coefs[1], params->at("LEN"), params->at("WID"), params->at("HT"));
+		}
+		catch (exception e)
+		{
+			biomass = eq_636_2(coefs[0], coefs[1], params->at("VOL"));
+		}
 		break;
 	case 999:
 		biomass = eq_999(coefs[0], coefs[1], coefs[2], params->at("LEN"), params->at("WID"));
@@ -47,6 +55,13 @@ double RVS::Biomass::BiomassEquations::eq_201(double cf1, double cf2, double cov
 double RVS::Biomass::BiomassEquations::eq_636(double cf1, double cf2, double length, double width, double height)
 {
 	double biomass = cf1 + cf2 * log(length * width * height); // Volume
+	biomass = exp(biomass);
+	return biomass;
+}
+
+double RVS::Biomass::BiomassEquations::eq_636_2(double cf1, double cf2, double vol)
+{
+	double biomass = cf1 + cf2 * log(vol); // Volume
 	biomass = exp(biomass);
 	return biomass;
 }
