@@ -12,12 +12,15 @@
 #include <string>
 #include <vector>
 
+
 #include "DataTable.h"
 #include "DIO.h"
 #include "SppRecord.h"
 
 namespace RVS { namespace Biomass { class BiomassDriver; } }
+namespace RVS { namespace Biomass { class BiomassEqDriver; } }
 namespace RVS { namespace Fuels   { class FuelsDriver;   } }
+namespace RVS { namespace Succession { class SuccessionDriver; } }
 
 namespace RVS
 {
@@ -27,6 +30,8 @@ namespace DataManagement
 	{
 		friend class RVS::Biomass::BiomassDriver;
 		friend class RVS::Fuels::FuelsDriver;
+		friend class RVS::Biomass::BiomassEqDriver;
+		friend class RVS::Succession::SuccessionDriver;
 
 	public:
 		AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
@@ -48,6 +53,11 @@ namespace DataManagement
 		inline double SHRUBHEIGHT() { return shrubHeight; }
 		// Total shrub cover (%)
 		inline double SHRUBCOVER() { return shrubCover; }
+
+		inline double HERBHEIGHT() { return herbHeight; }
+
+		inline double HERBCOVER() { return herbCover; }
+
 		// Total herb biomass (lbs/ac)
 		inline double HERBBIOMASS() { return herbBiomass; }
 		// Total shrub biomass (lbs/ac)
@@ -62,6 +72,7 @@ namespace DataManagement
 		const float GRAMS_TO_POUNDS = 0.00220462f;
 
 		void push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
+		void push_shrub(RVS::DataManagement::SppRecord* record);
 
 		// Get NDVI for the requested year (starting at 0)
 		double getNDVI(int year);
@@ -108,6 +119,8 @@ namespace DataManagement
 		std::vector<RVS::DataManagement::SppRecord*> shrubRecords;   // List of shrub records
 		std::vector<double> ndviValues;   // NDVI values for all years to be simulated
 		std::vector<double> precipValues; // PPT values for all years to be simulated
+
+		int relativeSuccessionYear;
 
 		// Builds the AnalysisPlot by querying the appropriate tables(s) in the database
 		void buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);

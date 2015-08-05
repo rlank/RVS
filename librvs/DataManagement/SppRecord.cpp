@@ -15,6 +15,12 @@ SppRecord::SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTab
 	fuelValues = std::map<std::string, double>();
 }
 
+SppRecord::SppRecord(string spp_code, double height, double cover, string dom_spp)
+{
+	initialize_object();
+	buildRecord(spp_code, height, cover, dom_spp);
+}
+
 SppRecord::~SppRecord(void)
 {
 }
@@ -50,6 +56,14 @@ void SppRecord::buildRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::
 
 }
 
+void SppRecord::buildRecord(string spp_code, double height, double cover, string dom_spp)
+{
+	this->spp_code = spp_code;
+	this->height = height;
+	this->cover = cover;
+	this->dom_spp = dom_spp;
+}
+
 double SppRecord::requestValue(std::string parameterName)
 {
 	double ret = 0.0;
@@ -64,6 +78,10 @@ double SppRecord::requestValue(std::string parameterName)
 	else if (parameterName.compare("LEN") == 0)
 	{
 		ret = width; // we assume circles
+	}
+	else if (parameterName.compare("COV") == 0)
+	{
+		ret = cover;
 	}
 	else if (parameterName.compare("BIO") == 0)
 	{

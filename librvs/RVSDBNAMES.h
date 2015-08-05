@@ -14,8 +14,8 @@
 namespace RVS
 {
 	// Primary table names. Replace with externs as needed
-	static const char* RVS_INPUT_TABLE = "Plots_h";
-	static const char* SHRUB_INPUT_TABLE = "Shrub_Input_cv";
+	static const char* RVS_INPUT_TABLE = "Plots";
+	static const char* SHRUB_INPUT_TABLE = "Shrubs";
 	static const char* BPS_HUC_TABLE = "BPS_HUC_Master";
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
 	static const char* BIOMASS_PRIMARYPRODUCTION_TABLE = "Bio_PP_KgH";
@@ -26,6 +26,7 @@ namespace RVS
 	static const char* FUEL_EQUATION_TABLE = "Fuel_Equation";
 	static const char* FUEL_BPS_ATTR_TABLE = "BPS_Fuelmodels";
 	static const char* FUEL_CLASSRULES_TABLE = "Fuel_ClassRules";
+	static const char* SUCCESSION_TABLE = "BPS_Growth_Rates";
 	// ********************
 
 	// Field names (primarily from input)
@@ -82,6 +83,20 @@ namespace RVS
 	static const char* FC_PROPORTION_UPPER = "proportion_upper";
 	static const char* FC_TOTAL_FUEL_LOWER = "total_fuel_lower";
 	static const char* FC_TOTAL_FUEL_UPPER = "total_fuel_upper";
+
+	// ********************
+
+	// Succession table names
+	static const char* COHORT_FIELD = "COHORT";
+	static const char* START_AGE_FIELD = "StartAge";
+	static const char* END_AGE_FIELD = "EndAge";
+	static const char* HT_GR_PER_YEAR_FIELD = "GR_HT_YR";
+	static const char* COVER_GR_PER_YEAR_FIELD = "GR_COV_YR";
+	static const char* COHORT_TYPE_FIELD = "COHORT_TYPE";
+	static const char* SUCCESSION_SPECIES_1_FIELD = "Species1";
+	static const char* SUCCESSION_SPECIES_2_FIELD = "Species2";
+	static const char* SUCCESSION_SPECIES_3_FIELD = "Species3";
+	static const char* SUCCESSION_SPECIES_4_FIELD = "Species4";
 
 	// ********************
 

@@ -24,7 +24,7 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	double runShrubHeight = 0;
 	RVS::DataManagement::SppRecord* record = NULL;
 
-	if (strcmp(ap->PLOT_NAME().c_str(), "EOSG 05") == 0)
+	if (strcmp(ap->PLOT_NAME().c_str(), "SWSB 01") == 0)
 	{
 		int i = 123;
 	}
@@ -76,7 +76,7 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	ap->shrubCover = totalShrubCover;
 	ap->shrubHeight = averageHeight;
 
-	*retHerbBiomass = calcAttenuation(*retHerbBiomass);
+	//*retHerbBiomass = calcAttenuation(*retHerbBiomass);
 
 	ap->herbBiomass = *retHerbBiomass;
 	ap->shrubBiomass = *retShrubBiomass;

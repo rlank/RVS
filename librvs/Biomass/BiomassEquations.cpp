@@ -4,18 +4,26 @@ double RVS::Biomass::BiomassEquations::eq_BAT(int equationNumber, double* coefs,
 {
 	double biomass = 0.0;
 	//$$ TODO add bounds checking to arrays
-	switch (equationNumber)
+
+
+	if (equationNumber <= 168 || (equationNumber >= 791 && equationNumber <= 807) || equationNumber == 1068)
 	{
-	case 201:
+		biomass = eq_165(coefs[0], coefs[1], params->at("COV"));
+	}
+	else if (equationNumber == 201)
+	{
 		biomass = eq_201(coefs[0], coefs[1], params->at("COV"));
-		break;
-	case 620:
-	case 622:
-	case 623:
+	}
+	else if (equationNumber == 202 || equationNumber == 1087 || equationNumber == 1096 || equationNumber == 1105 || equationNumber == 1109)
+	{
+		biomass = eq_202(coefs[0], coefs[1], params->at("COV"));
+	}
+	else if (equationNumber <= 629)
+	{
 		biomass = eq_basicBAT(coefs[0], coefs[1], params->at("LEN"), params->at("WID"));
-		break;
-	case 636:
-		
+	}
+	else if (equationNumber <= 639)
+	{
 		try
 		{
 			biomass = eq_636(coefs[0], coefs[1], params->at("LEN"), params->at("WID"), params->at("HT"));
@@ -24,14 +32,68 @@ double RVS::Biomass::BiomassEquations::eq_BAT(int equationNumber, double* coefs,
 		{
 			biomass = eq_636_2(coefs[0], coefs[1], params->at("VOL"));
 		}
-		break;
-	case 999:
-		biomass = eq_999(coefs[0], coefs[1], coefs[2], params->at("LEN"), params->at("WID"));
-		break;
-	case 1153:
-		biomass = eq_1153(coefs[0], coefs[1], coefs[2], params->at("LEN"), params->at("WID"), params->at("HT"));
-		break;
 	}
+	else if (equationNumber == 743 || equationNumber == 831 || equationNumber == 832)
+	{
+		biomass = eq_743(coefs[0], coefs[1], params->at("COV"), params->at("HT"));
+	}
+	else if (equationNumber == 998)
+	{
+		biomass = eq_201(coefs[0], coefs[1], params->at("WID"));
+	}
+	else if (equationNumber == 999)
+	{
+		biomass = eq_999(coefs[0], coefs[1], coefs[2], params->at("LEN"), params->at("WID"));
+	}
+	else if (equationNumber == 1000)
+	{
+		biomass = eq_1000(coefs[0], coefs[1], coefs[2], coefs[3], params->at("LEN"), params->at("WID"), params->at("HT"));
+	}
+	else if (equationNumber == 1001)
+	{
+		biomass = eq_999(coefs[0], coefs[1], coefs[2], params->at("LEN"), params->at("HT"));
+	}
+	else if (equationNumber == 1002)
+	{
+		biomass = eq_165(coefs[0], coefs[1], params->at("VOL"));
+	}
+	else if (equationNumber == 1008 || equationNumber == 1016)
+	{
+		biomass = eq_1008(coefs[0], coefs[1], coefs[2], coefs[3], params->at("LEN"), params->at("WID"), params->at("HT"));
+	}
+	else if (equationNumber == 1012)
+	{
+		biomass = eq_1012(coefs[0], coefs[1], coefs[2], params->at("LEN"), params->at("HT"));
+	}
+	else if (equationNumber >= 1025 && equationNumber <= 1031)
+	{
+		biomass = eq_1012(coefs[0], coefs[1], coefs[2], params->at("LEN"), params->at("WID"));
+	}
+	else if (equationNumber == 1058 || equationNumber == 1137)
+	{
+		biomass = eq_1058(coefs[0], coefs[1], coefs[2], params->at("COV"));
+	}
+	else if (equationNumber == 1067 || equationNumber == 1097 || equationNumber == 1103 || equationNumber == 1106)
+	{
+		biomass = eq_202(coefs[0], coefs[1], params->at("LEN"));
+	}
+	else if (equationNumber == 1136)
+	{
+		biomass = eq_999(coefs[0], coefs[1], coefs[2], params->at("COV"), params->at("LEN"));
+	}
+	else if (equationNumber == 1152 || equationNumber == 1153)
+	{
+		biomass = eq_1153(coefs[0], coefs[1], coefs[2], params->at("LEN"), params->at("WID"), params->at("HT"));
+	}
+	else if (equationNumber == 1160)
+	{
+		biomass = eq_1160(coefs[0], coefs[1], coefs[2], params->at("VOL"));
+	}
+	else
+	{
+		//$$ Throw not found exception
+	}
+	
 
 	return biomass;
 }
@@ -45,9 +107,22 @@ double RVS::Biomass::BiomassEquations::eq_PCH(double cf1, double cf2, double hei
 	return result;
 }
 
+double RVS::Biomass::BiomassEquations::eq_165(double cf1, double cf2, double cover)
+{
+	double biomass = cf1 + cf2 * cover;
+	return biomass;
+}
+
 double RVS::Biomass::BiomassEquations::eq_201(double cf1, double cf2, double cover)
 {
 	double biomass = cf1 + cf2 * cover;
+	biomass = exp(biomass);
+	return biomass;
+}
+
+double RVS::Biomass::BiomassEquations::eq_202(double cf1, double cf2, double cover)
+{
+	double biomass = cf1 + cf2 * log(cover);
 	biomass = exp(biomass);
 	return biomass;
 }
@@ -66,9 +141,29 @@ double RVS::Biomass::BiomassEquations::eq_636_2(double cf1, double cf2, double v
 	return biomass;
 }
 
+double RVS::Biomass::BiomassEquations::eq_743(double cf1, double cf2, double cover, double height)
+{
+	double biomass = cf1 + cf2 * cover * height; 
+	return biomass;
+}
+
 double RVS::Biomass::BiomassEquations::eq_999(double cf1, double cf2, double cf3, double length, double width)
 {
 	double biomass = cf1 + cf2 * log(length) + cf3 * log(width);
+	biomass = exp(biomass);
+	return biomass;
+}
+
+double RVS::Biomass::BiomassEquations::eq_1000(double cf1, double cf2, double cf3, double cf4, double length, double width, double height)
+{
+	double biomass = cf1 + cf2 * log(length) + cf3 * log(width) + pow(cf4,log(height));
+	biomass = exp(biomass);
+	return biomass;
+}
+
+double RVS::Biomass::BiomassEquations::eq_1008(double cf1, double cf2, double cf3, double cf4, double length, double width, double height)
+{
+	double biomass = cf1 + cf2 * log(length) + cf3 * log(width) + cf4 * log(height);
 	biomass = exp(biomass);
 	return biomass;
 }
@@ -80,6 +175,18 @@ double RVS::Biomass::BiomassEquations::eq_1153(double cf1, double cf2, double cf
 	return biomass;
 }
 
+double RVS::Biomass::BiomassEquations::eq_1012(double cf1, double cf2, double cf3, double p1, double p2)
+{
+	double biomass = cf1 + cf2 * log(p1) + cf3 * log(p2);
+	biomass = exp(biomass);
+	return biomass;
+}
+
+double RVS::Biomass::BiomassEquations::eq_1058(double cf1, double cf2, double cf3, double p1)
+{
+	double biomass = cf1 + cf2 * p1 + cf3 * sqrt(p1);
+	return biomass;
+}
 
 double RVS::Biomass::BiomassEquations::eq_basicBAT(double cf1, double cf2, double length, double width)
 {
@@ -88,7 +195,11 @@ double RVS::Biomass::BiomassEquations::eq_basicBAT(double cf1, double cf2, doubl
 	return biomass;
 }
 
-
+double RVS::Biomass::BiomassEquations::eq_1160(double cf1, double cf2, double cf3, double p1)
+{
+	double biomass = (cf1 + cf2 * p1) * cf3;
+	return biomass;
+}
 
 double RVS::Biomass::BiomassEquations::shunt(string equation, map<string, double> vars)
 {

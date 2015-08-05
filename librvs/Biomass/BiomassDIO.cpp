@@ -23,6 +23,8 @@ int* RVS::Biomass::BiomassDIO::create_output_table()
 		BIOMASS_SHRUB_OUT_FIELD << " REAL, " << \
 		BIOMASS_HERB_OUT_FIELD << " REAL, " << \
 		BIOMASS_TOTAL_OUT_FIELD << " REAL, " << \
+		HERB_COVER_FIELD << " REAL, " << \
+		HERB_HEIGHT_FIELD << " REAL, " << \
 		AVG_SHRUB_HEIGHT_FIELD << " REAL, " << \
 		TOT_SHRUB_COVER_FIELD << " REAL);";
 
@@ -45,6 +47,8 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		BIOMASS_TOTAL_OUT_FIELD << ", "<< \
 		BIOMASS_SHRUB_OUT_FIELD << ", " << \
 		BIOMASS_HERB_OUT_FIELD << ", " << \
+		HERB_COVER_FIELD << ", " << \
+		HERB_HEIGHT_FIELD << ", " << \
 		AVG_SHRUB_HEIGHT_FIELD << ", " << \
 		TOT_SHRUB_COVER_FIELD << ") " << \
 		"VALUES (" << \
@@ -56,6 +60,8 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		ap->TOTALBIOMASS() << "," << \
 		ap->SHRUBBIOMASS() << "," << \
 		ap->HERBBIOMASS() << "," << \
+		ap->HERBCOVER() << "," << \
+		ap->HERBHEIGHT() << "," << \
 		ap->SHRUBHEIGHT() << "," << \
 		ap->SHRUBCOVER() << ");";
 
@@ -76,7 +82,11 @@ int* RVS::Biomass::BiomassDIO::create_intermediate_table()
 		BPS_NUM_FIELD << " INTEGER NOT NULL, " << \
 		DOM_SPP_FIELD << " TEXT, " << \
 		SPP_CODE_FIELD << " TEXT, " << \
+		BIOMASS_HERB_OUT_FIELD << " REAL, " << \
+		HERB_HEIGHT_FIELD << " REAL, " << \
+		HERB_COVER_FIELD << " REAL, " << \
 		BIOMASS_COVER_FIELD << " TEXT, " << \
+		BIOMASS_HEIGHT_FIELD << " REAL, " << \
 		BIOMASS_SHRUB_CALC_FIELD << " REAL, " << \
 		BIOMASS_TOTAL_OUT_FIELD << " REAL, " << \
 		BIOMASS_STEMS_PER_ACRE_FIELD << " REAL, " << \
@@ -101,7 +111,11 @@ int* RVS::Biomass::BiomassDIO::write_intermediate_record(int* year, RVS::DataMan
 		BPS_NUM_FIELD << " ," << \
 		DOM_SPP_FIELD << ", " << \
 		SPP_CODE_FIELD << ", " << \
+		BIOMASS_HERB_OUT_FIELD << ", " << \
+		HERB_HEIGHT_FIELD << ", " << \
+		HERB_COVER_FIELD << ", " << \
 		BIOMASS_COVER_FIELD << ", " << \
+		BIOMASS_HEIGHT_FIELD << ", " << \
 		BIOMASS_SHRUB_CALC_FIELD << ", " << \
 		BIOMASS_TOTAL_OUT_FIELD << ", " << \
 		BIOMASS_STEMS_PER_ACRE_FIELD << ", " << \
@@ -115,7 +129,11 @@ int* RVS::Biomass::BiomassDIO::write_intermediate_record(int* year, RVS::DataMan
 		ap->BPS_NUM() << ",\"" << \
 		record->DOM_SPP() << "\",\"" << \
 		record->SPP_CODE() << "\"," << \
+		ap->HERBBIOMASS() << "," << \
+		ap->HERBHEIGHT() << "," << \
+		ap->HERBCOVER() << "," << \
 		record->COVER() << "," << \
+		record->HEIGHT() << "," << \
 		record->SHRUB_SINGLE_BIOMASS() << "," << \
 		record->SHRUB_EX_BIOMASS() << ", " << \
 		record->STEMSPERACRE() << "," << \

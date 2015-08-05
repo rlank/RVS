@@ -77,6 +77,11 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 void AnalysisPlot::push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt)
 {
 	RVS::DataManagement::SppRecord* record = new RVS::DataManagement::SppRecord(dio, dt);
+	push_shrub(record);
+}
+
+void AnalysisPlot::push_shrub(RVS::DataManagement::SppRecord* record)
+{
 	shrubRecords.push_back(record);
 }
 

@@ -30,8 +30,8 @@ extern bool* USE_MEM;
 
 #if WIN
 	#ifndef RVS_DB_PATH
-	#define RVS_DB_PATH "C:/Users/robb/Documents/GitHub/RVS/rvs_in.db"
-	#define OUT_DB_PATH "C:/Users/robb/Documents/GitHub/RVS/rvs_out.db"
+	#define RVS_DB_PATH "C:/Users/robblankston/Documents/GitHub/RVS/rvs_in.db"
+	#define OUT_DB_PATH "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out.db"
 	#endif
 #else
 	#ifndef RVS_DB_PATH
