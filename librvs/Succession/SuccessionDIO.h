@@ -39,8 +39,8 @@ namespace Succession
 		//## Query functions ##//
 		RVS::DataManagement::DataTable* query_equation_table(int equation_number);
 		
-		RVS::DataManagement::DataTable* query_succession_table(int bps_code);
-		bool get_succession_data(int bps_code, std::map<string, string>* stringVals, std::map<string, double>* numVals);
+		RVS::DataManagement::DataTable* query_succession_table(string bps_model_code);
+		bool get_succession_data(string bps_model_code, std::map<string, string>* stringVals, std::map<string, double>* numVals);
 
 		bool check_shrub_data_exists(string spp_code);
 		string get_scientific_name(string spp_code);

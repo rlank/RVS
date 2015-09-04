@@ -34,7 +34,20 @@ namespace Succession
 		RVS::DataManagement::AnalysisPlot* ap;
 		bool suppress_messages;
 
-		int determineCurrentClass(int year, std::vector<double> endpoints);
+		bool isShrubDominated;
+
+		std::map<string, string> strVals_primary;
+		std::map<string, double> numVals_primary;
+		std::map<string, string> strVals_secondary;
+		std::map<string, double> numVals_secondary;
+		std::map<string, string> strVals_tertiary;
+		std::map<string, double> numVals_tertiary;
+
+		int determineCurrentClass();
+		int determineVegClass(string cohortType, double cover);
+		int relativeTimeInStage(int sclass);
+		int relativeTimeInStageAdjuster(double cover, std::map<string, string> strVals, std::map<string, double> numVals);
+
 		std::list<string> makeSpeciesList(std::map<string, string> strVals);
 		void addNewSpecies(std::vector<string> sClassSppCodes);
 

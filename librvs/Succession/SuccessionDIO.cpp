@@ -13,14 +13,49 @@ RVS::Succession::SuccessionDIO::~SuccessionDIO(void)
 
 int* RVS::Succession::SuccessionDIO::create_output_table()
 {
+	std::stringstream sqlstream;
+	sqlstream << "CREATE TABLE " << "Succession_Output" << "(" << \
+		PLOT_NUM_FIELD << " INTEGER NOT NULL, " << \
+		PLOT_NAME_FIELD << " TEXT, " << \
+		YEAR_OUT_FIELD << " INTEGER NOT NULL, " << \
+		"BPS_MODEL" << " TEXT NOT NULL, " << \
+		"COHORT" << " INTEGER, " << \
+		"COHORT_TYPE" << " TEXT, " << \
+		"TIME_IN_STAGE" << " REAL, " << \
+		"YEAR_OFFSET" << " REAL);";
 
+	char* sql = new char;
+	sql = streamToCharPtr(&sqlstream);
+	queuedWrites.push_back(sql);
 
 	return RC;
 }
 
 int* RVS::Succession::SuccessionDIO::write_output_record(int* year, RVS::DataManagement::AnalysisPlot* ap)
 {
+	std::stringstream sqlstream;
+	sqlstream << "INSERT INTO " << "Succession_Output" << " (" << \
+		PLOT_NUM_FIELD << ", " << \
+		PLOT_NAME_FIELD << ", " << \
+		YEAR_OUT_FIELD << ", " << \
+		"BPS_MODEL" << ", " << \
+		"COHORT" << ", " << \
+		"COHORT_TYPE" << ", " << \
+		"TIME_IN_STAGE" << ", " << \
+		"YEAR_OFFSET" << ") " << \
+		"VALUES (" << \
+		ap->PLOT_ID() << ",\"" << \
+		ap->PLOT_NAME() << "\"," << \
+		*year << ",\"" << \
+		ap->BPS_MODEL_NUM() << "\"," << \
+		ap->CURRENT_SUCCESSION_STAGE() << ",\"" << \
+		ap->COHORT_TYPE() << "\"," << \
+		ap->TIME_IN_SUCCESSION_STAGE() << "," << \
+		ap->YEAR_OFFSET() << ");";
 
+	char* sql = new char;
+	sql = streamToCharPtr(&sqlstream);
+	queuedWrites.push_back(sql);
 
 	return RC;
 }
@@ -43,23 +78,23 @@ RVS::DataManagement::DataTable* RVS::Succession::SuccessionDIO::query_equation_t
 	return nullptr;
 }
 
-RVS::DataManagement::DataTable* RVS::Succession::SuccessionDIO::query_succession_table(int bps_code)
+RVS::DataManagement::DataTable* RVS::Succession::SuccessionDIO::query_succession_table(string bps_model_code)
 {
-	const char* sql = query_base(SUCCESSION_TABLE, BPS_NUM_FIELD, bps_code);
+	const char* sql = query_base(SUCCESSION_TABLE, "BPS_MODEL", bps_model_code, "COHORT");
 	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
 	return dt;
 }
 
-bool RVS::Succession::SuccessionDIO::get_succession_data(int bps_code, std::map<string, string>* stringVals, std::map<string, double>* numVals)
+bool RVS::Succession::SuccessionDIO::get_succession_data(string bps_model_code, std::map<string, string>* stringVals, std::map<string, double>* numVals)
 {
 	RVS::DataManagement::DataTable* succDt;
 	try
 	{
-		succDt = query_succession_table(bps_code);
+		succDt = query_succession_table(bps_model_code);
 	}
 	catch (RVS::DataManagement::DataNotFoundException dex)
 	{
-		succDt = query_succession_table(10800);
+		succDt = query_succession_table("0211310");
 	}
 
 	double cohort;
@@ -73,11 +108,20 @@ bool RVS::Succession::SuccessionDIO::get_succession_data(int bps_code, std::map<
 	double gr_cov;
 	double max_ht;
 	double max_cov;
+
+	double min_ht;
+	double min_cov;
+
 	getVal(succDt->getStmt(), succDt->Columns["MIDPOINT"], &midpoint);
-	getVal(succDt->getStmt(), succDt->Columns["GR_HT_YR"], &gr_ht);
-	getVal(succDt->getStmt(), succDt->Columns["GR_COV_YR"], &gr_cov);
+	getVal(succDt->getStmt(), succDt->Columns["GR_HT"], &gr_ht);
+	getVal(succDt->getStmt(), succDt->Columns["GR_COV"], &gr_cov);
 	getVal(succDt->getStmt(), succDt->Columns["MAX_HT"], &max_ht);
 	getVal(succDt->getStmt(), succDt->Columns["MAX_CC"], &max_cov);
+	getVal(succDt->getStmt(), succDt->Columns["MIN_HT"], &min_ht);
+	getVal(succDt->getStmt(), succDt->Columns["MIN_CC"], &min_cov);
+
+
+
 	string cohort_type;
 	getVal(succDt->getStmt(), succDt->Columns["COHORT_TYPE"], &cohort_type);
 	string species1;
@@ -104,6 +148,8 @@ bool RVS::Succession::SuccessionDIO::get_succession_data(int bps_code, std::map<
 	(*numVals)["midpoint"] = midpoint;
 	(*numVals)["gr_ht"] = gr_ht;
 	(*numVals)["gr_cov"] = gr_cov;
+	(*numVals)["min_ht"] = min_ht;
+	(*numVals)["min_cov"] = min_cov;
 	(*numVals)["max_ht"] = max_ht;
 	(*numVals)["max_cov"] = max_cov;
 

@@ -20,29 +20,35 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 
 	std::vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 
+	if (ap->PLOT_NAME().compare("EOSG 05") == 0 && year == 19)
+	{
+		int asd = 0;
+	}
+
+
 	RVS::DataManagement::SppRecord* record = NULL;
 
-	std::map<string, string> strVals_primary = std::map<string, string>();
-	std::map<string, double> numVals_primary = std::map<string, double>();
+	strVals_primary = std::map<string, string>();
+	numVals_primary = std::map<string, double>();
 
-	std::map<string, string> strVals_secondary = std::map<string, string>();;
-	std::map<string, double> numVals_secondary = std::map<string, double>();
+	strVals_secondary = std::map<string, string>();;
+	numVals_secondary = std::map<string, double>();
 
-	std::map<string, string> strVals_tertiary = std::map<string, string>();;
-	std::map<string, double> numVals_tertiary = std::map<string, double>();
+	strVals_tertiary = std::map<string, string>();;
+	numVals_tertiary = std::map<string, double>();
 
 	bool lastCohort = false;
 
-	lastCohort = sdio->get_succession_data(ap->BPS_NUM(), &strVals_primary, &numVals_primary);
+	lastCohort = sdio->get_succession_data(ap->BPS_MODEL_NUM(), &strVals_primary, &numVals_primary);
 
 	if (!lastCohort)
 	{
-		lastCohort = sdio->get_succession_data(ap->BPS_NUM(), &strVals_secondary, &numVals_secondary);
+		lastCohort = sdio->get_succession_data(ap->BPS_MODEL_NUM(), &strVals_secondary, &numVals_secondary);
 	}
 
 	if (!lastCohort)
 	{
-		lastCohort = sdio->get_succession_data(ap->BPS_NUM(), &strVals_tertiary, &numVals_tertiary);
+		lastCohort = sdio->get_succession_data(ap->BPS_MODEL_NUM(), &strVals_tertiary, &numVals_tertiary);
 	}
 
 	std::vector<double> endyears = std::vector<double>();
@@ -50,7 +56,30 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 	if (numVals_secondary.size() > 0) { endyears.push_back(numVals_secondary["endAge"]); }
 	if (numVals_tertiary.size() > 0) { endyears.push_back(numVals_tertiary["endAge"]); }
 
-	int sclass = determineCurrentClass(year, endyears);
+	int sclass = ap->CURRENT_SUCCESSION_STAGE();
+	int yearOffset = ap->startingYearsOffset;
+	int yearsInClass = ap->TIME_IN_SUCCESSION_STAGE();
+	isShrubDominated = ap->SHRUBCOVER() > ap->HERBCOVER();
+	
+	ap->cohortType = isShrubDominated ? "S" : "H";
+
+	if (sclass == 0)
+	{
+		sclass = determineCurrentClass();
+		yearOffset = relativeTimeInStage(sclass);
+		ap->startingYearsOffset = yearOffset;
+	}
+	
+	// If sclass == 0, no classification could be made and it's uncharacteristic
+	if (sclass == 0)
+	{
+		ap->cohort = sclass;
+		ap->timeInSuccessionStage = yearsInClass;
+		ap->cohortType = "U";
+
+		sdio->write_output_record(&year, ap);
+		return RC;
+	}
 
 	//	get rounded midpoint year for stage
 	//	add rounded midpoint to actual years(startage + rounded midpoint length) = adjusted midpoint
@@ -63,24 +92,13 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 		stage = strVals_primary["cover_type"];
 		break;
 	case 2:
-		midpoint = (int)numVals_secondary["midpoint"] + numVals_primary["midpoint"];
+		midpoint = (int)numVals_secondary["midpoint"] + (int)numVals_secondary["startAge"];
 		stage = strVals_secondary["cover_type"];
 		break;
 	case 3:
-		midpoint = (int)numVals_tertiary["midpoint"] + numVals_secondary["midpoint"];
+		midpoint = (int)numVals_tertiary["midpoint"] + (int)numVals_tertiary["startAge"];
 		stage = strVals_tertiary["cover_type"];
 		break;
-	}
-
-	//	if LATE and adjusted midpoint > current year : DO NOTHING, BREAK METHOD NOW
-	//	else, do below
-	if (sclass == 3 && midpoint > year)
-	{
-		return RC;
-	}
-	if (sclass == 2 && midpoint > year && strVals_tertiary.size() == 0)
-	{
-		return RC;
 	}
 	
 	std::map<string, string> strVals_current;
@@ -88,7 +106,7 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 	std::map<string, string> strVals_next;
 	std::map<string, double> numVals_next;
 
-	bool isLate = strcmp(stage.c_str(), "Late") == 0 ? true : false;
+	bool isLate = stage.compare("Late") == 0 ? true : false;
 
 	switch (sclass)
 	{
@@ -120,8 +138,12 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 		break;
 	}
 
-	
-	if (year <= midpoint)
+	int relativeYear = year + yearOffset;
+
+	//(remember if type S split cover among all shrubs)
+	shrubs = ap->SHRUB_RECORDS();
+
+	if (relativeYear < midpoint)
 	{
 		//determine H or S growth stage(Cohort Type)
 		string growthStage = strVals_current["cohort_type"];
@@ -133,69 +155,23 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 		double max_height = numVals_current["max_ht"];
 		double max_cover = numVals_current["max_cov"];
 		
-		/*
-		//(remember if type S split cover among all shrubs)
-		//check species list
-		shrubs = ap->SHRUB_RECORDS();
-		
-		std::list<string> classSpecies = makeSpeciesList(strVals_current);
-		std::list<string> speciesToAdd = std::list<string>(classSpecies);
-		for (int r = 0; r < shrubs->size(); r++)
-		{
-			record = shrubs->at(r);
-			for (string s : classSpecies)
-			{
-				if (record->spp_code.compare(s) == 0)
-				{
-					speciesToAdd.remove(s);
-				}
-			}
-		}
-
-		for (string s : speciesToAdd)
-		{
-			//if species doesn't exist:
-			//if spp_code NOT IN Bio_Crosswalk : PASS
-			bool useSpecies = sdio->check_shrub_data_exists(s);
-			if (useSpecies)
-			{
-				string spp_name = sdio->get_scientific_name(s);
-				RVS::DataManagement::SppRecord* record = new RVS::DataManagement::SppRecord(s, 0.0, 0.0, spp_name);
-				ap->push_shrub(record);
-			}
-		}
-
-		shrubs = ap->SHRUB_RECORDS();
-		*/
-
 		if (growthStage.compare("H") == 0)
 		{	
-			if (ap->herbHeight < max_height)
-			{
-				ap->herbHeight += cov_growth;
-			}
-			if (ap->herbCover < max_cover)
-			{
-				ap->herbCover += ht_growth;
-			}
+			if (ap->herbHeight < max_height) { ap->herbHeight += cov_growth; }
+			if (ap->herbCover < max_cover) { ap->herbCover += ht_growth; }
 		}
 		else
 		{
-			double divHeight = ht_growth / shrubs->size();
-			double divCover = cov_growth / shrubs->size();
+			double divCover = 0;
+			double divHeight = 0;
+			if (ap->shrubCover < max_cover) { divCover = cov_growth / shrubs->size(); }
+			if (ap->shrubHeight < max_height) { divHeight = ht_growth / shrubs->size(); }
+			
 			for (int r = 0; r < shrubs->size(); r++)
 			{
 				record = shrubs->at(r);
-
-				//if amounts > current(cover or height) : do nothing
-				if (record->height < max_height)
-				{
-					record->height += divHeight;
-				}
-				if (record->cover < max_cover)
-				{
-					record->cover += divCover;
-				}
+				record->height += divHeight;
+				record->cover += divCover;
 			}
 		}
 	}
@@ -204,7 +180,7 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 		//determine H or S growth stage(Cohort Type)
 		string growthStage = strVals_current["cohort_type"];
 		//determine next stage H or S
-		string nextGrowthStage = strVals_current["cover_type"];
+		string nextGrowthStage = strVals_next["cohort_type"];
 		//height growth amount = GR_HT_m_yr
 		double ht_growth = numVals_next["gr_ht"];
 		//cover growth amount = GR_CC_yr
@@ -212,93 +188,24 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 
 		double max_height = numVals_next["max_ht"];
 		double max_cover = numVals_next["max_cov"];
-		//check species list of 'next' class
-		/*
-		std::list<string> classSpecies = makeSpeciesList(strVals_next);
-		std::list<string> speciesToAdd = std::list<string>(classSpecies);
-		for (int r = 0; r < shrubs->size(); r++)
-		{
-			record = shrubs->at(r);
-			for (string s : classSpecies)
-			{
-				if (record->spp_code.compare(s) == 0)
-				{
-					speciesToAdd.remove(s);
-				}
-			}
-		}
-
-		for (string s : speciesToAdd)
-		{
-			//if species doesn't exist:
-			//if spp_code NOT IN Bio_Crosswalk : PASS
-			bool useSpecies = sdio->check_shrub_data_exists(s);
-			if (useSpecies)
-			{
-				string spp_name = sdio->get_scientific_name(s);
-				RVS::DataManagement::SppRecord* record = new RVS::DataManagement::SppRecord(s, 0.0, 0.0, spp_name);
-				ap->push_shrub(record);
-			}
-		}
-
-		shrubs = ap->SHRUB_RECORDS();
-		*/
-		std::list<string> oldClassSpecies = makeSpeciesList(strVals_current);
-		
-
-		if (growthStage.compare("H") == 0)
-		{
-			ap->herbHeight -= ht_growth;
-			ap->herbCover -= cov_growth;
-			if (ap->herbHeight < 0) { ap->herbHeight = 0; }
-			if (ap->herbCover < 0) { ap->herbCover = 0; }
-		}
-		else
-		{
-			for (int r = 0; r < shrubs->size(); r++)
-			{
-				record = shrubs->at(r);
-				for (string os : oldClassSpecies)
-				{
-					if (strcmp(os.c_str(), record->spp_code.c_str()) == 0)
-					{
-						record->height -= ht_growth;
-						record->cover -= cov_growth;
-						if (record->height < 0) { record->height = 0; }
-						if (record->cover < 0) { record->cover = 0; }
-					}
-				}
-			}
-		}
 
 		if (nextGrowthStage.compare("H") == 0)
 		{
-			if (record->height < max_height)
-			{
-				ap->herbCover += ht_growth;
-			}
-			if (record->cover < max_cover)
-			{
-				ap->herbHeight += cov_growth;
-			}
+			if (ap->herbHeight < max_height) { ap->herbHeight += cov_growth; }
+			if (ap->herbCover < max_cover) { ap->herbCover += ht_growth; }
 		}
 		else
 		{
-			double divHeight = ht_growth / shrubs->size();
-			double divCover = cov_growth / shrubs->size();
+			double divCover = 0;
+			double divHeight = 0;
+			if (ap->shrubCover < max_cover) { divCover = cov_growth / shrubs->size(); }
+			if (ap->shrubHeight < max_height) { divHeight = ht_growth / shrubs->size(); }
+
 			for (int r = 0; r < shrubs->size(); r++)
 			{
 				record = shrubs->at(r);
-
-				//if amounts > current(cover or height) : do nothing
-				if (record->height < max_height)
-				{
-					record->height += divHeight;
-				}
-				if (record->cover < max_cover)
-				{
-					record->cover += divCover;
-				}
+				record->height += divHeight;
+				record->cover += divCover;
 			}
 		}
 	}
@@ -310,26 +217,86 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 		ap->herbCover = (ap->herbCover / total) * 100;
 		ap->shrubCover = (ap->shrubCover / total) * 100;
 	}
+
+
+	ap->cohort = sclass;
+	ap->timeInSuccessionStage = yearsInClass;
+
+	sdio->write_output_record(&year, ap);
+
+	ap->timeInSuccessionStage += 1;
+
+	if (relativeYear == numVals_current["endAge"])
+	{
+		ap->cohort += 1;
+		ap->timeInSuccessionStage = 0;
+	}
+
 	return RC;
 }
 
-int RVS::Succession::SuccessionDriver::determineCurrentClass(int year, std::vector<double> endpoints)
+
+int RVS::Succession::SuccessionDriver::determineCurrentClass()
+{
+	int sclass = isShrubDominated ? determineVegClass("S", ap->SHRUBCOVER()) : determineVegClass("H", ap->HERBCOVER());
+	return sclass;
+}
+
+int RVS::Succession::SuccessionDriver::determineVegClass(string cohortType, double cover)
 {
 	int sclass = 0;
-	if (year <= endpoints[0])
-	{
-		sclass = 1;
-	}
-	else if (year <= endpoints[1])
-	{
-		sclass = 2;
-	}
-	else
-	{
-		sclass = 3;
-	}
 
+	if (strVals_primary["cohort_type"].compare(cohortType) == 0)
+	{
+		if (cover < numVals_primary["max_cov"])
+		{
+			sclass = 1;
+		}
+	}
+	else if (strVals_secondary["cohort_type"].compare(cohortType) == 0)
+	{
+		if (cover < numVals_secondary["max_cov"])
+		{
+			sclass = 2;
+		}
+	}
+	else if (strVals_tertiary.size() > 0)
+	{
+		if (strVals_tertiary["cohort_type"].compare(cohortType) == 0)
+		{
+			if (cover < numVals_tertiary["max_cov"])
+			sclass = 3;
+		}
+	}
 	return sclass;
+}
+
+int RVS::Succession::SuccessionDriver::relativeTimeInStage(int sclass)
+{
+	int adjust = 0;
+
+	double cover = isShrubDominated ? ap->SHRUBCOVER() : ap->HERBCOVER();
+
+	switch (sclass)
+	{
+	case 1:
+		adjust = relativeTimeInStageAdjuster(cover, strVals_primary, numVals_primary);
+		break;
+	case 2:
+		adjust = relativeTimeInStageAdjuster(cover, strVals_secondary, numVals_secondary);
+		break;
+	case 3:
+		adjust = relativeTimeInStageAdjuster(cover, strVals_tertiary, numVals_tertiary);
+		break;
+	}
+	return adjust;
+}
+
+int RVS::Succession::SuccessionDriver::relativeTimeInStageAdjuster(double cover, std::map<string, string> strVals, std::map<string, double> numVals)
+{
+	int midpoint = numVals["midpoint"];
+	int yearsPassed = (int)cover / (int)numVals["max_cov"];
+	return yearsPassed;
 }
 
 std::list<string> RVS::Succession::SuccessionDriver::makeSpeciesList(std::map<string, string> strVals)

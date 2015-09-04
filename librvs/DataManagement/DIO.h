@@ -90,6 +90,7 @@ namespace DataManagement
 		/// Base query function. All the public functions only define the selection string.
 		const char* query_base(const char* table, const char* field);
 		const char* query_base(const char* table, const char* field, boost::any whereclause);
+		const char* query_base(const char* table, const char* field, boost::any whereclause, string order);
 
 		// Bogus function for sqlite3_exec
 		static int callback(void* nu, int argc, char** argv, char** azColName);

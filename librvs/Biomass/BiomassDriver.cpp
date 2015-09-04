@@ -24,26 +24,13 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	double runShrubHeight = 0;
 	RVS::DataManagement::SppRecord* record = NULL;
 
-	if (strcmp(ap->PLOT_NAME().c_str(), "SWSB 01") == 0)
-	{
-		int i = 123;
-	}
-
 	for (int r = 0; r < shrubs->size(); r++)
 	{
 		record = shrubs->at(r);
 
-		if (strcmp(record->spp_code.c_str(), "ARTRW8") == 0)
-		{
-			int i = 123;
-		}
-
 		double stemsPerAcre = calcStemsPerAcre(record);
 		record->stemsPerAcre = stemsPerAcre;
 		double singleBiomass = calcShrubBiomass(record);
-
-		//$$ TEMP fudging biomass
-		//singleBiomass *= .08;
 
 		record->shrubBiomass = singleBiomass;
 		record->exShrubBiomass = singleBiomass * stemsPerAcre;
@@ -56,20 +43,28 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 		RC = bdio->write_intermediate_record(&year, ap, record);
 	}
 
+	
+
 	// Apply holdover biomass if applicable
-	//if (ap->herbBiomass != 0)
-	//{
-	//	double holdover = calcHerbReduction(totalShrubCover);
-	//	ap->herbHoldoverBiomass = holdover * ap->herbBiomass;
-	//	//ap->herbHoldoverBiomass = 0;
-	//}
+	if (ap->herbBiomass != 0)
+	{
+		double holdover = calcHerbReduction(totalShrubCover);
+		ap->herbHoldoverBiomass = holdover * ap->herbBiomass;
+		//ap->herbHoldoverBiomass = 0;
+	}
 
 	//double holdover = calcHerbReduction(totalShrubCover);
 
-	*retHerbBiomass = calcHerbBiomass(year);
+	*retHerbBiomass = ap->HERBCOVER() > 0 ? calcHerbBiomass(year) : 0;
 
 	double averageHeight = runShrubHeight / totalShrubCover;
 
+	if (shrubs->empty())
+	{
+		totalShrubCover = 0;
+		runShrubHeight = 0;
+		averageHeight = 0; 
+	}
 
 	//ap->herbBiomass = *retHerbBiomass + ap->herbHoldoverBiomass;
 	
@@ -100,6 +95,11 @@ double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 	catch (RVS::DataManagement::DataNotFoundException dex)
 	{
 		equationNumber = bdio->query_crosswalk_table("ARTR2", "BAT2");
+	}
+
+	if (equationNumber == 0)
+	{
+		string s = "Something is wrong.";
 	}
 
 	record->batEqNum = equationNumber;
@@ -156,7 +156,7 @@ double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 	return stemsPerAcre;
 }
 
-/*
+
 double BiomassDriver::calcHerbBiomass(int year)
 {
 	// BASIC FORM:
@@ -200,23 +200,18 @@ double BiomassDriver::calcHerbBiomass(int year)
 	double biomass = INTERCEPT + *grp_id_const + (ln_ndvi * LN_NDVI) + (ln_ppt * LN_PRECIP) + (ln_ndvi * *ndvi_grp_interact) + (ln_ppt * *ppt_grp_interact);
 	return exp(biomass);
 }
-*/
 
+
+/*
 double BiomassDriver::calcHerbBiomass(int year)
 {
 
 	double ndvi = ap->getNDVI(year);
-
-	if (ndvi == 0.0)
-	{
-		ndvi = .0000000000001;
-	}
-
 	double biomass = 139.07 * exp(0.0004 * ndvi);
 	//double biomass = 152.03 * exp(0.0004 * ndvi);
 	return biomass;
 }
-
+*/
 
 double BiomassDriver::calcHerbReduction(double totalShrubCover)
 {

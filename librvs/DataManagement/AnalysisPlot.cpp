@@ -8,6 +8,7 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	plot_name = "";
 	evt_num = 0;
 	bps_num = 0;
+	bps_model_num = "";
 	shrubHeight = 0;
 	shrubCover = 0;
 	totalBiomass = 0;
@@ -43,6 +44,7 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 	dio->getVal(stmt, dt->Columns[PLOT_NAME_FIELD], &plot_name);
 	dio->getVal(stmt, dt->Columns[EVT_NUM_FIELD], &evt_num);
 	dio->getVal(stmt, dt->Columns[BPS_NUM_FIELD], &bps_num);
+	dio->getVal(stmt, dt->Columns["BPS_MODEL"], &bps_model_num);
 	dio->getVal(stmt, dt->Columns[HUC_FIELD], &huc);
 	dio->getVal(stmt, dt->Columns[HERB_COVER_FIELD], &herbCover);
 	dio->getVal(stmt, dt->Columns[HERB_HEIGHT_FIELD], &herbHeight);
