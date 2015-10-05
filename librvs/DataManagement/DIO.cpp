@@ -107,6 +107,7 @@ int* RVS::DataManagement::DIO::create_output_db(char* path)
 	return RC;
 }
 
+
 RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const char* sql, sqlite3* db, bool addToActive, bool reset)
 {
 	shared_ptr<DataTable> dt;
@@ -140,6 +141,31 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const c
 
 	return dt.get();
 }
+
+
+/*
+RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const char* sql, sqlite3* db, bool addToActive, bool reset)
+{
+	shared_ptr<DataTable> dt;
+
+	int nByte = -1;
+	sqlite3_stmt* stmt;
+
+	// Prepare SQL query as object code
+	*RC = sqlite3_prepare_v2(db, sql, nByte, &stmt, NULL);
+	checkDBStatus(db, sql);
+	*RC = sqlite3_step(stmt);
+	checkDBStatus(db, sql);
+	dt = shared_ptr<DataTable>(new DataTable(stmt));
+
+	if (addToActive) { activeQueries.insert(pair<string, shared_ptr<DataTable>>(sql, dt)); }
+
+	int* rc = dt->STATUS();
+	*rc = *RC;
+
+	return dt.get();
+}
+*/
 
 int* RVS::DataManagement::DIO::write_output(void)
 {
@@ -196,6 +222,17 @@ std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 	return items;
 }
 
+const char* RVS::DataManagement::DIO::query_base(const char* table)
+{
+	std::stringstream* selectStream = new std::stringstream();
+	*selectStream << "SELECT * FROM " << table << "; ";
+
+	char* selectString = new char;
+	selectString = streamToCharPtr(selectStream);
+	delete selectStream;
+	return selectString;
+}
+
 const char* RVS::DataManagement::DIO::query_base(const char* table, const char* field)
 {
 	std::stringstream* selectStream = new std::stringstream();
@@ -219,6 +256,27 @@ const char* RVS::DataManagement::DIO::query_base(const char* table, const char* 
 	{
 		*selectStream << "SELECT * FROM " << table << " WHERE " << field << "=" << boost::any_cast<int>(whereclause) << "; ";
 	}
+
+	char* selectString = new char;
+	selectString = streamToCharPtr(selectStream);
+	delete selectStream;
+	return selectString;
+}
+
+const char* RVS::DataManagement::DIO::query_base(const char* table, const char* field, boost::any whereclause, string order)
+{
+	std::stringstream* selectStream = new std::stringstream();
+
+	if (whereclause.type() == typeid(std::string))
+	{
+		*selectStream << "SELECT * FROM " << table << " WHERE " << field << "='" << boost::any_cast<std::string>(whereclause) << "'";
+	}
+	else if (whereclause.type() == typeid(int))
+	{
+		*selectStream << "SELECT * FROM " << table << " WHERE " << field << "=" << boost::any_cast<int>(whereclause);
+	}
+
+	*selectStream << " ORDER BY " << order << ";";
 
 	char* selectString = new char;
 	selectString = streamToCharPtr(selectStream);

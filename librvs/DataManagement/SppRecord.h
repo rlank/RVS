@@ -19,7 +19,9 @@
 #include "DIO.h"
 
 namespace RVS { namespace Biomass { class BiomassDriver; } }
+namespace RVS { namespace Biomass { class BiomassEqDriver; } }
 namespace RVS { namespace Fuels   { class FuelsDriver; } }
+namespace RVS { namespace Succession { class SuccessionDriver; } }
 
 using namespace RVS::DataManagement;
 
@@ -31,8 +33,12 @@ namespace DataManagement
 	{
 		friend class RVS::Biomass::BiomassDriver;
 		friend class RVS::Fuels::FuelsDriver;
+		friend class RVS::Biomass::BiomassEqDriver;
+		friend class RVS::Succession::SuccessionDriver;
+
 	public:
 		SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
+		SppRecord(string spp_code, double height, double cover, string dom_spp);
 		virtual ~SppRecord(void);
 
 		/// General Record parameters ///
@@ -79,6 +85,7 @@ namespace DataManagement
 		// General protected functions //
 		virtual void initialize_object();
 		virtual void buildRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
+		virtual void buildRecord(string spp_code, double height, double cover, string dom_spp);
 
 		// Biomass values
 		double shrubBiomass;  // grams

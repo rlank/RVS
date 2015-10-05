@@ -1,12 +1,11 @@
 /// ********************************************************** ///
-/// Name: BiomassDIO.h                                         ///
-/// Desc: Data Input/output class for dealing with Biomass     ///
-/// data and queries.                                          ///
+/// Name: SuccessionDIO.h                                         ///
+/// Desc:                                          ///
 /// Base Class(es): DIO.h                                      ///
 /// ********************************************************** ///
 
-#ifndef BIOMASSDIO_H
-#define BIOMASSDIO_H
+#ifndef SUCCESSIONDIO_H
+#define SUCCESSIONDIO_H
 
 #include <string>
 
@@ -22,14 +21,14 @@
 
 namespace RVS
 {
-namespace Biomass
+namespace Succession
 {
-	class BiomassDIO : 
+	class SuccessionDIO :
 		public RVS::DataManagement::DIO
 	{
 	public:
-		BiomassDIO(void);
-		virtual ~BiomassDIO(void);
+		SuccessionDIO(void);
+		virtual ~SuccessionDIO(void);
 
 		//## DB functins ##//
 		int* create_output_table();
@@ -38,20 +37,13 @@ namespace Biomass
 		int* write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* record);
 
 		//## Query functions ##//
-
-		// Queries Bio_Crosswalk for which equations to use
-		int query_crosswalk_table(std::string spp, std::string returnType);
-		// Returns a record from the biomass equation table
 		RVS::DataManagement::DataTable* query_equation_table(int equation_number);
+		
+		RVS::DataManagement::DataTable* query_succession_table(string bps_model_code);
+		bool get_succession_data(string bps_model_code, std::map<string, string>* stringVals, std::map<string, double>* numVals);
 
-		double** query_covariance_matrix();
-
-		int find_group_index(string* grp_id);
-
-
-		// Return a collection of required values for herbaceous biomass calculation.
-		// Takes the macro group ID as parameter
-		void query_biogroup_coefs(int bps, double* group_const, double* ndvi_grp_interact, double* ppt_grp_interact, std::string* grp_id, bool covariance);
+		bool check_shrub_data_exists(string spp_code);
+		string get_scientific_name(string spp_code);
 	};
 }
 }

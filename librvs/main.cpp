@@ -3,7 +3,7 @@
 /// Desc: (Test) driver for RVS. Build as execultable and      ///
 /// this becomes the program entry point                       ///
 /// Base Class(es): none                                       ///
-/// Last Modified: 6 Jun 14                                    ///
+/// Last Modified: 5 Aug 15                                    ///
 /// ********************************************************** ///
 
 #include <ctime>
@@ -13,7 +13,8 @@
 #include <string>
 #include <vector>
 
-//#include <boost/thread.hpp>
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 //#include <boost/exception/all.hpp>
 
 #include "RVSDEF.h"
@@ -22,20 +23,24 @@
 #include "DataManagement/RVSException.h"
 #include "Biomass/BiomassDIO.h"
 #include "Biomass/BiomassDriver.h"
+#include "Biomass/BiomassEqDriver.h"
 #include "Fuels/FuelsDIO.h"
 #include "Fuels/FuelsDriver.h"
+#include "Succession/SuccessionDIO.h"
+#include "Succession/SuccessionDriver.h"
 
 using namespace std;
 using namespace RVS;
 using namespace RVS::DataManagement;
 
 int* RC = new int(SQLITE_OK);
-int* YEARS = new int(1);
+int* YEARS = new int(50);
 bool* SUPPRESS_MSG = new bool(true);
 const char* DEBUG_FILE = "RVS_Debug.txt";
 bool* USE_MEM = new bool(true);
 
-void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, Biomass::BiomassDriver* bd, Fuels::FuelsDriver* fd);
+void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, 
+	Biomass::BiomassDriver* bd, Fuels::FuelsDriver* fd, Succession::SuccessionDriver* sd);
 
 int main(int argc, char* argv[])
 {   
@@ -48,13 +53,10 @@ int main(int argc, char* argv[])
 	/// User execution args ///
 	///////////////////////////
 
-	// Args:
-	// 1: Input database path
-	// 2: Output database path
-
 	/// Get DIO ready for queries
 	Biomass::BiomassDIO* bdio = new Biomass::BiomassDIO();
 	Fuels::FuelsDIO* fdio = new Fuels::FuelsDIO();
+	Succession::SuccessionDIO* sdio = new Succession::SuccessionDIO();
     
     vector<int> plotcounts = bdio->query_analysis_plots();
 	map<int, AnalysisPlot*> aps;
@@ -88,14 +90,54 @@ int main(int argc, char* argv[])
 
 	std::cout << "Done." << std::endl;
 
+	/*
+	Biomass::BiomassEqDriver beqd = Biomass::BiomassEqDriver(bdio, *SUPPRESS_MSG);
+
+	vector<int> testEquations = vector<int>();
+
+	ifstream equationsFile;
+	equationsFile.open("C:\\Users\\robblankston\\Documents\\GitHub\\RVS\\librvs\\biomass_text_equations.txt");
+	string line;
+	if (equationsFile.is_open())
+	{
+		while (getline(equationsFile, line))
+		{
+			line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
+			int eqNum = std::stoi(line);
+			testEquations.push_back(eqNum);
+		}
+		equationsFile.close();
+	}
+
+	for (vector<int>::iterator it = testEquations.begin(); it != testEquations.end(); ++it)
+	{
+		std::cout << "\n===================================" << std::endl;
+		std::cout << "EQUATION " << *it << std::endl;
+		std::cout << "===================================\n" << std::endl;
+
+		for (int &p : plotcounts)
+		{
+			currentPlot = aps[p];
+			RC = beqd.BioMain(*it, currentPlot);
+		}
+
+		stringstream ss;
+		ss << "EQUATION " << *it << " finished";
+		bdio->write_debug_msg(ss.str().c_str());
+	}
+	
+	*/
+	
+
 	///////////////////////////////
 	/// Prepare for simulation
 	///////////////////////////////
 
-	//vector<boost::thread> threads;
+	boost::thread_group tgroup;
 
 	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, *SUPPRESS_MSG);
 	Fuels::FuelsDriver fd = Fuels::FuelsDriver(fdio, *SUPPRESS_MSG);
+	Succession::SuccessionDriver sd = Succession::SuccessionDriver(sdio, *SUPPRESS_MSG);
 
 	for (int year = 0; year < *YEARS; year++)
 	{
@@ -106,19 +148,25 @@ int main(int argc, char* argv[])
 		for (int &p : plotcounts)
 		{
 			currentPlot = aps[p];
-			//threads.push_back(boost::thread(simulate, year, currentPlot, &bd, &fd));
-			simulate(year, currentPlot, &bd, &fd);
+			simulate(year, currentPlot, &bd, &fd, &sd);
+
+			//tgroup.create_thread(boost::bind(&simulate, year, currentPlot, &bd, &fd, &sd));
 		}
 
 		stringstream ss; 
 		ss << "Year " << year << " finished";
 		bdio->write_debug_msg(ss.str().c_str());
+		//tgroup.join_all();
 	}
+    
+	//tgroup.join_all();
 
+	
 	bdio->write_output();
 
 	delete bdio;
 	delete fdio;
+	delete sdio;
 	
 	std::cout << std::endl << "Ran to completion." << std::endl;
 
@@ -127,10 +175,13 @@ int main(int argc, char* argv[])
 	*dfile << ctime(&t) << "\n";
 	dfile->close();
 
+	
+
 	return (*RC);
 }
 
-void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, Biomass::BiomassDriver* bd, Fuels::FuelsDriver* fd)
+void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, 
+	Biomass::BiomassDriver* bd, Fuels::FuelsDriver* fd, Succession::SuccessionDriver* sd)
 {
 	if (!*SUPPRESS_MSG)
 	{
@@ -145,22 +196,7 @@ void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, Biomass:
 
 	RC = bd->BioMain(year, currentPlot, &shrubBiomass, &herbBiomass);
 
-	if (!*SUPPRESS_MSG)
-	{
-		std::cout << std::endl;
-		std::cout << "Shrub Biomass: " << shrubBiomass << std::endl;
-		std::cout << "Herb Biomass: " << herbBiomass << std::endl;
-		std::cout << "Total Biomass: " << (shrubBiomass + herbBiomass) << std::endl;
-	}
+	//RC = fd->FuelsMain(year, currentPlot);
 
-	RC = fd->FuelsMain(year, currentPlot);
-
-	if (!*SUPPRESS_MSG)
-	{
-		std::map<std::string, double> fuels = currentPlot->TOTALFUELSCOLLECTION();
-		for (std::map<std::string, double>::iterator it = fuels.begin(); it != fuels.end(); it++)
-		{
-			std::cout << it->first << ": " << it->second << std::endl;
-		}
-	}
+	RC = sd->SuccessionMain(year, currentPlot);
 }

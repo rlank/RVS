@@ -30,12 +30,22 @@ namespace Biomass
 		static double eq_PCH(double cf1, double cf2, double height);
 		
 	private:
+		static double eq_165(double cf1, double cf2, double cover);
 		static double eq_201(double cf1, double cf2, double cover);
+		static double eq_202(double cf1, double cf2, double cover);
 		static double eq_636(double cf1, double cf2, double length, double width, double height);
-		static double RVS::Biomass::BiomassEquations::eq_636_2(double cf1, double cf2, double vol);
+		static double eq_636_2(double cf1, double cf2, double vol);
+		static double eq_743(double cf1, double cf2, double cover, double height);
+		static double eq_998(double cf1, double cf2, double width);
 		static double eq_999(double cf1, double cf2, double cf3, double length, double width);
+		static double eq_1000(double cf1, double cf2, double cf3, double cf4, double length, double width, double height);
+		static double eq_1002(double cf1, double cf2, double vol);
+		static double eq_1008(double cf1, double cf2, double cf3, double cf4, double length, double width, double height);
+		static double eq_1012(double cf1, double cf2, double cf3, double p1, double p2);
+		static double eq_1058(double cf1, double cf2, double cf3, double p1);
 		static double eq_basicBAT(double cf1, double cf2, double length, double width);
 		static double eq_1153(double cf1, double cf2, double cf3, double length, double width, double height);
+		static double eq_1160(double cf1, double cf2, double cf3, double p1);
 
 		static double shunt(std::string equation, std::map<std::string, double> variables);
 	};

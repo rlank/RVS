@@ -14,18 +14,21 @@
 namespace RVS
 {
 	// Primary table names. Replace with externs as needed
-	static const char* RVS_INPUT_TABLE = "Plots_h";
-	static const char* SHRUB_INPUT_TABLE = "Shrub_Input_cv";
+	static const char* RVS_INPUT_TABLE = "Plots";
+	static const char* SHRUB_INPUT_TABLE = "Shrubs";
 	static const char* BPS_HUC_TABLE = "BPS_HUC_Master";
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
 	static const char* BIOMASS_PRIMARYPRODUCTION_TABLE = "Bio_PP_KgH";
 	static const char* BIOMASS_EQUATION_TABLE = "Bio_Equation";
 	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT";
 	static const char* BIOMASS_GROUP_COEFS_TABLE = "Bio_Group_Coef_Cross";
+	static const char* BIOMASS_GROUP_COVARIANCE_TABLE = "Bio_Group_Covariance_Cross";
+	static const char* COVARIANCE_TABLE = "Covariance_Matrix";
 	static const char* FUEL_CROSSWALK_TABLE = "Fuel_Crosswalk";
 	static const char* FUEL_EQUATION_TABLE = "Fuel_Equation";
 	static const char* FUEL_BPS_ATTR_TABLE = "BPS_Fuelmodels";
 	static const char* FUEL_CLASSRULES_TABLE = "Fuel_ClassRules";
+	static const char* SUCCESSION_TABLE = "BPS_Growth_Rates";
 	// ********************
 
 	// Field names (primarily from input)
@@ -85,6 +88,20 @@ namespace RVS
 
 	// ********************
 
+	// Succession table names
+	static const char* COHORT_FIELD = "COHORT";
+	static const char* START_AGE_FIELD = "StartAge";
+	static const char* END_AGE_FIELD = "EndAge";
+	static const char* HT_GR_PER_YEAR_FIELD = "GR_HT_YR";
+	static const char* COVER_GR_PER_YEAR_FIELD = "GR_COV_YR";
+	static const char* COHORT_TYPE_FIELD = "COHORT_TYPE";
+	static const char* SUCCESSION_SPECIES_1_FIELD = "Species1";
+	static const char* SUCCESSION_SPECIES_2_FIELD = "Species2";
+	static const char* SUCCESSION_SPECIES_3_FIELD = "Species3";
+	static const char* SUCCESSION_SPECIES_4_FIELD = "Species4";
+
+	// ********************
+
 	// Output table names
 	static const char* BIOMASS_OUTPUT_TABLE = "Biomass_Output";
 	static const char* BIOMASS_INTERMEDIATE_TABLE = "Biomass_Output_Spp";
@@ -110,6 +127,9 @@ namespace RVS
 	static const char* FUEL_1HRDEAD_OUT_FIELD = "FD1";
 	static const char* FUEL_10HRDEAD_OUT_FIELD = "FD2";
 	static const char* FUEL_100HRDEAD_OUT_FIELD = "FD3";
+	static const char* UPPER_BOUND_FIELD = "upper_bound";
+	static const char* LOWER_BOUND_FIELD = "lower_bound";
+	static const char* S2Y_FIELD = "s2y";
 
 	static const char* PCH_EQU_NUM = "pch_eq";
 	static const char* PCH_CALC_FIELD = "pch";
