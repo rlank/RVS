@@ -47,6 +47,10 @@ namespace DataManagement
 		inline const std::string GRP_ID() { return grp_id; }
 		inline const bool ISDRY() { return dryClimate; }
 
+		inline const double LOWER_BOUND() { return lower_confidence; }
+		inline const double UPPER_BOUND() { return upper_confidence; }
+		inline const double S2Y() { return s2y; }
+
 		// Collection of shrub records. Some plots will only have a single record, others many.
 		inline std::vector<RVS::DataManagement::SppRecord*>* SHRUB_RECORDS() { return &shrubRecords; }
 
@@ -95,6 +99,10 @@ namespace DataManagement
 		int fallback_bps_num;
 		int huc;
 		std::string grp_id;
+
+		double lower_confidence;
+		double upper_confidence;
+		double s2y;
 
 		// Average cover-weighted shrub height
 		double shrubHeight;

@@ -88,6 +88,7 @@ namespace DataManagement
 		char* streamToCharPtr(std::stringstream* stream);
 
 		/// Base query function. All the public functions only define the selection string.
+		const char* query_base(const char* table);
 		const char* query_base(const char* table, const char* field);
 		const char* query_base(const char* table, const char* field, boost::any whereclause);
 		const char* query_base(const char* table, const char* field, boost::any whereclause, string order);

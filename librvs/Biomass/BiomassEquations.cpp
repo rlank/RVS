@@ -39,7 +39,7 @@ double RVS::Biomass::BiomassEquations::eq_BAT(int equationNumber, double* coefs,
 	}
 	else if (equationNumber == 998)
 	{
-		biomass = eq_201(coefs[0], coefs[1], params->at("WID"));
+		biomass = eq_998(coefs[0], coefs[1], params->at("WID"));
 	}
 	else if (equationNumber == 999)
 	{
@@ -55,7 +55,7 @@ double RVS::Biomass::BiomassEquations::eq_BAT(int equationNumber, double* coefs,
 	}
 	else if (equationNumber == 1002)
 	{
-		biomass = eq_165(coefs[0], coefs[1], params->at("VOL"));
+		biomass = eq_1002(coefs[0], coefs[1], params->at("VOL"));
 	}
 	else if (equationNumber == 1008 || equationNumber == 1016)
 	{
@@ -129,14 +129,14 @@ double RVS::Biomass::BiomassEquations::eq_202(double cf1, double cf2, double cov
 
 double RVS::Biomass::BiomassEquations::eq_636(double cf1, double cf2, double length, double width, double height)
 {
-	double biomass = cf1 + cf2 * log(length * width * height); // Volume
+	double biomass = cf1 + cf2 * log((length * width * height) / 1000); // Volume
 	biomass = exp(biomass);
 	return biomass;
 }
 
 double RVS::Biomass::BiomassEquations::eq_636_2(double cf1, double cf2, double vol)
 {
-	double biomass = cf1 + cf2 * log(vol); // Volume
+	double biomass = cf1 + cf2 * log(vol / 1000); // Volume // EQUATIONS CALL FOR dm^3
 	biomass = exp(biomass);
 	return biomass;
 }
@@ -147,17 +147,30 @@ double RVS::Biomass::BiomassEquations::eq_743(double cf1, double cf2, double cov
 	return biomass;
 }
 
+double RVS::Biomass::BiomassEquations::eq_998(double cf1, double cf2, double width)
+{
+	double biomass = cf1 + (cf2 * log10(width));
+	biomass = pow(10, biomass);
+	return biomass;
+}
+
 double RVS::Biomass::BiomassEquations::eq_999(double cf1, double cf2, double cf3, double length, double width)
 {
-	double biomass = cf1 + cf2 * log(length) + cf3 * log(width);
-	biomass = exp(biomass);
+	double biomass = cf1 + cf2 * log10(length) + cf3 * log10(width);
+	biomass = pow(10, biomass);
 	return biomass;
 }
 
 double RVS::Biomass::BiomassEquations::eq_1000(double cf1, double cf2, double cf3, double cf4, double length, double width, double height)
 {
-	double biomass = cf1 + cf2 * log(length) + cf3 * log(width) + pow(cf4,log(height));
-	biomass = exp(biomass);
+	double biomass = cf1 + cf2 * log10(length) + cf3 * log10(width) + cf4 * log10(height);
+	biomass = pow(10, biomass);
+	return biomass;
+}
+
+double RVS::Biomass::BiomassEquations::eq_1002(double cf1, double cf2, double vol)
+{
+	double biomass = cf1 + cf2 * (vol / 1000);
 	return biomass;
 }
 
@@ -170,8 +183,8 @@ double RVS::Biomass::BiomassEquations::eq_1008(double cf1, double cf2, double cf
 
 double RVS::Biomass::BiomassEquations::eq_1153(double cf1, double cf2, double cf3, double length, double width, double height)
 {
-	double biomass = cf1 + cf2 * log(length + width) + cf3 * log(height);
-	biomass = exp(biomass);
+	double biomass = cf1 + cf2 * log10(length * width) + cf3 * log10(height);
+	biomass = pow(10, biomass);
 	return biomass;
 }
 

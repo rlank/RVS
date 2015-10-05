@@ -222,6 +222,17 @@ std::vector<int> RVS::DataManagement::DIO::query_analysis_plots()
 	return items;
 }
 
+const char* RVS::DataManagement::DIO::query_base(const char* table)
+{
+	std::stringstream* selectStream = new std::stringstream();
+	*selectStream << "SELECT * FROM " << table << "; ";
+
+	char* selectString = new char;
+	selectString = streamToCharPtr(selectStream);
+	delete selectStream;
+	return selectString;
+}
+
 const char* RVS::DataManagement::DIO::query_base(const char* table, const char* field)
 {
 	std::stringstream* selectStream = new std::stringstream();

@@ -22,6 +22,8 @@ namespace RVS
 	static const char* BIOMASS_EQUATION_TABLE = "Bio_Equation";
 	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT";
 	static const char* BIOMASS_GROUP_COEFS_TABLE = "Bio_Group_Coef_Cross";
+	static const char* BIOMASS_GROUP_COVARIANCE_TABLE = "Bio_Group_Covariance_Cross";
+	static const char* COVARIANCE_TABLE = "Covariance_Matrix";
 	static const char* FUEL_CROSSWALK_TABLE = "Fuel_Crosswalk";
 	static const char* FUEL_EQUATION_TABLE = "Fuel_Equation";
 	static const char* FUEL_BPS_ATTR_TABLE = "BPS_Fuelmodels";
@@ -125,6 +127,9 @@ namespace RVS
 	static const char* FUEL_1HRDEAD_OUT_FIELD = "FD1";
 	static const char* FUEL_10HRDEAD_OUT_FIELD = "FD2";
 	static const char* FUEL_100HRDEAD_OUT_FIELD = "FD3";
+	static const char* UPPER_BOUND_FIELD = "upper_bound";
+	static const char* LOWER_BOUND_FIELD = "lower_bound";
+	static const char* S2Y_FIELD = "s2y";
 
 	static const char* PCH_EQU_NUM = "pch_eq";
 	static const char* PCH_CALC_FIELD = "pch";

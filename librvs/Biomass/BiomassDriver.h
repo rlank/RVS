@@ -48,18 +48,27 @@ namespace Biomass
 		bool suppress_messages;
 
 		// Constants for herbaceous biomass calculation
-		//$$ TODO get these from DB, not const
-		const float INTERCEPT = -19.4346f;
-		const float LN_PRECIP = 0.141f;
-		const float LN_NDVI = 3.0056f;
+		
+		//const float INTERCEPT = -19.4346f;
+		//const float LN_PRECIP = 0.141f;
+		//const float LN_NDVI = 3.0056f;
+
+		const float MSE = 0.05418119f;
+		const float SMEAR = 1.02456869001763;
+		static double** covariance_matrix;
 
 		double calcShrubBiomass(RVS::DataManagement::SppRecord* record);
 		double calcStemsPerAcre(RVS::DataManagement::SppRecord* record);
 		double calcHerbBiomass(int year);
+		void calcConfidence(int year, double biomass, double* lower, double* upper, double* level);
 		// Given cover, calculate the holdover amount
 		double calcHerbReduction(double totalShrubCover);
 		double calcAttenuation(double herbBiomass);
 
+		double calc_s2b(string* grp_id, double* lnNDVI, double* lnPPT);
+		double** matrix_mult(double** A, int aRow, int aCol, double** B, int bRow, int bCol);
+		double** matrix_trans(double** A, int aRow, int aCol);
+		double** generate_dummy_variables(int index, double* lnPPT, double* lnNDVI);
 	};
 }
 }

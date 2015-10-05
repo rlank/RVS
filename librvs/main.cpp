@@ -125,8 +125,8 @@ int main(int argc, char* argv[])
 		ss << "EQUATION " << *it << " finished";
 		bdio->write_debug_msg(ss.str().c_str());
 	}
+	
 	*/
-
 	
 
 	///////////////////////////////
@@ -161,6 +161,7 @@ int main(int argc, char* argv[])
     
 	//tgroup.join_all();
 
+	
 	bdio->write_output();
 
 	delete bdio;
