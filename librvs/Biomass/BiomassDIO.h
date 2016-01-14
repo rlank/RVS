@@ -48,10 +48,11 @@ namespace Biomass
 
 		int find_group_index(string* grp_id);
 
-
 		// Return a collection of required values for herbaceous biomass calculation.
 		// Takes the macro group ID as parameter
 		void query_biogroup_coefs(int bps, double* group_const, double* ndvi_grp_interact, double* ppt_grp_interact, std::string* grp_id, bool covariance);
+
+		void query_herb_growth_coefs(string bps_model, double* cov_rate, double* ht_rate);
 	};
 }
 }

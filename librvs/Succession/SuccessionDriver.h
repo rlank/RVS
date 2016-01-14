@@ -32,6 +32,7 @@ namespace Succession
 	private:
 		RVS::Succession::SuccessionDIO* sdio;
 		RVS::DataManagement::AnalysisPlot* ap;
+		std::vector<RVS::DataManagement::SppRecord*>* shrubs;
 		bool suppress_messages;
 
 		bool isShrubDominated;
@@ -47,6 +48,8 @@ namespace Succession
 		int determineVegClass(string cohortType, double cover);
 		int relativeTimeInStage(int sclass);
 		int relativeTimeInStageAdjuster(double cover, std::map<string, string> strVals, std::map<string, double> numVals);
+
+		void growStage(std::map<string, string> strVals, std::map<string, double> numVals);
 
 		std::list<string> makeSpeciesList(std::map<string, string> strVals);
 		void addNewSpecies(std::vector<string> sClassSppCodes);

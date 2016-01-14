@@ -19,7 +19,7 @@ int* RVS::Succession::SuccessionDIO::create_output_table()
 		PLOT_NAME_FIELD << " TEXT, " << \
 		YEAR_OUT_FIELD << " INTEGER NOT NULL, " << \
 		"BPS_MODEL" << " TEXT NOT NULL, " << \
-		"COHORT" << " INTEGER, " << \
+		"STAGE" << " INTEGER, " << \
 		"COHORT_TYPE" << " TEXT, " << \
 		"TIME_IN_STAGE" << " REAL, " << \
 		"YEAR_OFFSET" << " REAL);";
@@ -39,7 +39,7 @@ int* RVS::Succession::SuccessionDIO::write_output_record(int* year, RVS::DataMan
 		PLOT_NAME_FIELD << ", " << \
 		YEAR_OUT_FIELD << ", " << \
 		"BPS_MODEL" << ", " << \
-		"COHORT" << ", " << \
+		"STAGE" << ", " << \
 		"COHORT_TYPE" << ", " << \
 		"TIME_IN_STAGE" << ", " << \
 		"YEAR_OFFSET" << ") " << \
@@ -49,7 +49,7 @@ int* RVS::Succession::SuccessionDIO::write_output_record(int* year, RVS::DataMan
 		*year << ",\"" << \
 		ap->BPS_MODEL_NUM() << "\"," << \
 		ap->CURRENT_SUCCESSION_STAGE() << ",\"" << \
-		ap->COHORT_TYPE() << "\"," << \
+		ap->CURRENT_STAGE_TYPE() << "\"," << \
 		ap->TIME_IN_SUCCESSION_STAGE() << "," << \
 		ap->YEAR_OFFSET() << ");";
 
@@ -175,7 +175,7 @@ bool RVS::Succession::SuccessionDIO::check_shrub_data_exists(string spp_code)
 	{
 		dataExists = false;
 	}
-	const char* sql = query_base("NRCSPlantsDB", "Plants Code", spp_code);
+	const char* sql = query_base(PLANTS_TABLE, "Plants_Code", spp_code);
 	try
 	{
 		RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
@@ -187,12 +187,34 @@ bool RVS::Succession::SuccessionDIO::check_shrub_data_exists(string spp_code)
 	return dataExists;
 }
 
+bool RVS::Succession::SuccessionDIO::check_code_is_shrub(string spp_code)
+{
+	bool isShrub = false;
+	const char* sql = query_base(PLANTS_TABLE, "Plants_Code", spp_code);
+	try
+	{
+		RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
+		string plantType;
+		getVal(dt->getStmt(), dt->Columns[LIFEFORM_FIELD], &plantType);
+		int f1 = plantType.find("SHRUB");
+		int f2 = plantType.find("Shrub");
+		if (f1 >= 0 || f2 >= 0)
+		{
+			isShrub = true;
+		}
+	}
+	catch (RVS::DataManagement::DataNotFoundException dex)
+	{
+	}
+	return isShrub;
+}
+
 string RVS::Succession::SuccessionDIO::get_scientific_name(string spp_code)
 {
-	const char* sql = query_base("NRCSPlantsDB", "Plants Code", spp_code);
+	const char* sql = query_base(PLANTS_TABLE, "Plants_Code", spp_code);
 
 	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
 	string dom_spp;
-	getVal(dt->getStmt(), dt->Columns["Scientific Name"], &dom_spp);
+	getVal(dt->getStmt(), dt->Columns[DOM_SPP_FIELD], &dom_spp);
 	return dom_spp;
 }

@@ -65,6 +65,10 @@ namespace DataManagement
 
 		// Total herb biomass (lbs/ac)
 		inline double HERBBIOMASS() { return herbBiomass; }
+
+		inline double PRIMARYPRODUCTION() { return primaryProduction; }
+		inline double HERBHOLDOVER() { return herbHoldoverBiomass; }
+
 		// Total shrub biomass (lbs/ac)
 		inline double SHRUBBIOMASS() { return shrubBiomass * GRAMS_TO_POUNDS; }
 		// Total biomass (shrubs + herbs) (lbs/ac)
@@ -74,9 +78,9 @@ namespace DataManagement
 		// Fuel model for the plot
 		inline int FBFM() { return calcFBFM == 0 ? defaultFBFM : calcFBFM; }
 
-		inline int CURRENT_SUCCESSION_STAGE() { return cohort; }
+		inline int CURRENT_SUCCESSION_STAGE() { return currentStage; }
 		inline int TIME_IN_SUCCESSION_STAGE() { return timeInSuccessionStage; }
-		inline string COHORT_TYPE() { return cohortType; }
+		inline string CURRENT_STAGE_TYPE() { return currentStageType; }
 		inline int YEAR_OFFSET() { return startingYearsOffset; }
 
 		const float GRAMS_TO_POUNDS = 0.00220462f;
@@ -84,10 +88,10 @@ namespace DataManagement
 		void push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
 		void push_shrub(RVS::DataManagement::SppRecord* record);
 
-		// Get NDVI for the requested year (starting at 0)
-		double getNDVI(int year);
-		// Get precipitation for the requested year (starting at 0)
-		double getPPT(int year);
+		// Get NDVI for the requested level
+		double getNDVI(string level, bool useRand);
+		// Get precipitation for the requested level
+		double getPPT(string level, bool useRand);
 
 	private:
 		int plot_id;
@@ -118,6 +122,8 @@ namespace DataManagement
 		double herbBiomass;
 		// Herb holdover biomass (standing dead)
 		double herbHoldoverBiomass;
+
+		double primaryProduction;
 		// Shrub biomass for whole plot (g/ac)
 		double shrubBiomass;
 
@@ -135,8 +141,8 @@ namespace DataManagement
 		std::vector<double> ndviValues;   // NDVI values for all years to be simulated
 		std::vector<double> precipValues; // PPT values for all years to be simulated
 
-		int cohort = 0;
-		string cohortType;
+		int currentStage = 0;
+		string currentStageType;
 		int timeInSuccessionStage = 0;
 		int startingYearsOffset = 0;
 
