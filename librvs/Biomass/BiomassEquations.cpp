@@ -210,7 +210,7 @@ double RVS::Biomass::BiomassEquations::eq_basicBAT(double cf1, double cf2, doubl
 
 double RVS::Biomass::BiomassEquations::eq_1160(double cf1, double cf2, double cf3, double p1)
 {
-	double biomass = (cf1 + cf2 * p1) * cf3;
+	double biomass = ((cf1 + cf2 * p1) * cf3) * 453.592;
 	return biomass;
 }
 

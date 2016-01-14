@@ -64,6 +64,7 @@ namespace Biomass
 		// Given cover, calculate the holdover amount
 		double calcHerbReduction(double totalShrubCover);
 		double calcAttenuation(double herbBiomass);
+		void growHerbs(double* herbCover, double* herbHeight, double oldBiomass, double newBiomass);
 
 		double calc_s2b(string* grp_id, double* lnNDVI, double* lnPPT);
 		double** matrix_mult(double** A, int aRow, int aCol, double** B, int bRow, int bCol);

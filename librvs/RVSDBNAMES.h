@@ -14,8 +14,8 @@
 namespace RVS
 {
 	// Primary table names. Replace with externs as needed
-	static const char* RVS_INPUT_TABLE = "Plots";
-	static const char* SHRUB_INPUT_TABLE = "Shrubs";
+	static const char* RVS_INPUT_TABLE = "Plots_Blind";
+	static const char* SHRUB_INPUT_TABLE = "Shrubs_Blind";
 	static const char* BPS_HUC_TABLE = "BPS_HUC_Master";
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
 	static const char* BIOMASS_PRIMARYPRODUCTION_TABLE = "Bio_PP_KgH";
@@ -29,6 +29,8 @@ namespace RVS
 	static const char* FUEL_BPS_ATTR_TABLE = "BPS_Fuelmodels";
 	static const char* FUEL_CLASSRULES_TABLE = "Fuel_ClassRules";
 	static const char* SUCCESSION_TABLE = "BPS_Growth_Rates";
+	static const char* PLANTS_TABLE = "Plants";
+	static const char* HERB_GROWTH_TABLE = "Herb_Growth";
 	// ********************
 
 	// Field names (primarily from input)
@@ -38,11 +40,11 @@ namespace RVS
 	static const char* EVT_NAME_FIELD = "evt_name";
 	static const char* HERB_COVER_FIELD = "herb_cover";
 	static const char* HERB_HEIGHT_FIELD = "herb_height";
-	static const char* BPS_NUM_FIELD = "BPS";
+	static const char* BPS_NUM_FIELD = "BPS_CODE";
 	static const char* HUC_FIELD = "HUC";
 	static const char* DOM_SPP_FIELD = "dom_spp";
 	static const char* SPP_CODE_FIELD = "spp_code";
-	static const char* LIFEFORM_FIELD = "lifeform";
+	static const char* LIFEFORM_FIELD = "Lifeform2";
 	static const char* RET_CODE_FIELD = "ret_code";
 	static const char* EQUATION_NUMBER_FIELD = "EQN_NUM";
 	static const char* EQUATION_TYPE_FIELD = "eqn_type";
@@ -52,6 +54,8 @@ namespace RVS
 	static const char* PRCP_INTERACT_FIELD = "ln_PPT_GRP_ID";
 	static const char* BIOMASS_HEIGHT_FIELD = "height";
 	static const char* BIOMASS_COVER_FIELD = "cover";
+	static const char* BPS_MODEL_FIELD = "BPS_MODEL";
+
 
 	static const char* EQN_COEF_1_FIELD = "CF1";
 	static const char* EQN_COEF_2_FIELD = "CF2";
@@ -60,6 +64,9 @@ namespace RVS
 	static const char* EQN_P1_FIELD = "PA1_CODE";
 	static const char* EQN_P2_FIELD = "PA2_CODE";
 	static const char* EQN_P3_FIELD = "PA3_CODE";
+
+	static const char* HERB_CC_GROWTH_FIELD = "CC_Slope";
+	static const char* HERB_HT_GROWTH_FIELD = "HT_Slope";
 	// ********************
 
 	// Fuel classification fields
@@ -99,6 +106,7 @@ namespace RVS
 	static const char* SUCCESSION_SPECIES_2_FIELD = "Species2";
 	static const char* SUCCESSION_SPECIES_3_FIELD = "Species3";
 	static const char* SUCCESSION_SPECIES_4_FIELD = "Species4";
+	static const char* SUCCESSION_CLASS_FIELD = "SCLASS";
 
 	// ********************
 
@@ -134,6 +142,9 @@ namespace RVS
 	static const char* PCH_EQU_NUM = "pch_eq";
 	static const char* PCH_CALC_FIELD = "pch";
 	static const char* BIOMASS_EQU_NUM = "bio_eq";
+
+	static const char* BIOMASS_HERB_PP_FIELD = "primary_production";
+	static const char* BIOMASS_HERB_HOLDOVER_FIELD = "herb_holdover";
 
 	// ********************
 }

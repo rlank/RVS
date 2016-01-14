@@ -34,7 +34,7 @@ using namespace RVS;
 using namespace RVS::DataManagement;
 
 int* RC = new int(SQLITE_OK);
-int* YEARS = new int(50);
+int* YEARS = new int(150);
 bool* SUPPRESS_MSG = new bool(true);
 const char* DEBUG_FILE = "RVS_Debug.txt";
 bool* USE_MEM = new bool(true);
@@ -79,6 +79,7 @@ int main(int argc, char* argv[])
 	}
 
 	RVS::DataManagement::DataTable* shrub_dt = bdio->query_shrubs_table();
+
 	int plot_id = 0;
 	while (*RC == SQLITE_ROW)
 	{

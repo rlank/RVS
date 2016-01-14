@@ -27,8 +27,8 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	
 	// Order matters here!
 	buildAnalysisPlot(dio, dt);
-	fallback_bps_num = dio->query_backup_bps(huc);
-	buildInitialFuels(dio);
+	//fallback_bps_num = dio->query_backup_bps(huc);
+	//buildInitialFuels(dio);
 }
 
 AnalysisPlot::~AnalysisPlot(void)
@@ -44,10 +44,11 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 	dio->getVal(stmt, dt->Columns[PLOT_NAME_FIELD], &plot_name);
 	dio->getVal(stmt, dt->Columns[EVT_NUM_FIELD], &evt_num);
 	dio->getVal(stmt, dt->Columns[BPS_NUM_FIELD], &bps_num);
-	dio->getVal(stmt, dt->Columns["BPS_MODEL"], &bps_model_num);
+	dio->getVal(stmt, dt->Columns[BPS_MODEL_FIELD], &bps_model_num);
 	dio->getVal(stmt, dt->Columns[HUC_FIELD], &huc);
 	dio->getVal(stmt, dt->Columns[HERB_COVER_FIELD], &herbCover);
 	dio->getVal(stmt, dt->Columns[HERB_HEIGHT_FIELD], &herbHeight);
+	dio->getVal(stmt, dt->Columns[SUCCESSION_CLASS_FIELD], &currentStage);
 
 	int colCount = sqlite3_column_count(stmt);
 	std::string ndvi = "NDVI";
@@ -99,26 +100,77 @@ void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 	}
 }
 
-double AnalysisPlot::getNDVI(int year)
+double AnalysisPlot::getNDVI(string level, bool useRand)
 {
-	if (year >= ndviValues.size())
+	double ndvi = 0;
+	if (level.compare("Dry") == 0)
 	{
-		return ndviValues.at(year % ndviValues.size());
+		ndvi = ndviValues.at(0);
+	}
+	else if (level.compare("Mid-Dry") == 0)
+	{
+		ndvi = ndviValues.at(1);
+	}
+	else if (level.compare("Mid-Wet") == 0)
+	{
+		ndvi = ndviValues.at(3);
+	}
+	else if (level.compare("Wet") == 0)
+	{
+		ndvi = ndviValues.at(4);
+	}
+	else if (level.compare("Normal") == 0)
+	{
+		ndvi = ndviValues.at(2);
 	}
 	else
 	{
-		return ndviValues.at(year);
+		ndvi = ndviValues.at(2);
 	}
+
+	if (useRand)
+	{
+		int r = rand() % 15 + 90;
+		ndvi = ndvi * (r / 100);
+	}
+
+	return ndvi;
 }
 
-double AnalysisPlot::getPPT(int year)
+double AnalysisPlot::getPPT(string level, bool useRand)
 {
-	if (year >= precipValues.size())
+	double ppt = 0;
+	if (level.compare("Dry") == 0)
 	{
-		return precipValues.at(year % precipValues.size());
+		ppt = precipValues.at(0);
+	}
+	else if (level.compare("Mid-Dry") == 0)
+	{
+		ppt = precipValues.at(1);
+	}
+	else if (level.compare("Mid-Wet") == 0)
+	{
+		ppt = precipValues.at(3);
+	}
+	else if (level.compare("Wet") == 0)
+	{
+		ppt = precipValues.at(4);
+	}
+	else if (level.compare("Normal") == 0)
+	{
+		ppt = precipValues.at(2);
 	}
 	else
 	{
-		return precipValues.at(year);
+		ppt = precipValues.at(2);
 	}
+
+
+	if (useRand)
+	{
+		int r = rand() % 15 + 90;
+		ppt = ppt * (r / 100);
+	}
+
+	return ppt;
 }

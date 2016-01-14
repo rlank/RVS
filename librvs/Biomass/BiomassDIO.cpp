@@ -22,6 +22,8 @@ int* RVS::Biomass::BiomassDIO::create_output_table()
 		GROUP_ID_FIELD << " TEXT, " << \
 		BIOMASS_SHRUB_OUT_FIELD << " REAL, " << \
 		BIOMASS_HERB_OUT_FIELD << " REAL, " << \
+		BIOMASS_HERB_PP_FIELD << " REAL, " << \
+		BIOMASS_HERB_HOLDOVER_FIELD << " REAL, " << \
 		BIOMASS_TOTAL_OUT_FIELD << " REAL, " << \
 		HERB_COVER_FIELD << " REAL, " << \
 		HERB_HEIGHT_FIELD << " REAL, " << \
@@ -51,6 +53,8 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		BIOMASS_TOTAL_OUT_FIELD << ", "<< \
 		BIOMASS_SHRUB_OUT_FIELD << ", " << \
 		BIOMASS_HERB_OUT_FIELD << ", " << \
+		BIOMASS_HERB_PP_FIELD << ", " << \
+		BIOMASS_HERB_HOLDOVER_FIELD << ", " << \
 		HERB_COVER_FIELD << ", " << \
 		HERB_HEIGHT_FIELD << ", " << \
 		AVG_SHRUB_HEIGHT_FIELD << ", " << \
@@ -68,6 +72,8 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		ap->TOTALBIOMASS() << "," << \
 		ap->SHRUBBIOMASS() << "," << \
 		ap->HERBBIOMASS() << "," << \
+		ap->PRIMARYPRODUCTION() << "," << \
+		ap->HERBHOLDOVER() << "," << \
 		ap->HERBCOVER() << "," << \
 		ap->HERBHEIGHT() << "," << \
 		ap->SHRUBHEIGHT() << "," << \
@@ -196,9 +202,10 @@ void RVS::Biomass::BiomassDIO::query_biogroup_coefs(int bps, double* group_const
 	}
 	else
 	{
-		const char* sql1 = query_base(BIOMASS_MACROGROUP_TABLE, BPS_NUM_FIELD, bps);
-		RVS::DataManagement::DataTable* dt1 = prep_datatable(sql1, rvsdb);
-		getVal(dt1->getStmt(), dt1->Columns[GROUP_ID_FIELD], grp_id);
+		//const char* sql1 = query_base(BIOMASS_MACROGROUP_TABLE, BPS_NUM_FIELD, bps);
+		//RVS::DataManagement::DataTable* dt1 = prep_datatable(sql1, rvsdb);
+		//getVal(dt1->getStmt(), dt1->Columns[GROUP_ID_FIELD], grp_id);
+		*grp_id = "G333";
 	}
 
 	std::stringstream sqlstream;
@@ -272,4 +279,37 @@ int RVS::Biomass::BiomassDIO::find_group_index(string* grp_id)
 	sqlite3_reset(dt->getStmt());
 	sqlite3_step(dt->getStmt());
 	return row;
+}
+
+void RVS::Biomass::BiomassDIO::query_herb_growth_coefs(string bps_model, double* cov_rate, double* ht_rate)
+{
+	const char* sql = query_base(HERB_GROWTH_TABLE, BPS_MODEL_FIELD, bps_model);
+	RVS::DataManagement::DataTable* dt;
+	*cov_rate = 0;
+	*ht_rate = 0;
+	try
+	{
+		dt = prep_datatable(sql, rvsdb);
+		getVal(dt->getStmt(), dt->Columns[HERB_CC_GROWTH_FIELD], cov_rate);
+		getVal(dt->getStmt(), dt->Columns[HERB_HT_GROWTH_FIELD], ht_rate);
+	}
+	catch (RVS::DataManagement::DataNotFoundException dex)
+	{
+		string bps;
+		if (bps_model.length() == 6)
+		{
+			bps = bps_model.substr(1);
+		}
+		else
+		{
+			bps = bps_model.substr(2);
+		}
+		sql = query_base(HERB_GROWTH_TABLE, "BPS_CODE", stoi(bps));
+		dt = prep_datatable(sql, rvsdb);
+	
+		getVal(dt->getStmt(), dt->Columns[HERB_CC_GROWTH_FIELD], cov_rate);
+		getVal(dt->getStmt(), dt->Columns[HERB_HT_GROWTH_FIELD], ht_rate);
+	}
+
+	
 }

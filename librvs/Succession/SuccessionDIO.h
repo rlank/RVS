@@ -43,6 +43,7 @@ namespace Succession
 		bool get_succession_data(string bps_model_code, std::map<string, string>* stringVals, std::map<string, double>* numVals);
 
 		bool check_shrub_data_exists(string spp_code);
+		bool check_code_is_shrub(string spp_code);
 		string get_scientific_name(string spp_code);
 	};
 }

@@ -22,6 +22,11 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	this->ap = ap;
 	int plot_num = ap->PLOT_ID();
 
+	if (plot_num == 1)
+	{
+		int asdasds = 0;
+	}
+
 	std::vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 	double totalShrubCover = 0;
 	double runShrubHeight = 0;
@@ -46,19 +51,14 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 		RC = bdio->write_intermediate_record(&year, ap, record);
 	}
 
-	
+	double oldBiomass = ap->herbBiomass;
 
 	// Apply holdover biomass if applicable
 	if (ap->herbBiomass != 0)
 	{
 		double holdover = calcHerbReduction(totalShrubCover);
-		ap->herbHoldoverBiomass = holdover * ap->herbBiomass;
-		//ap->herbHoldoverBiomass = 0;
+		ap->herbHoldoverBiomass = holdover * oldBiomass;
 	}
-
-	//double holdover = calcHerbReduction(totalShrubCover);
-
-	//*retHerbBiomass = ap->HERBCOVER() > 0 ? calcHerbBiomass(year) : 0;  old method
 
 	double* yhat = new double;
 	double* lower = new double;
@@ -66,7 +66,7 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 
 	if (ap->HERBCOVER() > 0)
 	{
-		*yhat = ap->HERBCOVER() > 0 ? calcHerbBiomass(year) : 0;
+		*yhat = calcHerbBiomass(year);
 		calcConfidence(year, *yhat, lower, upper, 0);
 		*retHerbBiomass = exp(*yhat) * SMEAR;
 	}
@@ -90,14 +90,14 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 		averageHeight = 0; 
 	}
 
-	//ap->herbBiomass = *retHerbBiomass + ap->herbHoldoverBiomass;
+	growHerbs(&ap->herbCover, &ap->herbHeight, oldBiomass, *retHerbBiomass);
+
+	ap->primaryProduction = *retHerbBiomass;
 	
 	ap->shrubCover = totalShrubCover;
 	ap->shrubHeight = averageHeight;
 
-	//*retHerbBiomass = calcAttenuation(*retHerbBiomass);
-
-	ap->herbBiomass = *retHerbBiomass;
+	ap->herbBiomass = *retHerbBiomass + ap->herbHoldoverBiomass;
 	ap->shrubBiomass = *retShrubBiomass;
 	ap->totalBiomass = ap->SHRUBBIOMASS() + ap->HERBBIOMASS();
 
@@ -220,8 +220,8 @@ double BiomassDriver::calcHerbBiomass(int year)
 
 	ap->grp_id = *grp_id;
 
-	double ndvi = ap->getNDVI(year);
-	double ppt = ap->getPPT(year);
+	double ndvi = ap->getNDVI("Normal");
+	double ppt = ap->getPPT("Normal");
 
 	double ln_ndvi = log(ndvi);
 	double ln_ppt = log(ppt);
@@ -242,8 +242,8 @@ void BiomassDriver::calcConfidence(int year, double biomass, double* lower, doub
 	double* ndvi_grp_interact = new double;
 	double* ppt_grp_interact = new double;
 
-	double ndvi = ap->getNDVI(year);
-	double ppt = ap->getPPT(year);
+	double ndvi = ap->getNDVI("Normal");
+	double ppt = ap->getPPT("Normal");
 
 	double ln_ndvi = log(ndvi);
 	double ln_ppt = log(ppt);
@@ -315,15 +315,36 @@ double BiomassDriver::calcAttenuation(double herbBiomass)
 	double herbIndex = ap->herbCover * ap->herbHeight;
 	double shrubIndex = ap->shrubCover * ap->shrubHeight;
 
-	//double herbIndex = ap->herbCover;
-	//double shrubIndex = ap->shrubCover;
-
 	double ratio = herbIndex / shrubIndex;
 	if (ratio > 1)
 	{
 		ratio = 1 / ratio;
 	}
 	return herbBiomass * ratio;
+}
+
+void BiomassDriver::growHerbs(double* herbCover, double* herbHeight, double oldBiomass, double newBiomass)
+{
+	double ratio = *herbCover / *herbHeight;
+	double newProduction = newBiomass;
+
+	double* coverRate = new double;
+	double* herbRate = new double;
+
+	bdio->query_herb_growth_coefs(ap->BPS_MODEL_NUM(), coverRate, herbRate);
+
+	double cover = (*coverRate * newProduction);
+	double height = *herbRate * newProduction * 10;
+
+	if (cover > 100)
+	{
+		*herbCover = 95;
+	}
+	else
+	{
+		*herbCover = cover;
+	}
+	*herbHeight = height;
 }
 
 double BiomassDriver::calc_s2b(string* grp_id, double* lnNDVI, double* lnPPT)
@@ -333,18 +354,7 @@ double BiomassDriver::calc_s2b(string* grp_id, double* lnNDVI, double* lnPPT)
 	double** dummy = generate_dummy_variables(index, lnPPT, lnNDVI);
 	double** dummyTrans = matrix_trans(dummy, 1, 102);
 
-	
 	double** temp = matrix_mult(covariance_matrix, 102, 102, dummyTrans, 102, 1);
-
-	//for (int i = 0; i < 102; i++)
-	//{
-	//	cout << i << "  " << dummy[0][i] << "\n";
-	//}
-
-	//for (int i = 0; i < 102; i++)
-	//{
-	//	cout << i << "  " << dummyTrans[i][0] << "\n";
-	//}
 
 	double** s2b = matrix_mult(dummy, 1, 102, temp, 102, 1);
 

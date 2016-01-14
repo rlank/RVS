@@ -132,9 +132,9 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const c
 		*RC = sqlite3_step(stmt);
 		checkDBStatus(db, sql);
 		dt = shared_ptr<DataTable>(new DataTable(stmt));
-		
+
 		if (addToActive) { activeQueries.insert(pair<string, shared_ptr<DataTable>>(sql, dt)); }
-		
+
 		int* rc = dt->STATUS();
 		*rc = *RC;
 	}
