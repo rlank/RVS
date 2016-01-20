@@ -40,6 +40,7 @@ int* RVS::Fuels::FuelsDIO::create_output_table()
 
 int* RVS::Fuels::FuelsDIO::write_output_record(int* year, RVS::DataManagement::AnalysisPlot* ap)
 {
+	/*
 	std::stringstream sqlstream;
 	sqlstream << "INSERT INTO " << FUELS_OUTPUT_TABLE << " (" << \
 		PLOT_NUM_FIELD << ", " << \
@@ -77,8 +78,9 @@ int* RVS::Fuels::FuelsDIO::write_output_record(int* year, RVS::DataManagement::A
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
 	queuedWrites.push_back(sql);
-
+	*/
 	return RC;
+	
 }
 
 int* RVS::Fuels::FuelsDIO::create_intermediate_table()
@@ -121,6 +123,7 @@ int* RVS::Fuels::FuelsDIO::create_intermediate_table()
 
 int* RVS::Fuels::FuelsDIO::write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* spp)
 {
+	/*
 	std::map<std::string, int> fuelsEqs = spp->FUEL_EQUS();
 	std::map<std::string, double> fuelsVals = spp->FUEL_VALUES();
 
@@ -156,7 +159,7 @@ int* RVS::Fuels::FuelsDIO::write_intermediate_record(int* year, RVS::DataManagem
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
 	queuedWrites.push_back(sql);
-
+	*/
 	return RC;
 }
 

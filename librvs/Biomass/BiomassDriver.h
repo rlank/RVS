@@ -35,10 +35,8 @@ namespace Biomass
         // Main function. Pass a return value and type reference, and BioMain sets them upon completion.
         // No other function needs to be called to calculate biomass.
         // <param name="plot_num">Analysis plot ID</param>
-        // <param name="biomass_return_value">The calculated biomass of the plot.</param>
-        // <param name="biomass_return_type">The units of the calculated biomass.</param>
         // <returns>Return code. 0 indicates a clean run.</returns>
-        int* BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, double* retShrubBiomass, double* retHerbBiomass);
+        int* BioMain(int year, RVS::DataManagement::AnalysisPlot* ap);
 
 		const float EXPANSION_FACTOR = 4046.8564224f;
 
@@ -48,10 +46,6 @@ namespace Biomass
 		bool suppress_messages;
 
 		// Constants for herbaceous biomass calculation
-		
-		//const float INTERCEPT = -19.4346f;
-		//const float LN_PRECIP = 0.141f;
-		//const float LN_NDVI = 3.0056f;
 
 		const float MSE = 0.05418119f;
 		const float SMEAR = 1.02456869001763;
@@ -62,9 +56,9 @@ namespace Biomass
 		double calcHerbBiomass(int year);
 		void calcConfidence(int year, double biomass, double* lower, double* upper, double* level);
 		// Given cover, calculate the holdover amount
-		double calcHerbReduction(double totalShrubCover);
+		double calcHerbHoldover(double totalShrubCover);
 		double calcAttenuation(double herbBiomass);
-		void growHerbs(double* herbCover, double* herbHeight, double oldBiomass, double newBiomass);
+		void growHerbs(double* herbCover, double* herbHeight, double oldBiomass);
 
 		double calc_s2b(string* grp_id, double* lnNDVI, double* lnPPT);
 		double** matrix_mult(double** A, int aRow, int aCol, double** B, int bRow, int bCol);

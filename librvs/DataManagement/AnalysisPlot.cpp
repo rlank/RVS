@@ -15,15 +15,15 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	herbBiomass = 0;
 	herbHoldoverBiomass = 0;
 	shrubBiomass = 0;
-	shrubFuels = 0;
-	herbFuels = 0;
-	defaultFBFM = 0;
-	calcFBFM = 0;
-	dryClimate = false;
+	//shrubFuels = 0;
+	//herbFuels = 0;
+	//defaultFBFM = 0;
+	//calcFBFM = 0;
+	//dryClimate = false;
 	shrubRecords = std::vector<SppRecord*>();
 	ndviValues = std::vector<double>();
 	precipValues = std::vector<double>();
-	totalFuels = std::map<std::string, double>();
+	//totalFuels = std::map<std::string, double>();
 	
 	// Order matters here!
 	buildAnalysisPlot(dio, dt);
@@ -49,6 +49,8 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 	dio->getVal(stmt, dt->Columns[HERB_COVER_FIELD], &herbCover);
 	dio->getVal(stmt, dt->Columns[HERB_HEIGHT_FIELD], &herbHeight);
 	dio->getVal(stmt, dt->Columns[SUCCESSION_CLASS_FIELD], &currentStage);
+	dio->getVal(stmt, dt->Columns[LATITUDE_FIELD], &latitude);
+	dio->getVal(stmt, dt->Columns[LONGITUDE_FIELD], &longitude);
 
 	int colCount = sqlite3_column_count(stmt);
 	std::string ndvi = "NDVI";
@@ -88,6 +90,7 @@ void AnalysisPlot::push_shrub(RVS::DataManagement::SppRecord* record)
 	shrubRecords.push_back(record);
 }
 
+/*
 void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 {
 	try
@@ -99,33 +102,34 @@ void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 		dio->query_fuels_basic_info(&fallback_bps_num, &defaultFBFM, &dryClimate);
 	}
 }
+*/
 
 double AnalysisPlot::getNDVI(string level, bool useRand)
 {
 	double ndvi = 0;
 	if (level.compare("Dry") == 0)
 	{
-		ndvi = ndviValues.at(0);
+		ndvi = ndviValues[0];
 	}
 	else if (level.compare("Mid-Dry") == 0)
 	{
-		ndvi = ndviValues.at(1);
+		ndvi = ndviValues[1];
 	}
 	else if (level.compare("Mid-Wet") == 0)
 	{
-		ndvi = ndviValues.at(3);
+		ndvi = ndviValues[3];
 	}
 	else if (level.compare("Wet") == 0)
 	{
-		ndvi = ndviValues.at(4);
+		ndvi = ndviValues[4];
 	}
 	else if (level.compare("Normal") == 0)
 	{
-		ndvi = ndviValues.at(2);
+		ndvi = ndviValues[2];
 	}
 	else
 	{
-		ndvi = ndviValues.at(2);
+		ndvi = ndviValues[2];
 	}
 
 	if (useRand)
@@ -142,27 +146,27 @@ double AnalysisPlot::getPPT(string level, bool useRand)
 	double ppt = 0;
 	if (level.compare("Dry") == 0)
 	{
-		ppt = precipValues.at(0);
+		ppt = precipValues[0];
 	}
 	else if (level.compare("Mid-Dry") == 0)
 	{
-		ppt = precipValues.at(1);
+		ppt = precipValues[1];
 	}
 	else if (level.compare("Mid-Wet") == 0)
 	{
-		ppt = precipValues.at(3);
+		ppt = precipValues[3];
 	}
 	else if (level.compare("Wet") == 0)
 	{
-		ppt = precipValues.at(4);
+		ppt = precipValues[4];
 	}
 	else if (level.compare("Normal") == 0)
 	{
-		ppt = precipValues.at(2);
+		ppt = precipValues[2];
 	}
 	else
 	{
-		ppt = precipValues.at(2);
+		ppt = precipValues[2];
 	}
 
 

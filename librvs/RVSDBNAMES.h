@@ -20,7 +20,7 @@ namespace RVS
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
 	static const char* BIOMASS_PRIMARYPRODUCTION_TABLE = "Bio_PP_KgH";
 	static const char* BIOMASS_EQUATION_TABLE = "Bio_Equation";
-	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT";
+	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT3";
 	static const char* BIOMASS_GROUP_COEFS_TABLE = "Bio_Group_Coef_Cross";
 	static const char* BIOMASS_GROUP_COVARIANCE_TABLE = "Bio_Group_Covariance_Cross";
 	static const char* COVARIANCE_TABLE = "Covariance_Matrix";
@@ -55,6 +55,8 @@ namespace RVS
 	static const char* BIOMASS_HEIGHT_FIELD = "height";
 	static const char* BIOMASS_COVER_FIELD = "cover";
 	static const char* BPS_MODEL_FIELD = "BPS_MODEL";
+	static const char* LATITUDE_FIELD = "latitude";
+	static const char* LONGITUDE_FIELD = "longitude";
 
 
 	static const char* EQN_COEF_1_FIELD = "CF1";

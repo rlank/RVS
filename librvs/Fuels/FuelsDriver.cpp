@@ -15,7 +15,7 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 {
 	vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 
-	ap->totalFuels.clear();  // Clear last year's fuels, if it exists
+	//ap->totalFuels.clear();  // Clear last year's fuels, if it exists
 
 	int plot_num = ap->PLOT_ID();
 	int evt_num = ap->EVT_NUM();
@@ -64,7 +64,7 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 			}
 			else  // only add to total fuels if the value isn't bogus
 			{
-				ap->totalFuels[et->first] += fuel;
+				//ap->totalFuels[et->first] += fuel;
 			}
 
 			current->fuelValues[et->first] = fuel;
@@ -88,15 +88,15 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 	}
 
 	// Save the total shrub fuel
-	ap->shrubFuels = totalShrubFuel;
+	//ap->shrubFuels = totalShrubFuel;
 	// Get herbaceous fuels and add it to total 1 hr fuels
-	ap->herbFuels = ap->herbBiomass;
-	ap->totalFuels["FS1"] += ap->herbFuels;
+	//ap->herbFuels = ap->herbBiomass;
+	//ap->totalFuels["FS1"] += ap->herbFuels;
 
 	string fuelClassTable = determineFBFMClassTable(ap);
 	int fuelModel = calcFBFM(fuelClassTable, ap);
 
-	ap->calcFBFM = fuelModel;
+	//ap->calcFBFM = fuelModel;
 
 	// Write out the total fuels record
 	RC = fdio->write_output_record(&year, ap);
@@ -329,6 +329,7 @@ int RVS::Fuels::FuelsDriver::calcFBFMShrub(std::string classTable, RVS::DataMana
 
 	int fbfm = 0;
 	bool pass = true;
+	/*
 	while (*RC == SQLITE_ROW)
 	{
 		fdio->getVal(dt->getStmt(), dt->Columns[FC_HT_LOWER], &htLower);
@@ -375,15 +376,18 @@ int RVS::Fuels::FuelsDriver::calcFBFMShrub(std::string classTable, RVS::DataMana
 		*RC = sqlite3_step(dt->getStmt());
 	}
 	*RC = sqlite3_reset(dt->getStmt());
+	*/
 	return fbfm;
 }
 
 int RVS::Fuels::FuelsDriver::calcFBFMMixed(std::string classTable, RVS::DataManagement::AnalysisPlot* ap)
 {
+	int fbfm = 0;
+	/*
 	RVS::DataManagement::DataTable* dt = fdio->query_fbfm_rules(classTable);
 	*RC = sqlite3_step(dt->getStmt());
 
-	int fbfm = 0;
+	
 	double proportion = ap->shrubBiomass / ap->herbBiomass;
 	double totalFuels = ap->herbFuels + ap->shrubFuels;
 
@@ -439,12 +443,14 @@ int RVS::Fuels::FuelsDriver::calcFBFMMixed(std::string classTable, RVS::DataMana
 		*RC = sqlite3_step(dt->getStmt());
 	}
 	*RC = sqlite3_reset(dt->getStmt());
+	*/
 	return fbfm;
 }
 
 int RVS::Fuels::FuelsDriver::switchClimateFBFM(RVS::DataManagement::DataTable* dt, RVS::DataManagement::AnalysisPlot* ap)
 {
 	int fbfm = 0;
+	/*
 	if (ap->dryClimate)
 	{
 		fdio->getVal(dt->getStmt(), dt->Columns[FC_FBFM_DRY_FIELD], &fbfm);
@@ -453,5 +459,6 @@ int RVS::Fuels::FuelsDriver::switchClimateFBFM(RVS::DataManagement::DataTable* d
 	{
 		fdio->getVal(dt->getStmt(), dt->Columns[FC_FBFM_HUMID_FIELD], &fbfm);
 	}
+	*/
 	return fbfm;
 }

@@ -196,6 +196,7 @@ bool RVS::Succession::SuccessionDIO::check_code_is_shrub(string spp_code)
 		RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
 		string plantType;
 		getVal(dt->getStmt(), dt->Columns[LIFEFORM_FIELD], &plantType);
+		
 		int f1 = plantType.find("SHRUB");
 		int f2 = plantType.find("Shrub");
 		if (f1 >= 0 || f2 >= 0)

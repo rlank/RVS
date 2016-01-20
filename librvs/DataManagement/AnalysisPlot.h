@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 
-
 #include "DataTable.h"
 #include "DIO.h"
 #include "SppRecord.h"
@@ -45,11 +44,14 @@ namespace DataManagement
 		inline const int BPS_NUM(bool useFallback) { return useFallback ? fallback_bps_num : bps_num; }
 		inline const int HUC() { return huc; }
 		inline const std::string GRP_ID() { return grp_id; }
-		inline const bool ISDRY() { return dryClimate; }
+		//inline const bool ISDRY() { return dryClimate; }
 
 		inline const double LOWER_BOUND() { return lower_confidence; }
 		inline const double UPPER_BOUND() { return upper_confidence; }
 		inline const double S2Y() { return s2y; }
+
+		inline const double LATITUDE() { return latitude; }
+		inline const double LONGITUDE() { return longitude; }
 
 		// Collection of shrub records. Some plots will only have a single record, others many.
 		inline std::vector<RVS::DataManagement::SppRecord*>* SHRUB_RECORDS() { return &shrubRecords; }
@@ -74,9 +76,9 @@ namespace DataManagement
 		// Total biomass (shrubs + herbs) (lbs/ac)
 		inline double TOTALBIOMASS() { return totalBiomass; }
 		// Collection of all calculated fuels values
-		inline std::map<std::string, double> TOTALFUELSCOLLECTION() { return totalFuels; }
+		//inline std::map<std::string, double> TOTALFUELSCOLLECTION() { return totalFuels; }
 		// Fuel model for the plot
-		inline int FBFM() { return calcFBFM == 0 ? defaultFBFM : calcFBFM; }
+		//inline int FBFM() { return calcFBFM == 0 ? defaultFBFM : calcFBFM; }
 
 		inline int CURRENT_SUCCESSION_STAGE() { return currentStage; }
 		inline int TIME_IN_SUCCESSION_STAGE() { return timeInSuccessionStage; }
@@ -103,6 +105,8 @@ namespace DataManagement
 		int fallback_bps_num;
 		int huc;
 		std::string grp_id;
+		double latitude;
+		double longitude;
 
 		double lower_confidence;
 		double upper_confidence;
@@ -128,14 +132,14 @@ namespace DataManagement
 		double shrubBiomass;
 
 		// All calculated fuels records, mapped to the type
-		std::map<std::string, double> totalFuels;
+		//std::map<std::string, double> totalFuels;
 		// Sum of 1, 10, 100 hour shrub fuels (g)
-		double shrubFuels;
+		//double shrubFuels;
 		// Herb fuel of the plot. Calculation :: production + holdover (lbs/ac)
-		double herbFuels;
-		int defaultFBFM;	// Default FBFM. Used if FBFM calculation fails
-		int calcFBFM;		// Calculated FBFM
-		bool dryClimate;	// Dry or humid BPS (true = dry)
+		//double herbFuels;
+		//int defaultFBFM;	// Default FBFM. Used if FBFM calculation fails
+		//int calcFBFM;		// Calculated FBFM
+		//bool dryClimate;	// Dry or humid BPS (true = dry)
 
 		std::vector<RVS::DataManagement::SppRecord*> shrubRecords;   // List of shrub records
 		std::vector<double> ndviValues;   // NDVI values for all years to be simulated
@@ -149,7 +153,7 @@ namespace DataManagement
 		// Builds the AnalysisPlot by querying the appropriate tables(s) in the database
 		void buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
 		// Get basic fuels information (FBFM, climate)
-		void buildInitialFuels(RVS::DataManagement::DIO* dio);
+		//void buildInitialFuels(RVS::DataManagement::DIO* dio);
 	};
 }
 }

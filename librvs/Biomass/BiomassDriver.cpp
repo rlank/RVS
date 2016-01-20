@@ -17,12 +17,15 @@ BiomassDriver::~BiomassDriver(void)
 {
 }
 
-int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, double* retShrubBiomass, double* retHerbBiomass)
+int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap)
 {
 	this->ap = ap;
 	int plot_num = ap->PLOT_ID();
 
-	if (plot_num == 1)
+	double totalShrubBiomass = 0;
+	double totalHerbBiomass = 0;
+
+	if (plot_num == 137)
 	{
 		int asdasds = 0;
 	}
@@ -30,33 +33,50 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	std::vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 	double totalShrubCover = 0;
 	double runShrubHeight = 0;
-	RVS::DataManagement::SppRecord* record = NULL;
+	double averageHeight = 0;
 
-	for (int r = 0; r < shrubs->size(); r++)
+	if (shrubs->empty())
 	{
-		record = shrubs->at(r);
-
-		double stemsPerAcre = calcStemsPerAcre(record);
-		record->stemsPerAcre = stemsPerAcre;
-		double singleBiomass = calcShrubBiomass(record);
-
-		record->shrubBiomass = singleBiomass;
-		record->exShrubBiomass = singleBiomass * stemsPerAcre;
-		*retShrubBiomass += record->exShrubBiomass;
-
-		totalShrubCover += record->cover;
-		runShrubHeight += record->height * record->cover;
-
-		// Write this result to the intermediate table
-		RC = bdio->write_intermediate_record(&year, ap, record);
+		totalShrubCover = 0;
+		runShrubHeight = 0;
+		averageHeight = 0;
 	}
+	else
+	{
+
+		RVS::DataManagement::SppRecord* record = NULL;
+		for (int r = 0; r < shrubs->size(); r++)
+		{
+			record = shrubs->at(r);
+
+			double stemsPerAcre = calcStemsPerAcre(record);
+			record->stemsPerAcre = stemsPerAcre;
+			double singleBiomass = calcShrubBiomass(record);
+
+			record->shrubBiomass = singleBiomass;
+			record->exShrubBiomass = singleBiomass * stemsPerAcre;
+			totalShrubBiomass += record->exShrubBiomass;
+
+			totalShrubCover += record->cover;
+			runShrubHeight += record->height * record->cover;
+
+			// Write this result to the intermediate table
+			RC = bdio->write_intermediate_record(&year, ap, record);
+		}
+
+		averageHeight = runShrubHeight / totalShrubCover;
+	}
+	
+	//////// HERBS ///////////
 
 	double oldBiomass = ap->herbBiomass;
-
-	// Apply holdover biomass if applicable
+	
+	// Apply holdover biomass if applicable and grow herbs from last year's production
 	if (ap->herbBiomass != 0)
 	{
-		double holdover = calcHerbReduction(totalShrubCover);
+		growHerbs(&ap->herbCover, &ap->herbHeight, oldBiomass);
+
+		double holdover = calcHerbHoldover(totalShrubCover);
 		ap->herbHoldoverBiomass = holdover * oldBiomass;
 	}
 
@@ -68,37 +88,29 @@ int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap, dou
 	{
 		*yhat = calcHerbBiomass(year);
 		calcConfidence(year, *yhat, lower, upper, 0);
-		*retHerbBiomass = exp(*yhat) * SMEAR;
+		totalHerbBiomass = exp(*yhat) * SMEAR;
 	}
 	else
 	{
 		*yhat = 0;
 		*lower = 0;
 		*upper = 0;
-		*retHerbBiomass = 0;
+		totalHerbBiomass = 0;
 	}
 	
 	ap->lower_confidence = *lower;
 	ap->upper_confidence = *upper;
 
-	double averageHeight = runShrubHeight / totalShrubCover;
+	//totalHerbBiomass = calcAttenuation(totalHerbBiomass);
 
-	if (shrubs->empty())
-	{
-		totalShrubCover = 0;
-		runShrubHeight = 0;
-		averageHeight = 0; 
-	}
-
-	growHerbs(&ap->herbCover, &ap->herbHeight, oldBiomass, *retHerbBiomass);
-
-	ap->primaryProduction = *retHerbBiomass;
 	
+
+	// Save output data
+	ap->primaryProduction = totalHerbBiomass;
 	ap->shrubCover = totalShrubCover;
 	ap->shrubHeight = averageHeight;
-
-	ap->herbBiomass = *retHerbBiomass + ap->herbHoldoverBiomass;
-	ap->shrubBiomass = *retShrubBiomass;
+	ap->herbBiomass = totalHerbBiomass + ap->herbHoldoverBiomass;
+	ap->shrubBiomass = totalShrubBiomass;
 	ap->totalBiomass = ap->SHRUBBIOMASS() + ap->HERBBIOMASS();
 
 	// Write output biomass record
@@ -193,7 +205,7 @@ double BiomassDriver::calcHerbBiomass(int year)
 
 	try
 	{
-		bdio->query_biogroup_coefs(0, baseline_const, baseline_ndvi, baseline_ppt, grp_id, false);
+		bdio->query_biogroup_coefs("base", baseline_const, baseline_ndvi, baseline_ppt, grp_id, false);
 	}
 	catch (RVS::DataManagement::DataNotFoundException &ex)
 	{
@@ -207,11 +219,11 @@ double BiomassDriver::calcHerbBiomass(int year)
 	
 	try
 	{
-		bdio->query_biogroup_coefs(ap->BPS_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, false);
+		bdio->query_biogroup_coefs(ap->BPS_MODEL_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, false);
 	}
 	catch (RVS::DataManagement::DataNotFoundException &ex)
 	{
-		bdio->query_biogroup_coefs(ap->BPS_NUM(true), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, false);
+		bdio->query_biogroup_coefs(ap->BPS_MODEL_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, false);
 	}
 
 	*grp_id_const = *grp_id_const + *baseline_const;
@@ -220,8 +232,14 @@ double BiomassDriver::calcHerbBiomass(int year)
 
 	ap->grp_id = *grp_id;
 
-	double ndvi = ap->getNDVI("Normal");
-	double ppt = ap->getPPT("Normal");
+	double ndvi = ap->getNDVI("Normal", false);
+	double ppt = ap->getPPT("Normal", false);
+
+	// Modify NDVI and PPT as a function of NOT SHRUB cover
+	double adjust = 1 - (ap->SHRUBCOVER() / 100);
+
+	ndvi = ndvi * adjust;
+	ppt = ppt * adjust;
 
 	double ln_ndvi = log(ndvi);
 	double ln_ppt = log(ppt);
@@ -242,15 +260,21 @@ void BiomassDriver::calcConfidence(int year, double biomass, double* lower, doub
 	double* ndvi_grp_interact = new double;
 	double* ppt_grp_interact = new double;
 
-	double ndvi = ap->getNDVI("Normal");
-	double ppt = ap->getPPT("Normal");
+	double ndvi = ap->getNDVI("Normal", false);
+	double ppt = ap->getPPT("Normal", false);
+
+	// Modify NDVI and PPT as a function of NOT SHRUB cover
+	double adjust = 1 - (ap->SHRUBCOVER() / 100);
+
+	ndvi = ndvi * adjust;
+	ppt = ppt * adjust;
 
 	double ln_ndvi = log(ndvi);
 	double ln_ppt = log(ppt);
 
 	try
 	{
-		bdio->query_biogroup_coefs(0, baseline_const, baseline_ndvi, baseline_ppt, grp_id, true);
+		bdio->query_biogroup_coefs("base", baseline_const, baseline_ndvi, baseline_ppt, grp_id, true);
 	}
 	catch (RVS::DataManagement::DataNotFoundException &ex)
 	{
@@ -258,11 +282,11 @@ void BiomassDriver::calcConfidence(int year, double biomass, double* lower, doub
 	}
 	try
 	{
-		bdio->query_biogroup_coefs(ap->BPS_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, true);
+		bdio->query_biogroup_coefs(ap->BPS_MODEL_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, true);
 	}
 	catch (RVS::DataManagement::DataNotFoundException &ex)
 	{
-		bdio->query_biogroup_coefs(ap->BPS_NUM(true), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, true);
+		bdio->query_biogroup_coefs(ap->BPS_MODEL_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, true);
 	}
 
 	// Begin confidence interval code
@@ -270,10 +294,10 @@ void BiomassDriver::calcConfidence(int year, double biomass, double* lower, doub
 	double yhat = exp(biomass) * SMEAR;
 	double ln_yhat = biomass;
 
-	double n = 1192;  // make this dynamic
-	double p = 102;   // make this dynamic
+	//double n = 1192;  // make this dynamic
+	//double p = 102;   // make this dynamic
 
-	double tval = 1.9621475777951;  // make this dynamic
+	double tval = 1.96214;  // make this dynamic
 
 	double s2y = calc_s2b(grp_id, &ln_ndvi, &ln_ppt);
 	double sy = sqrt(s2y);
@@ -301,7 +325,7 @@ double BiomassDriver::calcHerbBiomass(int year)
 }
 */
 
-double BiomassDriver::calcHerbReduction(double totalShrubCover)
+double BiomassDriver::calcHerbHoldover(double totalShrubCover)
 {
 	//$$ TODO OMG THE MAGIC NUMBERS
 	//if (totalShrubCover > 85) totalShrubCover = 85;
@@ -323,20 +347,24 @@ double BiomassDriver::calcAttenuation(double herbBiomass)
 	return herbBiomass * ratio;
 }
 
-void BiomassDriver::growHerbs(double* herbCover, double* herbHeight, double oldBiomass, double newBiomass)
+void BiomassDriver::growHerbs(double* herbCover, double* herbHeight, double oldBiomass)
 {
 	double ratio = *herbCover / *herbHeight;
-	double newProduction = newBiomass;
+	double newProduction = oldBiomass;
 
 	double* coverRate = new double;
 	double* herbRate = new double;
 
 	bdio->query_herb_growth_coefs(ap->BPS_MODEL_NUM(), coverRate, herbRate);
 
-	double cover = (*coverRate * newProduction);
-	double height = *herbRate * newProduction * 10;
+	double cover = *coverRate * newProduction;
+	double height = *herbRate * newProduction * 100;
 
-	if (cover > 100)
+	if (cover + ap->SHRUBCOVER() > 98)
+	{
+		*herbCover = 100 - ap->SHRUBCOVER() - 1;
+	}
+	else if (cover > 98)
 	{
 		*herbCover = 95;
 	}
@@ -344,6 +372,8 @@ void BiomassDriver::growHerbs(double* herbCover, double* herbHeight, double oldB
 	{
 		*herbCover = cover;
 	}
+
+
 	*herbHeight = height;
 }
 
