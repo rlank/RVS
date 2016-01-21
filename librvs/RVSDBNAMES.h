@@ -23,7 +23,7 @@ namespace RVS
 	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT3";
 	static const char* BIOMASS_GROUP_COEFS_TABLE = "Bio_Group_Coef_Cross";
 	static const char* BIOMASS_GROUP_COVARIANCE_TABLE = "Bio_Group_Covariance_Cross";
-	static const char* COVARIANCE_TABLE = "Covariance_Matrix";
+	static const char* COVARIANCE_TABLE = "Covariance_Matrix_NoGroup";
 	static const char* FUEL_CROSSWALK_TABLE = "Fuel_Crosswalk";
 	static const char* FUEL_EQUATION_TABLE = "Fuel_Equation";
 	static const char* FUEL_BPS_ATTR_TABLE = "BPS_Fuelmodels";

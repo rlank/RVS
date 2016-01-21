@@ -36,7 +36,7 @@ namespace Biomass
         // No other function needs to be called to calculate biomass.
         // <param name="plot_num">Analysis plot ID</param>
         // <returns>Return code. 0 indicates a clean run.</returns>
-        int* BioMain(int year, RVS::DataManagement::AnalysisPlot* ap);
+        int* BioMain(int year, string* climate, RVS::DataManagement::AnalysisPlot* ap);
 
 		const float EXPANSION_FACTOR = 4046.8564224f;
 
@@ -44,11 +44,12 @@ namespace Biomass
 		RVS::Biomass::BiomassDIO* bdio;
 		RVS::DataManagement::AnalysisPlot* ap;
 		bool suppress_messages;
+		string* climate;
 
 		// Constants for herbaceous biomass calculation
 
-		const float MSE = 0.05418119f;
-		const float SMEAR = 1.02456869001763;
+		const float MSE = 0.1276825f;
+		const float SMEAR = 1.06431775f;
 		static double** covariance_matrix;
 
 		double calcShrubBiomass(RVS::DataManagement::SppRecord* record);
@@ -60,6 +61,7 @@ namespace Biomass
 		double calcAttenuation(double herbBiomass);
 		void growHerbs(double* herbCover, double* herbHeight, double oldBiomass);
 
+		double calc_s2b(double* lnNDVI, double* lnPPT);
 		double calc_s2b(string* grp_id, double* lnNDVI, double* lnPPT);
 		double** matrix_mult(double** A, int aRow, int aCol, double** B, int bRow, int bCol);
 		double** matrix_trans(double** A, int aRow, int aCol);

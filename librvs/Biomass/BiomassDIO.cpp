@@ -252,7 +252,7 @@ double** RVS::Biomass::BiomassDIO::query_covariance_matrix()
 
 	int colNum = dt->numCols();
 
-	double** covariance_matrix = new double*[102];
+	double** covariance_matrix = new double*[3];
 
 	int row = 0;
 	int col = 0;
@@ -260,7 +260,7 @@ double** RVS::Biomass::BiomassDIO::query_covariance_matrix()
 
 	for (row = 0; row < colNum; row++)
 	{
-		covariance_matrix[row] = new double[102];
+		covariance_matrix[row] = new double[3];
 
 		for (col = 0; col < colNum; col++)
 		{

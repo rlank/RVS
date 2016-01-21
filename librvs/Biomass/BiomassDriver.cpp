@@ -17,10 +17,11 @@ BiomassDriver::~BiomassDriver(void)
 {
 }
 
-int* BiomassDriver::BioMain(int year, RVS::DataManagement::AnalysisPlot* ap)
+int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::AnalysisPlot* ap)
 {
 	this->ap = ap;
 	int plot_num = ap->PLOT_ID();
+	this->climate = climate;
 
 	double totalShrubBiomass = 0;
 	double totalHerbBiomass = 0;
@@ -194,46 +195,8 @@ double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 
 double BiomassDriver::calcHerbBiomass(int year)
 {
-	// BASIC FORM:
-	// Intercept + ln_ndvi + ln_precip_mm + GRP_ID_CONST + (ln_ndvi*grp_id) + (ln_prcp_mm*grp_id)
-
-	double* baseline_const = new double;
-	double* baseline_ndvi = new double;
-	double* baseline_ppt = new double;
-
-	string* grp_id = new string;
-
-	try
-	{
-		bdio->query_biogroup_coefs("base", baseline_const, baseline_ndvi, baseline_ppt, grp_id, false);
-	}
-	catch (RVS::DataManagement::DataNotFoundException &ex)
-	{
-		
-	}
-
-	// Populate interact fields from database
-	double* grp_id_const = new double;
-	double* ndvi_grp_interact = new double;
-	double* ppt_grp_interact = new double;
-	
-	try
-	{
-		bdio->query_biogroup_coefs(ap->BPS_MODEL_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, false);
-	}
-	catch (RVS::DataManagement::DataNotFoundException &ex)
-	{
-		bdio->query_biogroup_coefs(ap->BPS_MODEL_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, false);
-	}
-
-	*grp_id_const = *grp_id_const + *baseline_const;
-	*ndvi_grp_interact = *ndvi_grp_interact + *baseline_ndvi;
-	*ppt_grp_interact = *ppt_grp_interact + *baseline_ppt;
-
-	ap->grp_id = *grp_id;
-
-	double ndvi = ap->getNDVI("Normal", false);
-	double ppt = ap->getPPT("Normal", false);
+	double ndvi = ap->getNDVI(*climate, false);
+	double ppt = ap->getPPT(*climate, false);
 
 	// Modify NDVI and PPT as a function of NOT SHRUB cover
 	double adjust = 1 - (ap->SHRUBCOVER() / 100);
@@ -244,24 +207,14 @@ double BiomassDriver::calcHerbBiomass(int year)
 	double ln_ndvi = log(ndvi);
 	double ln_ppt = log(ppt);
 
-	double biomass = *grp_id_const + (ln_ndvi * *ndvi_grp_interact) + (ln_ppt * *ppt_grp_interact);
+	double biomass = -5.2058235 + (ln_ppt * 0.1088213) + (ln_ndvi * 1.386304);
 	return biomass;
 }
 
 void BiomassDriver::calcConfidence(int year, double biomass, double* lower, double* upper, double* level)
 {
-	double* baseline_const = new double;
-	double* baseline_ndvi = new double;
-	double* baseline_ppt = new double;
-
-	string* grp_id = new string;
-	// Populate interact fields from database
-	double* grp_id_const = new double;
-	double* ndvi_grp_interact = new double;
-	double* ppt_grp_interact = new double;
-
-	double ndvi = ap->getNDVI("Normal", false);
-	double ppt = ap->getPPT("Normal", false);
+	double ndvi = ap->getNDVI(*climate, false);
+	double ppt = ap->getPPT(*climate, false);
 
 	// Modify NDVI and PPT as a function of NOT SHRUB cover
 	double adjust = 1 - (ap->SHRUBCOVER() / 100);
@@ -271,35 +224,15 @@ void BiomassDriver::calcConfidence(int year, double biomass, double* lower, doub
 
 	double ln_ndvi = log(ndvi);
 	double ln_ppt = log(ppt);
-
-	try
-	{
-		bdio->query_biogroup_coefs("base", baseline_const, baseline_ndvi, baseline_ppt, grp_id, true);
-	}
-	catch (RVS::DataManagement::DataNotFoundException &ex)
-	{
-
-	}
-	try
-	{
-		bdio->query_biogroup_coefs(ap->BPS_MODEL_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, true);
-	}
-	catch (RVS::DataManagement::DataNotFoundException &ex)
-	{
-		bdio->query_biogroup_coefs(ap->BPS_MODEL_NUM(), grp_id_const, ndvi_grp_interact, ppt_grp_interact, grp_id, true);
-	}
 
 	// Begin confidence interval code
 
 	double yhat = exp(biomass) * SMEAR;
 	double ln_yhat = biomass;
 
-	//double n = 1192;  // make this dynamic
-	//double p = 102;   // make this dynamic
+	double tval = 1.961961;  // make this dynamic
 
-	double tval = 1.96214;  // make this dynamic
-
-	double s2y = calc_s2b(grp_id, &ln_ndvi, &ln_ppt);
+	double s2y = calc_s2b(&ln_ndvi, &ln_ppt);
 	double sy = sqrt(s2y);
 
 	double ln_yhat_lower = ln_yhat - tval * sy;
@@ -375,6 +308,26 @@ void BiomassDriver::growHerbs(double* herbCover, double* herbHeight, double oldB
 
 
 	*herbHeight = height;
+}
+
+double BiomassDriver::calc_s2b(double* lnNDVI, double* lnPPT)
+{
+	double** dummy = new double*[1];
+	dummy[0] = new double[3];
+
+	dummy[0][0] = 1.0;
+	dummy[0][1] = *lnPPT;
+	dummy[0][2] = *lnNDVI;
+
+	double** dummyTrans = matrix_trans(dummy, 1, 3);
+
+	double** temp = matrix_mult(covariance_matrix, 3, 3, dummyTrans, 3, 1);
+
+	double** s2b = matrix_mult(dummy, 1, 3, temp, 3, 1);
+
+	ap->s2y = s2b[0][0];
+
+	return s2b[0][0];
 }
 
 double BiomassDriver::calc_s2b(string* grp_id, double* lnNDVI, double* lnPPT)
