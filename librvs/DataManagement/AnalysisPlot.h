@@ -37,13 +37,13 @@ namespace DataManagement
 		virtual ~AnalysisPlot(void);
 
 		inline const int PLOT_ID() { return plot_id; }
-		inline const std::string PLOT_NAME() { return plot_name; }
+		inline const string PLOT_NAME() { return plot_name; }
 		inline const int EVT_NUM() { return evt_num; }
 		inline const int BPS_NUM() { return bps_num; }
 		inline const string BPS_MODEL_NUM() { return bps_model_num; }
 		inline const int BPS_NUM(bool useFallback) { return useFallback ? fallback_bps_num : bps_num; }
 		inline const int HUC() { return huc; }
-		inline const std::string GRP_ID() { return grp_id; }
+		inline const string GRP_ID() { return grp_id; }
 		//inline const bool ISDRY() { return dryClimate; }
 
 		inline const double LOWER_BOUND() { return lower_confidence; }

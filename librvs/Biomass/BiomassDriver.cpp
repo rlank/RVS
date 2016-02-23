@@ -31,6 +31,9 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 		int asdasds = 0;
 	}
 
+
+	/////////// SHRUBS ///////////
+
 	std::vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 	double totalShrubCover = 0;
 	double runShrubHeight = 0;
@@ -68,7 +71,7 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 		averageHeight = runShrubHeight / totalShrubCover;
 	}
 	
-	//////// HERBS ///////////
+	/////////// HERBS ///////////
 
 	double oldBiomass = ap->herbBiomass;
 	
@@ -246,17 +249,6 @@ void BiomassDriver::calcConfidence(int year, double biomass, double* lower, doub
 	*lower = yhat_lower;
 	*upper = yhat_upper;
 }
-
-/*
-double BiomassDriver::calcHerbBiomass(int year)
-{
-
-	double ndvi = ap->getNDVI(year);
-	double biomass = 139.07 * exp(0.0004 * ndvi);
-	//double biomass = 152.03 * exp(0.0004 * ndvi);
-	return biomass;
-}
-*/
 
 double BiomassDriver::calcHerbHoldover(double totalShrubCover)
 {
