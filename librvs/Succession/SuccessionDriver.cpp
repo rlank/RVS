@@ -78,7 +78,7 @@ int* SuccessionDriver::SuccessionMain(int year, RVS::DataManagement::AnalysisPlo
 	if (sclass == 0)
 	{
 		sclass = determineCurrentClass();
-		yearOffset = relativeTimeInStage(sclass);
+		yearOffset = relativeTimeInStage(sclass);  //TODO This may have an error where if user puts cover > than our max cover, it runs off the end of our growth metrics
 		ap->startingYearsOffset = yearOffset;
 	}
 
@@ -257,8 +257,8 @@ int RVS::Succession::SuccessionDriver::relativeTimeInStage(int sclass)
 
 int RVS::Succession::SuccessionDriver::relativeTimeInStageAdjuster(double cover, std::map<string, string> strVals, std::map<string, double> numVals)
 {
-	int midpoint = numVals["midpoint"];
-	int yearsPassed = (int)cover / (int)numVals["max_cov"];
+	int startAge = numVals["startAge"];
+	int yearsPassed = ((int)cover / (int)numVals["max_cov"]) + startAge;
 	return yearsPassed;
 }
 
@@ -278,7 +278,7 @@ void RVS::Succession::SuccessionDriver::growStage(std::map<string, string> strVa
 
 	if (growthStage.compare("S") == 0)
 	{
-		if (shrubs->empty())
+		if (shrubs->empty())  //TODO need to have "bob override" to always use input data if applicable. This is needed now because of what DISTURBANCE will do
 		{
 			list<string> newspecies = makeSpeciesList(strVals);
 			for (string s : newspecies)
