@@ -118,6 +118,7 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const c
 		{
 			*RC = sqlite3_reset(dt->getStmt());
 			*RC = sqlite3_step(dt->getStmt());
+			*(dt->STATUS()) = *RC;
 			checkDBStatus(db, sql);
 		}
 	}
@@ -141,31 +142,6 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const c
 
 	return dt.get();
 }
-
-
-/*
-RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const char* sql, sqlite3* db, bool addToActive, bool reset)
-{
-	shared_ptr<DataTable> dt;
-
-	int nByte = -1;
-	sqlite3_stmt* stmt;
-
-	// Prepare SQL query as object code
-	*RC = sqlite3_prepare_v2(db, sql, nByte, &stmt, NULL);
-	checkDBStatus(db, sql);
-	*RC = sqlite3_step(stmt);
-	checkDBStatus(db, sql);
-	dt = shared_ptr<DataTable>(new DataTable(stmt));
-
-	if (addToActive) { activeQueries.insert(pair<string, shared_ptr<DataTable>>(sql, dt)); }
-
-	int* rc = dt->STATUS();
-	*rc = *RC;
-
-	return dt.get();
-}
-*/
 
 int* RVS::DataManagement::DIO::write_output(void)
 {
@@ -244,18 +220,10 @@ const char* RVS::DataManagement::DIO::query_base(const char* table, const char* 
 	return selectString;
 }
 
-const char* RVS::DataManagement::DIO::query_base(const char* table, const char* field, boost::any whereclause)
+const char* RVS::DataManagement::DIO::query_base(const char* table, const char* field, int whereclause)
 {
 	std::stringstream* selectStream = new std::stringstream();
-
-	if (whereclause.type() == typeid(std::string))
-	{
-		*selectStream << "SELECT * FROM " << table << " WHERE " << field << "='" << boost::any_cast<std::string>(whereclause) << "'; ";
-	}
-	else if (whereclause.type() == typeid(int))
-	{
-		*selectStream << "SELECT * FROM " << table << " WHERE " << field << "=" << boost::any_cast<int>(whereclause) << "; ";
-	}
+	*selectStream << "SELECT * FROM " << table << " WHERE " << field << "=" << whereclause << "; ";
 
 	char* selectString = new char;
 	selectString = streamToCharPtr(selectStream);
@@ -263,19 +231,33 @@ const char* RVS::DataManagement::DIO::query_base(const char* table, const char* 
 	return selectString;
 }
 
-const char* RVS::DataManagement::DIO::query_base(const char* table, const char* field, boost::any whereclause, string order)
+const char* RVS::DataManagement::DIO::query_base(const char* table, const char* field, string whereclause)
 {
 	std::stringstream* selectStream = new std::stringstream();
+	*selectStream << "SELECT * FROM " << table << " WHERE " << field << "='" << whereclause << "'; ";
+	
+	char* selectString = new char;
+	selectString = streamToCharPtr(selectStream);
+	delete selectStream;
+	return selectString;
+}
 
-	if (whereclause.type() == typeid(std::string))
-	{
-		*selectStream << "SELECT * FROM " << table << " WHERE " << field << "='" << boost::any_cast<std::string>(whereclause) << "'";
-	}
-	else if (whereclause.type() == typeid(int))
-	{
-		*selectStream << "SELECT * FROM " << table << " WHERE " << field << "=" << boost::any_cast<int>(whereclause);
-	}
+const char* RVS::DataManagement::DIO::query_base(const char* table, const char* field, int whereclause, string order)
+{
+	std::stringstream* selectStream = new std::stringstream();
+	*selectStream << "SELECT * FROM " << table << " WHERE " << field << "=" << whereclause;
+	*selectStream << " ORDER BY " << order << ";";
 
+	char* selectString = new char;
+	selectString = streamToCharPtr(selectStream);
+	delete selectStream;
+	return selectString;
+}
+
+const char* RVS::DataManagement::DIO::query_base(const char* table, const char* field, string whereclause, string order)
+{
+	std::stringstream* selectStream = new std::stringstream();
+	*selectStream << "SELECT * FROM " << table << " WHERE " << field << "='" << whereclause << "'";
 	*selectStream << " ORDER BY " << order << ";";
 
 	char* selectString = new char;
@@ -307,16 +289,6 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::query_shrubs_table(voi
 	const char* sql = streamToCharPtr(sqlStream);
 	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb, true);
 	return dt;
-}
-
-int RVS::DataManagement::DIO::query_backup_bps(int huc)
-{
-	const char* sql = query_base(BPS_HUC_TABLE, HUC_FIELD, huc);
-	DataTable* dt = prep_datatable(sql, rvsdb);
-
-	int backupBps;
-	getVal(dt->getStmt(), dt->Columns[BPS_NUM_FIELD], &backupBps);
-	return backupBps;
 }
 
 void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, boost::any* retval)
@@ -362,12 +334,12 @@ void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, double* re
 	}
 }
 
-void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, std::string* retVal)
+void RVS::DataManagement::DIO::getVal(sqlite3_stmt* stmt, int column, string* retVal)
 {
 	int colType = sqlite3_column_type(stmt, column);
 	if (colType == SQLITE3_TEXT)
 	{
-		*retVal = std::string((char*)sqlite3_column_text(stmt, column));
+		*retVal = string((char*)sqlite3_column_text(stmt, column));
 	}
 	else if (colType == SQLITE_NULL)
 	{
@@ -518,20 +490,20 @@ void RVS::DataManagement::DIO::query_fuels_basic_info(const int* bps, int* fbfm,
 }
 
 int* RVS::DataManagement::DIO::finalizeQueries(void)
-{
-	for (map<string, shared_ptr<DataTable>>::iterator it = activeQueries.begin(); it != activeQueries.end(); it++)
+{	
+	for (auto &q : activeQueries)
 	{
-		it->second.reset();
+		q.second.reset();
 	}
 	activeQueries.clear();
 
 	return RC;
 }
 
-char* RVS::DataManagement::DIO::streamToCharPtr(std::stringstream* stream)
+char* RVS::DataManagement::DIO::streamToCharPtr(stringstream* stream)
 {
 	// Get the string representation of the stream
-	std::string nstring = stream->str();
+	string nstring = stream->str();
 	// Create a character array of the size of string
 	char* str = new char[nstring.size() + 1];
 	// Copy the string value into the array and terminate
@@ -566,7 +538,6 @@ bool RVS::DataManagement::DIO::checkDBStatus(sqlite3* db, const char* sql, const
 		if (*RC == SQLITE_DONE)
 		{
 			write_debug_msg("Data not found");
-			throw RVS::DataManagement::DataNotFoundException(sql);
 		}
 		else
 		{
@@ -624,4 +595,9 @@ int RVS::DataManagement::DIO::buildInMemDB(sqlite3 *pInMemory, const char *zFile
 	** and return the result of this function. */
 	(void)sqlite3_close(pFile);
 	return rc;
+}
+
+RVS::DataManagement::DataTable* RVS::DataManagement::DIO::query_equation_table(int equation_number)
+{
+	return nullptr;
 }

@@ -73,11 +73,6 @@ int* RVS::Succession::SuccessionDIO::write_intermediate_record(int* year, RVS::D
 	return RC;
 }
 
-RVS::DataManagement::DataTable* RVS::Succession::SuccessionDIO::query_equation_table(int equation_number)
-{
-	return nullptr;
-}
-
 RVS::DataManagement::DataTable* RVS::Succession::SuccessionDIO::query_succession_table(string bps_model_code)
 {
 	const char* sql = query_base(SUCCESSION_TABLE, "BPS_MODEL", bps_model_code, "COHORT");
@@ -88,14 +83,8 @@ RVS::DataManagement::DataTable* RVS::Succession::SuccessionDIO::query_succession
 bool RVS::Succession::SuccessionDIO::get_succession_data(string bps_model_code, std::map<string, string>* stringVals, std::map<string, double>* numVals)
 {
 	RVS::DataManagement::DataTable* succDt;
-	try
-	{
-		succDt = query_succession_table(bps_model_code);
-	}
-	catch (RVS::DataManagement::DataNotFoundException dex)
-	{
-		succDt = query_succession_table("0211310");
-	}
+
+	succDt = query_succession_table(bps_model_code);
 
 	double cohort;
 	getVal(succDt->getStmt(), succDt->Columns["COHORT"], &cohort);
@@ -176,14 +165,9 @@ bool RVS::Succession::SuccessionDIO::check_shrub_data_exists(string spp_code)
 		dataExists = false;
 	}
 	const char* sql = query_base(PLANTS_TABLE, "Plants_Code", spp_code);
-	try
-	{
-		RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
-	}
-	catch (RVS::DataManagement::DataNotFoundException dex)
-	{
-		dataExists = false;
-	}
+
+	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
+	
 	return dataExists;
 }
 
@@ -191,22 +175,15 @@ bool RVS::Succession::SuccessionDIO::check_code_is_shrub(string spp_code)
 {
 	bool isShrub = false;
 	const char* sql = query_base(PLANTS_TABLE, "Plants_Code", spp_code);
-	try
-	{
-		RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
-		string plantType;
-		getVal(dt->getStmt(), dt->Columns[LIFEFORM_FIELD], &plantType);
+
+	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
+	string plantType;
+	transform(plantType.begin(), plantType.end(), plantType.begin(), ::toupper);
+	getVal(dt->getStmt(), dt->Columns[LIFEFORM_FIELD], &plantType);
 		
-		int f1 = plantType.find("SHRUB");
-		int f2 = plantType.find("Shrub");
-		if (f1 >= 0 || f2 >= 0)
-		{
-			isShrub = true;
-		}
-	}
-	catch (RVS::DataManagement::DataNotFoundException dex)
-	{
-	}
+	size_t f = plantType.find("shrub");
+	if (f >= 0) { isShrub = true; }
+
 	return isShrub;
 }
 

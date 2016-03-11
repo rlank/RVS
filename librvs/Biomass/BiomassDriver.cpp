@@ -26,7 +26,7 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 	double totalShrubBiomass = 0;
 	double totalHerbBiomass = 0;
 
-	if (plot_num == 137)
+	if (plot_num == 20)
 	{
 		int asdasds = 0;
 	}
@@ -34,7 +34,7 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 
 	/////////// SHRUBS ///////////
 
-	std::vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
+	vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 	double totalShrubCover = 0;
 	double runShrubHeight = 0;
 	double averageHeight = 0;
@@ -47,25 +47,44 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 	}
 	else
 	{
-
-		RVS::DataManagement::SppRecord* record = NULL;
-		for (int r = 0; r < shrubs->size(); r++)
+		for (auto &s : *shrubs)
 		{
-			record = shrubs->at(r);
+			double stemsPerAcre = calcStemsPerAcre(s);
+			s->stemsPerAcre = stemsPerAcre;
+			double singleBiomass = calcShrubBiomass(s);
 
-			double stemsPerAcre = calcStemsPerAcre(record);
-			record->stemsPerAcre = stemsPerAcre;
-			double singleBiomass = calcShrubBiomass(record);
+			s->shrubBiomass = singleBiomass;
+			s->exShrubBiomass = singleBiomass * stemsPerAcre;
+			totalShrubBiomass += s->exShrubBiomass;
 
-			record->shrubBiomass = singleBiomass;
-			record->exShrubBiomass = singleBiomass * stemsPerAcre;
-			totalShrubBiomass += record->exShrubBiomass;
+			totalShrubCover += s->cover;
+			runShrubHeight += s->height * s->cover;
+		}
 
-			totalShrubCover += record->cover;
-			runShrubHeight += record->height * record->cover;
+		if (ap->shrubBiomassReduction > 0)
+		{
+			double reduceRatio = ap->shrubBiomassReduction / totalShrubBiomass;
+			if (reduceRatio > 1) { int ijk = 0;	}
+			//reduceRatio = 1 - reduceRatio;
 
+			totalShrubCover = 0;
+			runShrubHeight = 0;
+
+			for (auto &s : *shrubs)
+			{
+				double shrubRatio = s->exShrubBiomass / totalShrubBiomass;
+				double reduceAmount = 1 - (reduceRatio * shrubRatio);
+				s->cover *= reduceAmount;
+				s->exShrubBiomass *= reduceAmount;
+				totalShrubCover += s->cover;
+				runShrubHeight += s->height * s->cover;
+			}
+		}
+
+		for (auto &s : *shrubs)
+		{
 			// Write this result to the intermediate table
-			RC = bdio->write_intermediate_record(&year, ap, record);
+			RC = bdio->write_intermediate_record(&year, ap, s);
 		}
 
 		averageHeight = runShrubHeight / totalShrubCover;
@@ -107,15 +126,16 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 
 	//totalHerbBiomass = calcAttenuation(totalHerbBiomass);
 
-	
-
 	// Save output data
 	ap->primaryProduction = totalHerbBiomass;
 	ap->shrubCover = totalShrubCover;
 	ap->shrubHeight = averageHeight;
-	ap->herbBiomass = totalHerbBiomass + ap->herbHoldoverBiomass;
-	ap->shrubBiomass = totalShrubBiomass;
+	ap->herbBiomass = totalHerbBiomass + ap->herbHoldoverBiomass - ap->herbBiomassReduction;
+	ap->shrubBiomass = totalShrubBiomass - ap->shrubBiomassReduction;
 	ap->totalBiomass = ap->SHRUBBIOMASS() + ap->HERBBIOMASS();
+
+	ap->herbBiomassReduction = 0;
+	ap->shrubBiomassReduction = 0;
 
 	// Write output biomass record
 	RC = bdio->write_output_record(&year, ap);
@@ -128,18 +148,11 @@ double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 	// Get the equation number for BAT (total aboveground biomass)
 	int equationNumber = 0;
 	
-	try
-	{
-		equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "BAT2");
-	}
-	catch (RVS::DataManagement::DataNotFoundException dex)
-	{
-		equationNumber = bdio->query_crosswalk_table("ARTR2", "BAT2");
-	}
+	equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), BIOMASS_EQUATION_FIELD);
 
 	if (equationNumber == 0)
 	{
-		string s = "Something is wrong.";
+		equationNumber = bdio->query_crosswalk_table(BIOMASS_BACKUP_SPP_CODE, BIOMASS_EQUATION_FIELD);
 	}
 
 	record->batEqNum = equationNumber;
@@ -166,13 +179,12 @@ double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 {
 	// Lookup the equation number from the crosswalk table
 	int equationNumber = 0;
-	try
+
+	equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), STEMS_PER_ACRE_EQUATION_FIELD);
+
+	if (equationNumber == 0)
 	{
-		equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "PCH");
-	}
-	catch (RVS::DataManagement::DataNotFoundException dex)
-	{
-		equationNumber = bdio->query_crosswalk_table("ARTR2", "PCH");
+		equationNumber = bdio->query_crosswalk_table(BIOMASS_BACKUP_SPP_CODE, STEMS_PER_ACRE_EQUATION_FIELD);
 	}
 	
 	record->pchEqNum = equationNumber;
@@ -274,7 +286,7 @@ double BiomassDriver::calcAttenuation(double herbBiomass)
 
 void BiomassDriver::growHerbs(double* herbCover, double* herbHeight, double oldBiomass)
 {
-	double ratio = *herbCover / *herbHeight;
+	//double ratio = *herbCover / *herbHeight;
 	double newProduction = oldBiomass;
 
 	double* coverRate = new double;
@@ -283,7 +295,7 @@ void BiomassDriver::growHerbs(double* herbCover, double* herbHeight, double oldB
 	bdio->query_herb_growth_coefs(ap->BPS_MODEL_NUM(), coverRate, herbRate);
 
 	double cover = *coverRate * newProduction;
-	double height = *herbRate * newProduction * 100;
+	double height = *herbRate * newProduction * 100;  // Why is there 100 here?  Seems to be conversion
 
 	if (cover + ap->SHRUBCOVER() > 98)
 	{

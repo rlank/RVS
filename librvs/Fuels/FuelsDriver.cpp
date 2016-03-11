@@ -30,13 +30,12 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 
 		// Equation numbers for each fuels calculation
 		map<string, int> equationNumbers;
-		try
+
+		equationNumbers = fdio->query_crosswalk_table(current->SPP_CODE());
+
+		if (equationNumbers.size() == 0)
 		{
-			equationNumbers = fdio->query_crosswalk_table(current->SPP_CODE());
-		}
-		catch (RVS::DataManagement::DataNotFoundException &ex)
-		{
-			equationNumbers = fdio->query_crosswalk_table("ARTRT");
+			equationNumbers = fdio->query_crosswalk_table(FUELS_BACKUP_SPP_CODE);
 		}
 
 		current->fuelEqs = equationNumbers;

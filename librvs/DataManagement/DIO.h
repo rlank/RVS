@@ -6,9 +6,6 @@
 
 #pragma once
 
-#ifndef DIO_H
-#define DIO_H
-
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -56,8 +53,6 @@ namespace DataManagement
 		// Querys the shrub input table ("Shrubs")
 		DataTable* query_shrubs_table(void);
 
-		int query_backup_bps(int huc);
-
 		// Returns a value from a specified column in a sqlite statement object
 		void getVal(sqlite3_stmt* stmt, int column, boost::any* retVal);
 		void getVal(sqlite3_stmt* stmt, int column, double* retval);
@@ -65,7 +60,7 @@ namespace DataManagement
 		void getVal(sqlite3_stmt* stmt, int column, int* retVal);
 		void getVal(sqlite3_stmt* stmt, int column, bool* retVal);
 		
-		virtual DataTable* query_equation_table(int equation_number) = 0;
+		virtual DataTable* query_equation_table(int equation_number);
 		virtual void query_equation_coefficients(int equation_number, double* coefs);
 		virtual void query_equation_parameters(int equation_number, string* params);
 		virtual void query_equation_parameters(int equation_number, string* params, double* coefs);
@@ -90,8 +85,10 @@ namespace DataManagement
 		/// Base query function. All the public functions only define the selection string.
 		const char* query_base(const char* table);
 		const char* query_base(const char* table, const char* field);
-		const char* query_base(const char* table, const char* field, boost::any whereclause);
-		const char* query_base(const char* table, const char* field, boost::any whereclause, string order);
+		const char* query_base(const char* table, const char* field, int whereClause);
+		const char* query_base(const char* table, const char* field, string whereClause);
+		const char* query_base(const char* table, const char* field, int whereClause, string order);
+		const char* query_base(const char* table, const char* field, string whereClause, string order);
 
 		// Bogus function for sqlite3_exec
 		static int callback(void* nu, int argc, char** argv, char** azColName);
@@ -117,5 +114,3 @@ namespace DataManagement
 	};
 }
 }
-
-#endif

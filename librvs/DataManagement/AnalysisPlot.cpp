@@ -15,20 +15,23 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	herbBiomass = 0;
 	herbHoldoverBiomass = 0;
 	shrubBiomass = 0;
-	//shrubFuels = 0;
-	//herbFuels = 0;
-	//defaultFBFM = 0;
-	//calcFBFM = 0;
-	//dryClimate = false;
-	shrubRecords = std::vector<SppRecord*>();
-	ndviValues = std::vector<double>();
-	precipValues = std::vector<double>();
-	//totalFuels = std::map<std::string, double>();
-	
+	shrubFuels = 0;
+	herbFuels = 0;
+	defaultFBFM = 0;
+	calcFBFM = 0;
+	dryClimate = false;
+	shrubRecords = vector<SppRecord*>();
+	ndviValues = vector<double>();
+	precipValues = vector<double>();
+	totalFuels = map<string, double>();
+	disturbances = vector<Disturbance::DisturbAction>();
+	disturbed = false;
+	herbBiomassReduction = 0;
+	shrubBiomassReduction = 0;
+
 	// Order matters here!
 	buildAnalysisPlot(dio, dt);
-	//fallback_bps_num = dio->query_backup_bps(huc);
-	//buildInitialFuels(dio);
+	buildInitialFuels(dio);
 }
 
 AnalysisPlot::~AnalysisPlot(void)
@@ -45,7 +48,6 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 	dio->getVal(stmt, dt->Columns[EVT_NUM_FIELD], &evt_num);
 	dio->getVal(stmt, dt->Columns[BPS_NUM_FIELD], &bps_num);
 	dio->getVal(stmt, dt->Columns[BPS_MODEL_FIELD], &bps_model_num);
-	dio->getVal(stmt, dt->Columns[HUC_FIELD], &huc);
 	dio->getVal(stmt, dt->Columns[HERB_COVER_FIELD], &herbCover);
 	dio->getVal(stmt, dt->Columns[HERB_HEIGHT_FIELD], &herbHeight);
 	dio->getVal(stmt, dt->Columns[SUCCESSION_CLASS_FIELD], &currentStage);
@@ -74,9 +76,7 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 		{
 			precipValues.push_back(*aval);
 		}
-
 	}
-	return;
 }
 
 void AnalysisPlot::push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt)
@@ -90,9 +90,11 @@ void AnalysisPlot::push_shrub(RVS::DataManagement::SppRecord* record)
 	shrubRecords.push_back(record);
 }
 
-/*
+
 void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 {
+	dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
+	/*
 	try
 	{
 		dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
@@ -101,8 +103,9 @@ void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 	{
 		dio->query_fuels_basic_info(&fallback_bps_num, &defaultFBFM, &dryClimate);
 	}
+	*/
 }
-*/
+
 
 double AnalysisPlot::getNDVI(string level, bool useRand)
 {
@@ -177,4 +180,19 @@ double AnalysisPlot::getPPT(string level, bool useRand)
 	}
 
 	return ppt;
+}
+
+vector<RVS::Disturbance::DisturbAction> RVS::DataManagement::AnalysisPlot::getDisturbancesForYear(int year)
+{
+	vector<Disturbance::DisturbAction> yearDisturbances = vector<Disturbance::DisturbAction>();
+
+	for (auto d : disturbances)
+	{
+		if (d.getActionYear() == year)
+		{
+			yearDisturbances.push_back(d);
+		}
+	}
+
+	return yearDisturbances;
 }

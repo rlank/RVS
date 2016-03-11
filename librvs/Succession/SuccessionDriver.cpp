@@ -257,8 +257,8 @@ int RVS::Succession::SuccessionDriver::relativeTimeInStage(int sclass)
 
 int RVS::Succession::SuccessionDriver::relativeTimeInStageAdjuster(double cover, std::map<string, string> strVals, std::map<string, double> numVals)
 {
-	int startAge = numVals["startAge"];
-	int yearsPassed = ((int)cover / (int)numVals["max_cov"]) + startAge;
+	double startAge = numVals["startAge"];
+	int yearsPassed = int(cover / numVals["max_cov"]) + int(startAge);
 	return yearsPassed;
 }
 

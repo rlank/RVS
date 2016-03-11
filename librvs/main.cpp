@@ -3,7 +3,7 @@
 /// Desc: Driver for RVS. Build as execultable and			   ///
 /// this becomes the program entry point                       ///
 /// Base Class(es): none                                       ///
-/// Last Modified: 5 Aug 15                                    ///
+/// Last Modified: 23 Feb 15                                   ///
 /// ********************************************************** ///
 
 #include <ctime>
@@ -24,6 +24,8 @@
 #include "Fuels/FuelsDriver.h"
 #include "Succession/SuccessionDIO.h"
 #include "Succession/SuccessionDriver.h"
+#include "Disturbance/DisturbanceDIO.h"
+#include "Disturbance/DisturbanceDriver.h"
 
 using namespace std;
 using namespace RVS;
@@ -37,7 +39,10 @@ string* CLIMATE = new string("Normal");
 bool* USE_MEM = new bool(true);
 
 void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, 
-	Biomass::BiomassDriver* bd, Fuels::FuelsDriver* fd, Succession::SuccessionDriver* sd);
+	Biomass::BiomassDriver* bd, 
+	Fuels::FuelsDriver* fd, 
+	Succession::SuccessionDriver* sd, 
+	Disturbance::DisturbanceDriver* dd);
 
 int main(int argc, char* argv[])
 {   
@@ -54,6 +59,7 @@ int main(int argc, char* argv[])
 	Biomass::BiomassDIO* bdio = new Biomass::BiomassDIO();
 	Fuels::FuelsDIO* fdio = new Fuels::FuelsDIO();
 	Succession::SuccessionDIO* sdio = new Succession::SuccessionDIO();
+	Disturbance::DisturbanceDIO* ddio = new Disturbance::DisturbanceDIO();
     
     vector<int> plotcounts = bdio->query_analysis_plots();
 	map<int, AnalysisPlot*> aps;
@@ -86,6 +92,13 @@ int main(int argc, char* argv[])
 		*RC = sqlite3_step(shrub_dt->getStmt());
 	}
 
+	map<int, vector<RVS::Disturbance::DisturbAction>> disturbances = ddio->query_disturbance_input();
+
+	for (auto &d : disturbances)
+	{
+		aps[d.first]->setDisturbances(d.second);
+	}
+
 	std::cout << "Done." << std::endl;
 
 	///////////////////////////////
@@ -95,6 +108,7 @@ int main(int argc, char* argv[])
 	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, *SUPPRESS_MSG);
 	Fuels::FuelsDriver fd = Fuels::FuelsDriver(fdio, *SUPPRESS_MSG);
 	Succession::SuccessionDriver sd = Succession::SuccessionDriver(sdio, *SUPPRESS_MSG);
+	Disturbance::DisturbanceDriver dd = Disturbance::DisturbanceDriver(ddio, *SUPPRESS_MSG);
 
 	for (int year = 0; year < *YEARS; year++)
 	{
@@ -105,7 +119,7 @@ int main(int argc, char* argv[])
 		for (int &p : plotcounts)
 		{
 			currentPlot = aps[p];
-			simulate(year, currentPlot, &bd, &fd, &sd);
+			simulate(year, currentPlot, &bd, &fd, &sd, &dd);
 		}
 
 		stringstream ss; 
@@ -130,7 +144,10 @@ int main(int argc, char* argv[])
 }
 
 void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, 
-	Biomass::BiomassDriver* bd, Fuels::FuelsDriver* fd, Succession::SuccessionDriver* sd)
+	Biomass::BiomassDriver* bd, 
+	Fuels::FuelsDriver* fd, 
+	Succession::SuccessionDriver* sd, 
+	Disturbance::DisturbanceDriver* dd)
 {
 	if (!*SUPPRESS_MSG)
 	{
@@ -139,9 +156,11 @@ void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot,
 		std::cout << "====================" << std::endl;
 	}
 
-	RC = bd->BioMain(year, CLIMATE, currentPlot);
-
-	//RC = fd->FuelsMain(year, currentPlot);
+	RC = dd->DisturbanceMain(year, currentPlot);
 
 	RC = sd->SuccessionMain(year, currentPlot);
+	
+	RC = bd->BioMain(year, CLIMATE, currentPlot);
+
+	RC = fd->FuelsMain(year, currentPlot);
 }

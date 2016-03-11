@@ -300,35 +300,16 @@ void RVS::Biomass::BiomassDIO::query_herb_growth_coefs(string bps_model, double*
 	RVS::DataManagement::DataTable* dt;
 	*cov_rate = 0;
 	*ht_rate = 0;
-	try
+
+	dt = prep_datatable(sql, rvsdb, true);
+	if (*(dt->STATUS()) == SQLITE_ROW)
 	{
-		dt = prep_datatable(sql, rvsdb);
 		getVal(dt->getStmt(), dt->Columns[HERB_CC_GROWTH_FIELD], cov_rate);
 		getVal(dt->getStmt(), dt->Columns[HERB_HT_GROWTH_FIELD], ht_rate);
 	}
-	catch (RVS::DataManagement::DataNotFoundException dex)
+	else
 	{
-		/*
-		string bps;
-		if (bps_model.length() == 6)
-		{
-			bps = bps_model.substr(1);
-		}
-		else
-		{
-			bps = bps_model.substr(2);
-		}
-		sql = query_base(HERB_GROWTH_TABLE, "BPS_CODE", stoi(bps));
-		dt = prep_datatable(sql, rvsdb);
-	
-		getVal(dt->getStmt(), dt->Columns[HERB_CC_GROWTH_FIELD], cov_rate);
-		getVal(dt->getStmt(), dt->Columns[HERB_HT_GROWTH_FIELD], ht_rate);
-		*/
-
 		*cov_rate = 0.020334387;
 		*ht_rate = 0.000419084;
-
 	}
-
-	
 }

@@ -15,11 +15,13 @@
 #include "DataTable.h"
 #include "DIO.h"
 #include "SppRecord.h"
+#include "../Disturbance/DisturbAction.h"
 
 namespace RVS { namespace Biomass { class BiomassDriver; } }
 namespace RVS { namespace Biomass { class BiomassEqDriver; } }
 namespace RVS { namespace Fuels   { class FuelsDriver;   } }
 namespace RVS { namespace Succession { class SuccessionDriver; } }
+namespace RVS { namespace Disturbance { class DisturbanceDriver; } }
 
 namespace RVS
 {
@@ -31,6 +33,7 @@ namespace DataManagement
 		friend class RVS::Fuels::FuelsDriver;
 		friend class RVS::Biomass::BiomassEqDriver;
 		friend class RVS::Succession::SuccessionDriver;
+		friend class RVS::Disturbance::DisturbanceDriver;
 
 	public:
 		AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
@@ -41,10 +44,8 @@ namespace DataManagement
 		inline const int EVT_NUM() { return evt_num; }
 		inline const int BPS_NUM() { return bps_num; }
 		inline const string BPS_MODEL_NUM() { return bps_model_num; }
-		inline const int BPS_NUM(bool useFallback) { return useFallback ? fallback_bps_num : bps_num; }
-		inline const int HUC() { return huc; }
 		inline const string GRP_ID() { return grp_id; }
-		//inline const bool ISDRY() { return dryClimate; }
+		inline const bool ISDRY() { return dryClimate; }
 
 		inline const double LOWER_BOUND() { return lower_confidence; }
 		inline const double UPPER_BOUND() { return upper_confidence; }
@@ -76,9 +77,9 @@ namespace DataManagement
 		// Total biomass (shrubs + herbs) (lbs/ac)
 		inline double TOTALBIOMASS() { return totalBiomass; }
 		// Collection of all calculated fuels values
-		//inline std::map<std::string, double> TOTALFUELSCOLLECTION() { return totalFuels; }
+		inline std::map<std::string, double> TOTALFUELSCOLLECTION() { return totalFuels; }
 		// Fuel model for the plot
-		//inline int FBFM() { return calcFBFM == 0 ? defaultFBFM : calcFBFM; }
+		inline int FBFM() { return calcFBFM == 0 ? defaultFBFM : calcFBFM; }
 
 		inline int CURRENT_SUCCESSION_STAGE() { return currentStage; }
 		inline int TIME_IN_SUCCESSION_STAGE() { return timeInSuccessionStage; }
@@ -86,6 +87,7 @@ namespace DataManagement
 		inline int YEAR_OFFSET() { return startingYearsOffset; }
 
 		const float GRAMS_TO_POUNDS = 0.00220462f;
+		const float POUNDS_TO_GRAMS = 453.592f;
 
 		void push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
 		void push_shrub(RVS::DataManagement::SppRecord* record);
@@ -95,6 +97,9 @@ namespace DataManagement
 		// Get precipitation for the requested level
 		double getPPT(string level, bool useRand);
 
+		std::vector<RVS::Disturbance::DisturbAction> getDisturbancesForYear(int year);
+		inline void setDisturbances(vector<RVS::Disturbance::DisturbAction> dists) { disturbances = dists; }
+
 	private:
 		int plot_id;
 		std::string plot_name;
@@ -103,10 +108,11 @@ namespace DataManagement
 		int bps_num;
 		string bps_model_num;
 		int fallback_bps_num;
-		int huc;
 		std::string grp_id;
 		double latitude;
 		double longitude;
+
+		bool doNotModel;
 
 		double lower_confidence;
 		double upper_confidence;
@@ -132,14 +138,14 @@ namespace DataManagement
 		double shrubBiomass;
 
 		// All calculated fuels records, mapped to the type
-		//std::map<std::string, double> totalFuels;
+		std::map<std::string, double> totalFuels;
 		// Sum of 1, 10, 100 hour shrub fuels (g)
-		//double shrubFuels;
+		double shrubFuels;
 		// Herb fuel of the plot. Calculation :: production + holdover (lbs/ac)
-		//double herbFuels;
-		//int defaultFBFM;	// Default FBFM. Used if FBFM calculation fails
-		//int calcFBFM;		// Calculated FBFM
-		//bool dryClimate;	// Dry or humid BPS (true = dry)
+		double herbFuels;
+		int defaultFBFM;	// Default FBFM. Used if FBFM calculation fails
+		int calcFBFM;		// Calculated FBFM
+		bool dryClimate;	// Dry or humid BPS (true = dry)
 
 		std::vector<RVS::DataManagement::SppRecord*> shrubRecords;   // List of shrub records
 		std::vector<double> ndviValues;   // NDVI values for all years to be simulated
@@ -153,7 +159,14 @@ namespace DataManagement
 		// Builds the AnalysisPlot by querying the appropriate tables(s) in the database
 		void buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
 		// Get basic fuels information (FBFM, climate)
-		//void buildInitialFuels(RVS::DataManagement::DIO* dio);
+		void buildInitialFuels(RVS::DataManagement::DIO* dio);
+
+		vector<RVS::Disturbance::DisturbAction> disturbances;
+		bool disturbed;
+		double herbBiomassReduction;
+		double shrubBiomassReduction;
+
+
 	};
 }
 }

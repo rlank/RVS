@@ -165,7 +165,7 @@ int* RVS::Fuels::FuelsDIO::write_intermediate_record(int* year, RVS::DataManagem
 
 std::map<std::string, int> RVS::Fuels::FuelsDIO::query_crosswalk_table(std::string spp)
 {
-	std::map<std::string, int> equationNumbers = std::map<std::string, int>();
+	map<string, int> equationNumbers = map<string, int>();
 	// Create the sqlite3 statment to query biomass crosswalk table on species
 	const char* sql = query_base(FUEL_CROSSWALK_TABLE, SPP_CODE_FIELD, spp);
 	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
@@ -176,7 +176,7 @@ std::map<std::string, int> RVS::Fuels::FuelsDIO::query_crosswalk_table(std::stri
 	for (int i = 0; i < colNum; i++)
 	{
 		const char* colName = sqlite3_column_name(dt->getStmt(), i);
-		std::string colStr = std::string(colName);
+		string colStr = string(colName);
 		// If the column name matches the return type, return the equation number found there
 		if (colName[0] == 'F')
 		{
@@ -194,9 +194,9 @@ RVS::DataManagement::DataTable* RVS::Fuels::FuelsDIO::query_equation_table(std::
 	sqlstream << "SELECT * FROM " << FUEL_EQUATION_TABLE << " WHERE " << EQUATION_NUMBER_FIELD << " IN (";
 
 	int count = 0;
-	for (std::map<std::string, int>::iterator fit = equationNumbers.begin(); fit != equationNumbers.end(); fit++)
+	for (auto eq : equationNumbers)
 	{
-		sqlstream << fit->second;
+		sqlstream << eq.second;
 		if (count < equationNumbers.size() - 1)
 		{
 			sqlstream << ",";

@@ -31,6 +31,8 @@ namespace RVS
 	static const char* SUCCESSION_TABLE = "BPS_Growth_Rates";
 	static const char* PLANTS_TABLE = "Plants";
 	static const char* HERB_GROWTH_TABLE = "Herb_Growth";
+	static const char* DISTURBANCE_PLOT_TABLE = "Disturbance_Plots_NoFire";
+	static const char* DISTURBANCE_TABLE = "Disturbance";
 	// ********************
 
 	// Field names (primarily from input)
@@ -41,7 +43,10 @@ namespace RVS
 	static const char* HERB_COVER_FIELD = "herb_cover";
 	static const char* HERB_HEIGHT_FIELD = "herb_height";
 	static const char* BPS_NUM_FIELD = "BPS_CODE";
-	static const char* HUC_FIELD = "HUC";
+	static const char* BIOMASS_EQUATION_FIELD = "BAT2";
+	static const char* BIOMASS_BACKUP_SPP_CODE = "ARTR2";
+	static const char* STEMS_PER_ACRE_EQUATION_FIELD = "PCH";
+	static const char* FUELS_BACKUP_SPP_CODE = "ARTRT";
 	static const char* DOM_SPP_FIELD = "dom_spp";
 	static const char* SPP_CODE_FIELD = "spp_code";
 	static const char* LIFEFORM_FIELD = "Lifeform2";
@@ -69,6 +74,20 @@ namespace RVS
 
 	static const char* HERB_CC_GROWTH_FIELD = "CC_Slope";
 	static const char* HERB_HT_GROWTH_FIELD = "HT_Slope";
+
+	static const char* DIST_TYPE_FIELD = "DIST_TYPE";
+	static const char* DIST_SUBTYPE_FIELD = "DIST_SUBTYPE";
+	static const char* DIST_BEGIN_FIELD = "START_YEAR";
+	static const char* DIST_END_FIELD = "STOP_YEAR";
+	static const char* DIST_FREQ_FIELD = "FREQ";
+	static const char* DIST_VAL1_FIELD = "P1_VAL";
+	static const char* DIST_VAL2_FIELD = "P2_VAL";
+	static const char* DIST_VAL3_FIELD = "P3_VAL";
+	static const char* DIST_VAL1_NAME_FIELD = "P1_NAME";
+	static const char* DIST_VAL2_NAME_FIELD = "P2_NAME";
+	static const char* DIST_VAL3_NAME_FIELD = "P3_NAME";
+
+
 	// ********************
 
 	// Fuel classification fields
@@ -117,6 +136,8 @@ namespace RVS
 	static const char* BIOMASS_INTERMEDIATE_TABLE = "Biomass_Output_Spp";
 	static const char* FUELS_OUTPUT_TABLE = "Fuels_Output";
 	static const char* FUELS_INTERMEDIATE_TABLE = "Fuels_Output_Spp";
+	static const char* DISTURBANCE_OUTPUT_TABLE = "Disturbance_Output";
+	static const char* DISTURBANCE_INTERMEDIATE_TABLE = "Disturbance_Output_Spp";
 	// ********************
 
 	// Output table fields
