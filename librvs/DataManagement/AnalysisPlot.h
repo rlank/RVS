@@ -6,9 +6,6 @@
 
 #pragma once
 
-#ifndef ANALYSIS_PLOT_H
-#define ANALYSIS_PLOT_H
-
 #include <string>
 #include <vector>
 
@@ -66,20 +63,34 @@ namespace DataManagement
 		// Herbaceous cover (%)
 		inline double HERBCOVER() { return herbCover; }
 
+		inline void HERB_RESET_TEST_ONLY() { herbBiomass = 0; }
+
 		// Total herb biomass (lbs/ac)
 		inline double HERBBIOMASS() { return herbBiomass; }
-
+		inline const double RAWPRODUCTION() { return rawProduction; }
 		inline double PRIMARYPRODUCTION() { return primaryProduction; }
 		inline double HERBHOLDOVER() { return herbHoldoverBiomass; }
 
 		// Total shrub biomass (lbs/ac)
 		inline double SHRUBBIOMASS() { return shrubBiomass * GRAMS_TO_POUNDS; }
+
+		inline double SHRUBSINGLESTEM() { return shrubAvgStem * GRAMS_TO_POUNDS; }
 		// Total biomass (shrubs + herbs) (lbs/ac)
 		inline double TOTALBIOMASS() { return totalBiomass; }
-		// Collection of all calculated fuels values
-		inline std::map<std::string, double> TOTALFUELSCOLLECTION() { return totalFuels; }
+
+		// Fuels returns.  CONVERTS TO LBS/AC
+		inline const double SHRUB_1HR_WB() { return shrub1HourWB * GRAMS_TO_POUNDS; }
+		inline const double SHRUB_1HR_FOLIAGE() { return shrub1HourFoliage * GRAMS_TO_POUNDS; }
+		inline const double SHRUB_10HR() { return shrub10Hour * GRAMS_TO_POUNDS; }
+		inline const double SHRUB_100HR() { return shrub100Hour * GRAMS_TO_POUNDS; }
+		inline const double SHRUB_1000HR() { return shrub1000Hour * GRAMS_TO_POUNDS; }
+		inline const double FUEL_TOTAL_1HR() { return total1HrFuel * GRAMS_TO_POUNDS; }
+		inline const double HERB_FUEL() { return herbFuel * GRAMS_TO_POUNDS; }
+		inline const double FUEL_TOTAL() { return (shrub1HourWB + shrub1HourFoliage + shrub10Hour + shrub100Hour + shrub1000Hour + herbFuel) * GRAMS_TO_POUNDS; }
+
 		// Fuel model for the plot
 		inline int FBFM() { return calcFBFM == 0 ? defaultFBFM : calcFBFM; }
+		inline const string FBFM_NAME() { return fbfmName; }
 
 		inline int CURRENT_SUCCESSION_STAGE() { return currentStage; }
 		inline int TIME_IN_SUCCESSION_STAGE() { return timeInSuccessionStage; }
@@ -99,6 +110,9 @@ namespace DataManagement
 
 		std::vector<RVS::Disturbance::DisturbAction> getDisturbancesForYear(int year);
 		inline void setDisturbances(vector<RVS::Disturbance::DisturbAction> dists) { disturbances = dists; }
+
+		inline double HERB_DISTURB_AMOUNT() { return herbBiomassReduction; }
+		inline double SHRUB_DISTURB_AMOUNT() { return shrubBiomassReduction; }
 
 	private:
 		int plot_id;
@@ -132,20 +146,40 @@ namespace DataManagement
 		double herbBiomass;
 		// Herb holdover biomass (standing dead)
 		double herbHoldoverBiomass;
-
+		// Raw primary production, not reduced by shrub cover
+		double rawProduction;
+		// Production allocated for herbs, reduced by shrub cover
 		double primaryProduction;
 		// Shrub biomass for whole plot (g/ac)
 		double shrubBiomass;
 
-		// All calculated fuels records, mapped to the type
-		std::map<std::string, double> totalFuels;
+		double shrubAvgStem;
+
 		// Sum of 1, 10, 100 hour shrub fuels (g)
 		double shrubFuels;
 		// Herb fuel of the plot. Calculation :: production + holdover (lbs/ac)
 		double herbFuels;
+
+		//////////////// FUELS //////////////////
+		//all values held in grams or grams/ac///
+		/////////////////////////////////////////
 		int defaultFBFM;	// Default FBFM. Used if FBFM calculation fails
 		int calcFBFM;		// Calculated FBFM
 		bool dryClimate;	// Dry or humid BPS (true = dry)
+		string fbfmName;
+
+		double fuel1HrProp;      // 1 Hr wood + bark proportion
+		double fuelFoilageProp;  // 1 Hr foliage proportion
+		double fuel10HrProp;     // 10 Hr wood + bark proportion
+		double fuel100HrProp;    // 100 Hr wood + bark proportion
+
+		double shrub1HourWB;
+		double shrub1HourFoliage;
+		double shrub10Hour;
+		double shrub100Hour;
+		double shrub1000Hour;
+		double total1HrFuel;   // 1 Hr Herbs, 1 Hr shrub W+B, 1 Hr shrub foliage
+		double herbFuel; 
 
 		std::vector<RVS::DataManagement::SppRecord*> shrubRecords;   // List of shrub records
 		std::vector<double> ndviValues;   // NDVI values for all years to be simulated
@@ -170,5 +204,3 @@ namespace DataManagement
 	};
 }
 }
-
-#endif

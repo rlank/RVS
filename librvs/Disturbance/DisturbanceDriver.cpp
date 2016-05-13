@@ -25,6 +25,8 @@ int* RVS::Disturbance::DisturbanceDriver::DisturbanceMain(int year, RVS::DataMan
 	if (disturbances.size() == 0)
 	{
 		ap->disturbed = false;
+		ap->herbBiomassReduction = 0;
+		ap->shrubBiomassReduction = 0;
 	}
 	else
 	{

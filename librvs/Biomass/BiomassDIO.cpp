@@ -24,6 +24,7 @@ int* RVS::Biomass::BiomassDIO::create_output_table()
 		"NDVI REAL, " << "PPT REAL, " << \
 		BIOMASS_SHRUB_OUT_FIELD << " REAL, " << \
 		BIOMASS_HERB_OUT_FIELD << " REAL, " << \
+		BIOMASS_RAW_PRODUCTION_FIELD << " REAL," << \
 		BIOMASS_HERB_PP_FIELD << " REAL, " << \
 		BIOMASS_HERB_HOLDOVER_FIELD << " REAL, " << \
 		BIOMASS_TOTAL_OUT_FIELD << " REAL, " << \
@@ -35,6 +36,8 @@ int* RVS::Biomass::BiomassDIO::create_output_table()
 		UPPER_BOUND_FIELD << " REAL, " << \
 		"range" << " REAL, " << \
 		S2Y_FIELD << " REAL, " << \
+		DISTURBANCE_HERB_FIELD << " REAL, " << \
+		DISTURBANCE_SHRUB_FIELD << " REAL, " << \
 		LATITUDE_FIELD << " FLOAT, " << \
 		LONGITUDE_FIELD << " FLOAT);";
 
@@ -59,6 +62,7 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		BIOMASS_TOTAL_OUT_FIELD << ", "<< \
 		BIOMASS_SHRUB_OUT_FIELD << ", " << \
 		BIOMASS_HERB_OUT_FIELD << ", " << \
+		BIOMASS_RAW_PRODUCTION_FIELD << ", " << \
 		BIOMASS_HERB_PP_FIELD << ", " << \
 		BIOMASS_HERB_HOLDOVER_FIELD << ", " << \
 		HERB_COVER_FIELD << ", " << \
@@ -69,6 +73,8 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		UPPER_BOUND_FIELD << ", " << \
 		"range" << ", " << \
 		S2Y_FIELD << ", " << \
+		DISTURBANCE_HERB_FIELD << ", " << \
+		DISTURBANCE_SHRUB_FIELD << ", " << \
 		LATITUDE_FIELD << ", " << \
 		LONGITUDE_FIELD << ") " << \
 		"VALUES (" << \
@@ -78,11 +84,12 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		ap->BPS_NUM() << ",\"" << \
 		ap->BPS_MODEL_NUM() << "\",\"" << \
 		ap->GRP_ID() << "\"," << \
-		ap->getNDVI("Normal", false) << "," << \
-		ap->getPPT("Normal", false) << "," << \
+		ap->getNDVI(*CLIMATE, false) << "," << \
+		ap->getPPT(*CLIMATE, false) << "," << \
 		ap->TOTALBIOMASS() << "," << \
 		ap->SHRUBBIOMASS() << "," << \
 		ap->HERBBIOMASS() << "," << \
+		ap->RAWPRODUCTION() << "," << \
 		ap->PRIMARYPRODUCTION() << "," << \
 		ap->HERBHOLDOVER() << "," << \
 		ap->HERBCOVER() << "," << \
@@ -93,6 +100,8 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		ap->UPPER_BOUND() << "," << \
 		(ap->UPPER_BOUND() - ap->LOWER_BOUND()) << "," << \
 		ap->S2Y() << "," << \
+		ap->HERB_DISTURB_AMOUNT() << "," << \
+		ap->SHRUB_DISTURB_AMOUNT() << "," << \
 		std::setprecision(10) << ap->LATITUDE() << "," << \
 		std::setprecision(10) << ap->LONGITUDE() << ");";
 

@@ -9,9 +9,6 @@
 
 #pragma once
 
-#ifndef BIOMASSDRIVER_H
-#define BIOMASSDRIVER_H
-
 #include <iostream>
 
 #include "BiomassDIO.h"
@@ -69,5 +66,3 @@ namespace Biomass
 	};
 }
 }
-
-#endif

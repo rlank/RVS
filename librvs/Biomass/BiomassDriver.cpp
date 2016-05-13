@@ -26,7 +26,7 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 	double totalShrubBiomass = 0;
 	double totalHerbBiomass = 0;
 
-	if (plot_num == 20)
+	if (plot_num == 68)
 	{
 		int asdasds = 0;
 	}
@@ -37,7 +37,9 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 	vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 	double totalShrubCover = 0;
 	double runShrubHeight = 0;
+	double runShrubStem = 0;
 	double averageHeight = 0;
+	double averageStem = 0;
 
 	if (shrubs->empty())
 	{
@@ -58,9 +60,10 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 			totalShrubBiomass += s->exShrubBiomass;
 
 			totalShrubCover += s->cover;
+			runShrubStem += singleBiomass * s->cover;
 			runShrubHeight += s->height * s->cover;
 		}
-
+		/*
 		if (ap->shrubBiomassReduction > 0)
 		{
 			double reduceRatio = ap->shrubBiomassReduction / totalShrubBiomass;
@@ -75,11 +78,20 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 				double shrubRatio = s->exShrubBiomass / totalShrubBiomass;
 				double reduceAmount = 1 - (reduceRatio * shrubRatio);
 				s->cover *= reduceAmount;
-				s->exShrubBiomass *= reduceAmount;
+				s->height *= reduceAmount;
+
+				double stemsPerAcre = calcStemsPerAcre(s);
+				s->stemsPerAcre = stemsPerAcre;
+				double singleBiomass = calcShrubBiomass(s);
+
+				s->shrubBiomass = singleBiomass;
+				s->exShrubBiomass = singleBiomass * stemsPerAcre;
+				totalShrubBiomass += s->exShrubBiomass;
 				totalShrubCover += s->cover;
 				runShrubHeight += s->height * s->cover;
 			}
 		}
+		*/
 
 		for (auto &s : *shrubs)
 		{
@@ -88,8 +100,13 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 		}
 
 		averageHeight = runShrubHeight / totalShrubCover;
+		averageStem = runShrubStem / totalShrubCover;
 	}
-	
+
+	ap->shrubCover = totalShrubCover;
+	ap->shrubHeight = averageHeight;
+	ap->shrubAvgStem = averageStem;
+
 	/////////// HERBS ///////////
 
 	double oldBiomass = ap->herbBiomass;
@@ -128,14 +145,12 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 
 	// Save output data
 	ap->primaryProduction = totalHerbBiomass;
-	ap->shrubCover = totalShrubCover;
-	ap->shrubHeight = averageHeight;
-	ap->herbBiomass = totalHerbBiomass + ap->herbHoldoverBiomass - ap->herbBiomassReduction;
-	ap->shrubBiomass = totalShrubBiomass - ap->shrubBiomassReduction;
-	ap->totalBiomass = ap->SHRUBBIOMASS() + ap->HERBBIOMASS();
 
-	ap->herbBiomassReduction = 0;
-	ap->shrubBiomassReduction = 0;
+	//ap->herbBiomass = totalHerbBiomass + ap->herbHoldoverBiomass - ap->herbBiomassReduction;
+	ap->herbBiomass = totalHerbBiomass + ap->herbHoldoverBiomass;
+	//ap->shrubBiomass = totalShrubBiomass - ap->shrubBiomassReduction;
+	ap->shrubBiomass = totalShrubBiomass;
+	ap->totalBiomass = ap->SHRUBBIOMASS() + ap->HERBBIOMASS();
 
 	// Write output biomass record
 	RC = bdio->write_output_record(&year, ap);
@@ -148,11 +163,20 @@ double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 	// Get the equation number for BAT (total aboveground biomass)
 	int equationNumber = 0;
 	
+	
 	equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), BIOMASS_EQUATION_FIELD);
-
 	if (equationNumber == 0)
 	{
 		equationNumber = bdio->query_crosswalk_table(BIOMASS_BACKUP_SPP_CODE, BIOMASS_EQUATION_FIELD);
+	}
+
+	if (equationNumber == 1160 && record->requestValue("VOL") > 20000)
+	{
+		equationNumber = 1160;
+	}
+	else if (equationNumber == 1160)
+	{
+		equationNumber = 1161;
 	}
 
 	record->batEqNum = equationNumber;
@@ -213,14 +237,20 @@ double BiomassDriver::calcHerbBiomass(int year)
 	double ndvi = ap->getNDVI(*climate, false);
 	double ppt = ap->getPPT(*climate, false);
 
+	double ln_ndvi = log(ndvi);
+	double ln_ppt = log(ppt);
+
+	double rawProduction = -5.2058235 + (ln_ppt * 0.1088213) + (ln_ndvi * 1.386304);
+	ap->rawProduction = exp(rawProduction);
+
 	// Modify NDVI and PPT as a function of NOT SHRUB cover
 	double adjust = 1 - (ap->SHRUBCOVER() / 100);
 
 	ndvi = ndvi * adjust;
 	ppt = ppt * adjust;
 
-	double ln_ndvi = log(ndvi);
-	double ln_ppt = log(ppt);
+	ln_ndvi = log(ndvi);
+	ln_ppt = log(ppt);
 
 	double biomass = -5.2058235 + (ln_ppt * 0.1088213) + (ln_ndvi * 1.386304);
 	return biomass;

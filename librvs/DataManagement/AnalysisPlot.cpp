@@ -23,7 +23,6 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	shrubRecords = vector<SppRecord*>();
 	ndviValues = vector<double>();
 	precipValues = vector<double>();
-	totalFuels = map<string, double>();
 	disturbances = vector<Disturbance::DisturbAction>();
 	disturbed = false;
 	herbBiomassReduction = 0;
@@ -94,16 +93,6 @@ void AnalysisPlot::push_shrub(RVS::DataManagement::SppRecord* record)
 void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 {
 	dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
-	/*
-	try
-	{
-		dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
-	}
-	catch (RVS::DataManagement::DataNotFoundException &ex)
-	{
-		dio->query_fuels_basic_info(&fallback_bps_num, &defaultFBFM, &dryClimate);
-	}
-	*/
 }
 
 

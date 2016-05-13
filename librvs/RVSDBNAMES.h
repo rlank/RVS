@@ -3,22 +3,17 @@
 // field names for input/output. Eventually, this will
 // be replaced by the RVS Dataloader which will load
 // data into expected tables.
-// Last Modified: 19 Jun 14
+// Last Modified: 18 Apr 16
 //############################################//
 
 #pragma once
 
-#ifndef RVSDBNAMES_H
-#define RVSDBNAMES_H
-
 namespace RVS
 {
 	// Primary table names. Replace with externs as needed
-	static const char* RVS_INPUT_TABLE = "Plots_NoSclass";
-	static const char* SHRUB_INPUT_TABLE = "Shrubs";
-	static const char* BPS_HUC_TABLE = "BPS_HUC_Master";
+	static const char* RVS_INPUT_TABLE = "Plots_FCCS";
+	static const char* SHRUB_INPUT_TABLE = "Shrubs_FCCS";
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
-	static const char* BIOMASS_PRIMARYPRODUCTION_TABLE = "Bio_PP_KgH";
 	static const char* BIOMASS_EQUATION_TABLE = "Bio_Equation";
 	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT3";
 	static const char* BIOMASS_GROUP_COEFS_TABLE = "Bio_Group_Coef_Cross";
@@ -149,15 +144,14 @@ namespace RVS
 	static const char* BIOMASS_SHRUB_OUT_FIELD = "shrub_biomass";
 	static const char* BIOMASS_TOTAL_OUT_FIELD = "total_biomass";
 	static const char* BIOMASS_SHRUB_CALC_FIELD = "biomass_calc";
-	static const char* FUEL_1HR_OUT_FIELD = "FS1";
-	static const char* FUEL_10HR_OUT_FIELD = "FS2";
-	static const char* FUEL_100HR_OUT_FIELD = "FS3";
-	static const char* FUEL_1HRLIVE_OUT_FIELD = "FL1";
-	static const char* FUEL_10HRLIVE_OUT_FIELD = "FL2";
-	static const char* FUEL_100HRLIVE_OUT_FIELD = "FL3";
-	static const char* FUEL_1HRDEAD_OUT_FIELD = "FD1";
-	static const char* FUEL_10HRDEAD_OUT_FIELD = "FD2";
-	static const char* FUEL_100HRDEAD_OUT_FIELD = "FD3";
+	static const char* FUEL_1HR_SHRUB_WB = "shrub_1hr_woodbark";
+	static const char* FUEL_1HR_SHRUB_FOLIAGE = "shrub_1hr_foliage";
+	static const char* FULE_1HR_HERB = "herb_fuel";
+	static const char* FUEL_1HR_TOTAL = "fuel_1hr";
+	static const char* FUEL_10HR_FIELD = "fuel_10hr";
+	static const char* FUEL_100HR_FIELD = "fuel_100hr";
+	static const char* FUEL_1000HR_FIELD = "fuel_1000hr";
+	static const char* FUEL_TOTAL_FIELD = "total_fuels";
 	static const char* UPPER_BOUND_FIELD = "upper_bound";
 	static const char* LOWER_BOUND_FIELD = "lower_bound";
 	static const char* S2Y_FIELD = "s2y";
@@ -166,9 +160,13 @@ namespace RVS
 	static const char* PCH_CALC_FIELD = "pch";
 	static const char* BIOMASS_EQU_NUM = "bio_eq";
 
+	static const char* BIOMASS_RAW_PRODUCTION_FIELD = "raw_production";
 	static const char* BIOMASS_HERB_PP_FIELD = "primary_production";
 	static const char* BIOMASS_HERB_HOLDOVER_FIELD = "herb_holdover";
 
+	static const char* DISTURBANCE_HERB_FIELD = "herb_disturbance";
+	static const char* DISTURBANCE_SHRUB_FIELD = "shrub_disturbance";
+
 	// ********************
 }
-#endif
+

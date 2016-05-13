@@ -296,8 +296,21 @@ void RVS::Succession::SuccessionDriver::growStage(std::map<string, string> strVa
 
 		double divCover = 0;
 		double divHeight = 0;
-		if (ap->shrubCover < max_cover) { divCover = cov_growth / shrubs->size(); }
-		if (ap->shrubHeight < max_height) { divHeight = ht_growth / shrubs->size(); }
+		// We cannot allow cover to exceed 100, so check that growth won't go over max
+		if (ap->shrubCover + cov_growth < max_cover) 
+		{ 
+			divCover = cov_growth / shrubs->size(); 
+		}
+		else 
+		{
+			divCover = (max_cover - ap->SHRUBCOVER()) / shrubs->size();
+		}
+
+		// We allow height to grow beyond max height, as this is possible
+		if (ap->shrubHeight < max_height)
+		{
+			divHeight = ht_growth / shrubs->size();
+		}
 
 		for (int r = 0; r < shrubs->size(); r++)
 		{
