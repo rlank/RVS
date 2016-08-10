@@ -25,8 +25,8 @@ int* RVS::Disturbance::DisturbanceDriver::DisturbanceMain(int year, RVS::DataMan
 	if (disturbances.size() == 0)
 	{
 		ap->disturbed = false;
-		ap->herbBiomassReduction = 0;
-		ap->shrubBiomassReduction = 0;
+		ap->burned = false;
+		ap->biomassReductionTotal = 0;
 	}
 	else
 	{
@@ -42,6 +42,7 @@ int* RVS::Disturbance::DisturbanceDriver::DisturbanceMain(int year, RVS::DataMan
 			if (action.compare(fire) == 0)
 			{
 				burnPlot(d.getActionSubType(), 0.0);
+				ap->burned = true;
 			}
 			else if (action.compare(graze) == 0)
 			{
@@ -62,6 +63,7 @@ int* RVS::Disturbance::DisturbanceDriver::DisturbanceMain(int year, RVS::DataMan
 					grazeType = cow;
 				}
 
+				//$ TODO get the parameter names from the database
 				grazePlot(grazeType, params["NUMBER"], params["AREA"], params["LENGTH"]);
 			}
 		}
@@ -73,31 +75,38 @@ void RVS::Disturbance::DisturbanceDriver::burnPlot(const string fireType, float 
 {
 	ap->herbHeight = 1;
 	ap->herbCover = 1;
-	ap->shrubRecords.clear();
+	ap->primaryProduction = 0;
+	ap->herbHoldoverBiomass = 0;
+	ap->previousHerbProductions[0] = 0;
+	ap->previousHerbProductions[1] = 0;
+	ap->previousHerbProductions[2] = 0;
+
+
+	for (auto &s : *(ap->SHRUB_RECORDS()))
+	{
+		s->height = 0.01;
+		s->cover = 0.01;
+	}
 }
 
 void RVS::Disturbance::DisturbanceDriver::grazePlot(GRAZE_TYPE grazeType, double numberGrazers, double plotArea, double grazeTime)
 {
-	double totalcover = ap->SHRUBCOVER() + ap->HERBCOVER();
-	double herbCoverRatio = ap->HERBCOVER() / totalcover;
-	double shrubCoverRatio = ap->SHRUBCOVER() / totalcover;
-
+	// The removeAmount is calculated in lbs/ac and saved as g/ac
 	double removeAmount;
 
 	switch (grazeType)
 	{
 	case cow:
 		removeAmount = (cow_multiplier * numberGrazers * grazeTime) / plotArea;
-		ap->herbBiomassReduction = removeAmount;
 		break;
 	case sheep:
 	case goat:
 		removeAmount = (small_multiplier * numberGrazers * grazeTime) / plotArea;
-		ap->herbBiomassReduction = removeAmount * herbCoverRatio;
-		ap->shrubBiomassReduction = (removeAmount * ap->POUNDS_TO_GRAMS) * shrubCoverRatio;
 		break;
 	default:
 		break;
 	}
+
+	ap->biomassReductionTotal = removeAmount * ap->POUNDS_TO_GRAMS;
 }
 

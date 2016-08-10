@@ -12,6 +12,7 @@
 #include <map>
 
 #include "../DataManagement/AnalysisPlot.h"
+#include "../Disturbance/DisturbAction.h"
 #include "FuelsDIO.h"
 #include "FuelsEquations.h"
 
@@ -41,17 +42,6 @@ namespace Fuels
 		// Processes a record in the equation table to calculate a fuel value
 		double calcShrubFuel(int equationNumber, RVS::DataManagement::SppRecord* spp);
 
-		// Determine which FBFM classification table to use by checking rules
-		string determineFBFMClassTable(RVS::DataManagement::AnalysisPlot* ap);
-
-		// Use class ruleset to determine FBFM
-		int calcFBFM(string classTable, RVS::DataManagement::AnalysisPlot* ap);
-
-		// DEPRECIATED FBFM
-		int calcFBFMGrass(string classTable, RVS::DataManagement::AnalysisPlot* ap);
-		int calcFBFMShrub(string classTable, RVS::DataManagement::AnalysisPlot* ap);
-		int calcFBFMMixed(string classTable, RVS::DataManagement::AnalysisPlot* ap);
-
 		// Current FBFM
 		string calcFBFMDry();
 		string calcFBFMHumid();
@@ -66,7 +56,7 @@ namespace Fuels
 		double calc100HrFuel(double biomass);
 		double calc1000HrFuel(double height);
 
-		void applyDisturbance();
+		void applyDisturbance(int year);
 	};
 }
 }

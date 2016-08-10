@@ -17,41 +17,14 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 
 	vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 
+	if (ap->PLOT_ID() == 66)
+	{
+		int asdasdasd = 0;
+	}
+
 	int plot_num = ap->PLOT_ID();
 	int evt_num = ap->EVT_NUM();
 	int bps = ap->BPS_NUM();
-
-	/*
-	double totalShrubFuel = 0;
-	for (auto &s : *shrubs)
-	{
-		SppRecord* current = s;
-
-		// Equation numbers for each fuels calculation
-		map<string, int> equationNumbers;
-
-		equationNumbers = fdio->query_crosswalk_table(current->SPP_CODE());
-
-		if (equationNumbers.size() == 0)
-		{
-			equationNumbers = fdio->query_crosswalk_table(FUELS_BACKUP_SPP_CODE);
-		}
-
-		// Loop through the equations and calculate each fuel
-		for (map<string, int>::iterator et = equationNumbers.begin(); et != equationNumbers.end(); et++)
-		{
-			int equationNumber = et->second;
-
-			
-		}
-
-
-		// Write out the individual (shrub) record
-		RC = fdio->write_intermediate_record(&year, ap, current);
-	}
-	*/
-
-	
 	
 	double shrub1HourWB = calc1HrWoodBark(ap->shrubBiomass);
 	double shrub1HourFoliage = calc1HrFoliage(ap->shrubBiomass);
@@ -61,17 +34,16 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 	
 	double bio = ap->shrubBiomass;
 
-	double herbFuel = ap->primaryProduction * ap->POUNDS_TO_GRAMS;
+	double herbFuel = ap->herbBiomass * ap->POUNDS_TO_GRAMS;
 	double fuelTot = shrub1HourWB + shrub1HourFoliage + shrub10Hour + shrub100Hour + shrub1000Hour;
 
-	//double propTot = fuelTot / bio * 100;
 	double prop1HrWB = shrub1HourWB / fuelTot;
 	double prop1HrFol = shrub1HourFoliage / fuelTot;
 	double prop10Hr = shrub10Hour / fuelTot;
 	double prop100Hr = shrub100Hour / fuelTot;
 	double prop1000Hr = shrub1000Hour / fuelTot;
 
-	double propTotal = prop1HrWB + prop1HrFol + prop10Hr + prop100Hr + prop1000Hr;  // just checking
+	//double propTotal = prop1HrWB + prop1HrFol + prop10Hr + prop100Hr + prop1000Hr;  // just checking
 
 	ap->herbFuel = herbFuel;
 	ap->shrub1HourWB = bio * prop1HrWB;
@@ -84,21 +56,17 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 
 	if (ap->disturbed)
 	{
-		//applyDisturbance();
+		applyDisturbance(year);
 	}
 
-
-	//string fuelClassTable = determineFBFMClassTable(ap);
-	//int fuelModel = calcFBFM(fuelClassTable, ap);
-	//ap->calcFBFM = fuelModel;
-
-	if (ap->ISDRY())
+	if (ap->FUEL_TOTAL() < 200)
 	{
-		ap->fbfmName = calcFBFMDry();
+		ap->fbfmName = "NB";
 	}
 	else
 	{
-		ap->fbfmName = calcFBFMHumid();
+		if (ap->ISDRY()) { ap->fbfmName = calcFBFMDry(); }
+		else { ap->fbfmName = calcFBFMHumid(); }
 	}
 
 	// Write out the total fuels record
@@ -128,333 +96,92 @@ double RVS::Fuels::FuelsDriver::calcShrubFuel(int equationNumber, RVS::DataManag
 	return fuel;
 }
 
-std::string RVS::Fuels::FuelsDriver::determineFBFMClassTable(RVS::DataManagement::AnalysisPlot* ap)
-{
-	RVS::DataManagement::DataTable* dt = fdio->query_fbfm_rules_selector();
-	*RC = sqlite3_step(dt->getStmt());
-
-	std::string fuelClassTable;
-	double shrubCovLo = 0;
-	double shrubCovHi = 0;
-	double herbProdLo = 0;
-	double herbProdHi = 0;
-
-	int shrubCovLoCol = dt->Columns[FC_SHRUB_COV_LOWER];
-	int shrubCovHiCol = dt->Columns[FC_SHRUB_COV_UPPER];
-	int herbProdLoCol = dt->Columns[FC_HERB_PROD_LOWER];
-	int herbProdHiCol = dt->Columns[FC_HERB_PROD_UPPER];
-	int fuelClassTableCol = dt->Columns[FC_RULE_TABLE_FIELD];
-
-	bool pass = true;
-
-	while (*RC == SQLITE_ROW)
-	{
-		fdio->getVal(dt->getStmt(), shrubCovLoCol, &shrubCovLo);
-		fdio->getVal(dt->getStmt(), shrubCovHiCol, &shrubCovHi);
-		fdio->getVal(dt->getStmt(), herbProdLoCol, &herbProdLo);
-		fdio->getVal(dt->getStmt(), herbProdHiCol, &herbProdHi);
-
-		if (shrubCovLo != -1)
-		{
-			if (shrubCovLo > ap->shrubCover)
-			{
-				pass = false;
-			}
-		}
-		if (shrubCovHi != -1)
-		{
-			if (shrubCovHi < ap->shrubCover)
-			{
-				pass = false;
-			}
-		}
-		if (herbProdLo != -1)
-		{
-			if (herbProdLo > ap->herbBiomass)
-			{
-				pass = false;
-			}
-		}
-		if (herbProdHi != -1)
-		{
-			if (herbProdHi < ap->herbBiomass)
-			{
-				pass = false;
-			}
-		}
-
-		if (pass == true)
-		{
-			fdio->getVal(dt->getStmt(), fuelClassTableCol, &fuelClassTable);
-		}
-
-		*RC = sqlite3_step(dt->getStmt());
-		pass = true;
-	}
-	*RC = sqlite3_reset(dt->getStmt());
-	return fuelClassTable;
-}
-
-int RVS::Fuels::FuelsDriver::calcFBFM(std::string classTable, RVS::DataManagement::AnalysisPlot* ap)
-{
-	int ret = 0;
-
-	if ((int)classTable.find("Grass") > 0)
-	{
-		ret = calcFBFMGrass(classTable, ap);
-	}
-	else if ((int)classTable.find("Shrub") > 0)
-	{
-		ret = calcFBFMShrub(classTable, ap);
-	}
-	else if ((int)classTable.find("Mixed") > 0)
-	{
-		ret = calcFBFMMixed(classTable, ap);
-	}
-
-	return ret;
-}
-
 string RVS::Fuels::FuelsDriver::calcFBFMDry()
 {
-	double shrubRelativeCover = ap->SHRUBCOVER() / (ap->SHRUBCOVER() + ap->HERBCOVER());
-	double herbRelativeCover = ap->HERBCOVER() / (ap->SHRUBCOVER() + ap->HERBCOVER());
+	double shrubRelativeFuel = (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB()) / ap->FUEL_TOTAL_1HR();
+	double herbRelativeFuel = ap->HERB_FUEL() / ap->FUEL_TOTAL_1HR();
+
 	string FBFM = "";
 
 	// First determine stand type
 	// SHRUB TYPE
-	if (shrubRelativeCover >= .9) 
+	if (shrubRelativeFuel >= .8)
 	{
-		if (ap->FUEL_TOTAL_1HR() <= 1500 && ap->FUEL_TOTAL() <= 4000) { FBFM = "SH1"; }
-		else if (ap->FUEL_TOTAL_1HR() >= 1500 && ap->FUEL_TOTAL_1HR() < 3000) {	FBFM = "SH2"; }
-		else if (ap->FUEL_TOTAL_1HR() >= 3000 && ap->FUEL_TOTAL() < 20000 && ap->SHRUBHEIGHT() > 91.44) { FBFM = "SH5";	}
-		else if (ap->FUEL_TOTAL_1HR() >= 3000 && ap->FUEL_TOTAL() >= 20000 && ap->SHRUBHEIGHT() > 91.44) { FBFM = "SH7"; }
+		if (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB() <= 1500) { FBFM = "SH1"; }
+		else if (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB() < 5000) { FBFM = "SH2"; }
+		else if (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB() + ap->SHRUB_10HR() + ap->SHRUB_100HR() <= 12000) { FBFM = "SH5"; }
+		else if (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB() + ap->SHRUB_10HR() + ap->SHRUB_100HR() > 12000) { FBFM = "SH7"; }
 		else { FBFM = "Unk1"; }
 	}
-	// MIXED TYPE
-	else if (shrubRelativeCover >= .1 && ap->SHRUBHEIGHT() >= 30.48 && ap->HERB_FUEL()*ap->GRAMS_TO_POUNDS >= 200)  
-	{
-		if (ap->HERB_FUEL() < 1500 && ap->FUEL_TOTAL() < 4000) { FBFM = "GS1"; }
-		else if (ap->HERB_FUEL() >= 1500 && ap->FUEL_TOTAL() >= 4000) {	FBFM = "GS2"; }
-		else { FBFM = "Unk2"; }
-	}
 	// GRASS TYPE
-	else if (herbRelativeCover >= .9 && ap->HERBCOVER() >= .1)
+	else if (herbRelativeFuel >= .8)
 	{
-		if (ap->HERB_FUEL() <= 1200 && ap->HERBHEIGHT() <= 30.48) { FBFM = "GR1"; }
-		else if (ap->HERB_FUEL() > 1200 && ap->HERB_FUEL() <= 3000 && ap->HERBHEIGHT() < 60.96) { FBFM = "GR2"; }
-		else if (ap->HERB_FUEL() > 1200 && ap->HERB_FUEL() <= 3000 && ap->HERBHEIGHT() >= 60.96) { FBFM = "GR3"; }
-		else if (ap->HERB_FUEL() > 3000 && ap->HERB_FUEL() <= 6000) { FBFM = "GR4"; }
-		else if (ap->HERB_FUEL() > 6000) { FBFM = "GR7"; }
+		if (ap->HERB_FUEL() <= 1000) { FBFM = "GR1"; }
+		else if (ap->HERB_FUEL() <= 2500) { FBFM = "GR2"; }
+		else if (ap->HERB_FUEL() <= 7500) { FBFM = "GR4"; }
+		else if (ap->HERB_FUEL() > 7500) { FBFM = "GR7"; }
 		else { FBFM = "Unk3"; }
 	}
+	// MIXED TYPE
+	else
+	{
+		//if (ap->FUEL_TOTAL() < 3000) { FBFM = "GS1"; }
+		//else if (ap->FUEL_TOTAL() > 3000) {	FBFM = "GS2"; }
+		if (ap->HERB_FUEL() <= 1000) { FBFM = "GS1"; }
+		else if (ap->HERB_FUEL() > 1000) { FBFM = "GS2"; }
+		else { FBFM = "Unk2"; }
+	}
+	
 	if (FBFM.compare("") == 0)
 	{
 		FBFM = "Unk7";
 	}
+
 	return FBFM;
 }
 
 string RVS::Fuels::FuelsDriver::calcFBFMHumid()
 {
-	double shrubRelativeCover = ap->SHRUBCOVER() / (ap->SHRUBCOVER() + ap->HERBCOVER());
-	double herbRelativeCover = ap->HERBCOVER() / (ap->SHRUBCOVER() + ap->HERBCOVER());
+	double shrubRelativeFuel = (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB()) / ap->FUEL_TOTAL_1HR();
+	double herbRelativeFuel = ap->HERB_FUEL() / ap->FUEL_TOTAL_1HR();
+
 	string FBFM = "";
 
 	// First determine stand type
 	// SHRUB TYPE
-	if (shrubRelativeCover >= .9)
+	if (shrubRelativeFuel >= .8)
 	{
-		if (ap->FUEL_TOTAL() >= 15000 && ap->FUEL_TOTAL() <= 20000 && ap->SHRUBHEIGHT() >= 60.96) { FBFM = "SH3"; }
-		else if (ap->FUEL_TOTAL() < 15000 && ap->SHRUBHEIGHT() >= 60.96) { FBFM = "SH4"; }
-		else if (ap->FUEL_TOTAL() >= 8000 && ap->FUEL_TOTAL() <= 15000 && ap->SHRUBHEIGHT() < 45.72) { FBFM = "SH6"; }
-		else if (ap->FUEL_TOTAL() >= 20000 && ap->FUEL_TOTAL() <= 25000 && ap->SHRUBHEIGHT() > 60.96) { FBFM = "SH8"; }
-		else if (ap->FUEL_TOTAL() >= 25000 && ap->SHRUBHEIGHT() > 106.68) { FBFM = "SH8"; }
-		else { FBFM = "Unk4"; }
-	}
-	// MIXED TYPE
-	else if (shrubRelativeCover >= .1 && ap->SHRUBHEIGHT() >= 30.48 && ap->HERB_FUEL()*ap->GRAMS_TO_POUNDS >= 200)
-	{
-		if (ap->HERB_FUEL() > 500 && ap->FUEL_TOTAL() >= 2500 && ap->FUEL_TOTAL() < 7000) { FBFM = "GS3"; }
-		else if (ap->HERB_FUEL() > 4000 && ap->FUEL_TOTAL() >= 7000) { FBFM = "GS4"; }
-		else { FBFM = "Unk5"; }
+		if (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB() <= 1000) { FBFM = "SH3"; }
+		else if (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB() + ap->SHRUB_10HR() + ap->SHRUB_100HR() < 5000) { FBFM = "SH4"; }
+		else if (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB() + ap->SHRUB_10HR() + ap->SHRUB_100HR() <= 9000) { FBFM = "SH6"; }
+		else if (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB() + ap->SHRUB_10HR() + ap->SHRUB_100HR() <= 5000) { FBFM = "SH8"; }
+		else if (ap->SHRUB_1HR_FOLIAGE() + ap->SHRUB_1HR_WB() > 5000) { FBFM = "SH9"; }
+		else { FBFM = "Unk1"; }
 	}
 	// GRASS TYPE
-	else if (herbRelativeCover >= .9 && ap->HERBCOVER() >= .1)
+	else if (herbRelativeFuel >= .8)
 	{
 		if (ap->HERB_FUEL() <= 4500) { FBFM = "GR3"; }
-		else if (ap->HERB_FUEL() > 4500 && ap->FUEL_TOTAL() < 6500) { FBFM = "GR5"; }
-		else if (ap->HERB_FUEL() >= 6500 && ap->FUEL_TOTAL() < 12000) { FBFM = "GR6"; }
-		else if (ap->HERB_FUEL() >= 12000 && ap->FUEL_TOTAL() < 17000) { FBFM = "GR8"; }
-		else if (ap->HERB_FUEL() > 17000) { FBFM = "GR9"; }
-		else { FBFM = "Unk6"; }
+		else if (ap->HERB_FUEL() <= 6000) { FBFM = "GR5"; }
+		else if (ap->HERB_FUEL() <= 8000) { FBFM = "GR6"; }
+		else if (ap->HERB_FUEL() <= 20000) { FBFM = "GR8"; }
+		else if (ap->HERB_FUEL() > 20000) { FBFM = "GR9"; }
+		else { FBFM = "Unk3"; }
 	}
+	// MIXED TYPE
+	else
+	{
+		if (ap->FUEL_TOTAL() < 5500) { FBFM = "GS3"; }
+		else if (ap->FUEL_TOTAL() > 3000) { FBFM = "GS4"; }
+		else { FBFM = "Unk2"; }
+	}
+
+	
 	if (FBFM.compare("") == 0)
 	{
 		FBFM = "Unk8";
 	}
 	return FBFM;
-}
-
-
-int RVS::Fuels::FuelsDriver::calcFBFMGrass(std::string classTable, RVS::DataManagement::AnalysisPlot* ap)
-{
-	RVS::DataManagement::DataTable* dt = fdio->query_fbfm_rules(classTable);
-	*RC = sqlite3_step(dt->getStmt());
-
-	double herbBiomass = ap->herbBiomass;
-	double lowerBound = 0;
-	double upperBound = 0;
-	bool pass = false;
-	while (*RC == SQLITE_ROW && pass == false)
-	{
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_HERB_1HR_LOWER], &lowerBound);
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_HERB_1HR_UPPER], &upperBound);
-
-		if (herbBiomass > lowerBound && herbBiomass < upperBound)
-		{
-			pass = true;
-		}
-		else
-		{
-			*RC = sqlite3_step(dt->getStmt());
-		}
-	}
-
-	*RC = sqlite3_reset(dt->getStmt());
-
-	int fbfm = switchClimateFBFM(dt, ap);
-	return fbfm;
-}
-
-int RVS::Fuels::FuelsDriver::calcFBFMShrub(std::string classTable, RVS::DataManagement::AnalysisPlot* ap)
-{
-	RVS::DataManagement::DataTable* dt = fdio->query_fbfm_rules(classTable);
-	*RC = sqlite3_step(dt->getStmt());
-
-	double htLower = 0;
-	double htUpper = 0;
-	double shrubFuelLower = 0;
-	double shrubFuelUpper = 0;
-
-	int fbfm = 0;
-	bool pass = true;
-	/*
-	while (*RC == SQLITE_ROW)
-	{
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_HT_LOWER], &htLower);
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_HT_UPPER], &htUpper);
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_SHRUB_FUEL_LOWER], &shrubFuelLower);
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_SHRUB_FUEL_UPPER], &shrubFuelUpper);
-
-		if (htLower != -1)
-		{
-			if (ap->shrubHeight < htLower)
-			{
-				pass = false;
-			}
-		}
-		if (htUpper != -1)
-		{
-			if (ap->shrubHeight > htUpper)
-			{
-				pass = false;
-			}
-		}
-		if (shrubFuelLower != -1)
-		{
-			if (ap->shrubFuels < shrubFuelLower)
-			{
-				pass = false;
-			}
-		}
-		if (shrubFuelUpper != -1)
-		{
-			if (ap->shrubFuels > shrubFuelUpper)
-			{
-				pass = false;
-			}
-		}
-
-		if (pass == true)
-		{
-			fbfm = switchClimateFBFM(dt, ap);
-			break;
-		}
-
-		pass = true;
-		*RC = sqlite3_step(dt->getStmt());
-	}
-	*RC = sqlite3_reset(dt->getStmt());
-	*/
-	return fbfm;
-}
-
-int RVS::Fuels::FuelsDriver::calcFBFMMixed(std::string classTable, RVS::DataManagement::AnalysisPlot* ap)
-{
-	int fbfm = 0;
-	/*
-	RVS::DataManagement::DataTable* dt = fdio->query_fbfm_rules(classTable);
-	*RC = sqlite3_step(dt->getStmt());
-
-	
-	double proportion = ap->shrubBiomass / ap->herbBiomass;
-	double totalFuels = ap->herbFuels + ap->shrubFuels;
-
-	double proportionLower = 0;
-	double proportionUpper = 0;
-	double totalFuelsLower = 0;
-	double totalFuelsUpper = 0;
-
-	bool pass = true;
-	while (*RC == SQLITE_ROW)
-	{
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_PROPORTION_LOWER], &proportionLower);
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_PROPORTION_UPPER], &proportionUpper);
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_TOTAL_FUEL_LOWER], &totalFuelsLower);
-		fdio->getVal(dt->getStmt(), dt->Columns[FC_TOTAL_FUEL_UPPER], &totalFuelsUpper);
-
-		if (proportionLower != -1)
-		{
-			if (proportion < proportionLower)
-			{
-				pass = false;
-			}
-		}
-		if (proportionUpper != -1)
-		{
-			if (proportion > proportionUpper)
-			{
-				pass = false;
-			}
-		}
-		if (totalFuelsLower != -1)
-		{
-			if (totalFuels < totalFuelsLower)
-			{
-				pass = false;
-			}
-		}
-		if (totalFuelsUpper != -1)
-		{
-			if (totalFuels > totalFuelsUpper)
-			{
-				pass = false;
-			}
-		}
-
-		if (pass == true)
-		{
-			fbfm = switchClimateFBFM(dt, ap);
-			break;
-		}
-
-		pass = true;
-		*RC = sqlite3_step(dt->getStmt());
-	}
-	*RC = sqlite3_reset(dt->getStmt());
-	*/
-	return fbfm;
 }
 
 int RVS::Fuels::FuelsDriver::switchClimateFBFM(RVS::DataManagement::DataTable* dt, RVS::DataManagement::AnalysisPlot* ap)
@@ -529,22 +256,76 @@ double RVS::Fuels::FuelsDriver::calc1000HrFuel(double ht)
 	return fs4;
 }
 
-void RVS::Fuels::FuelsDriver::applyDisturbance()
+void RVS::Fuels::FuelsDriver::applyDisturbance(int year)
 {
-	ap->shrub1HourFoliage -= ap->disturbed;
+	double herbPreference = 0;
+	double shrubPreference = 0;
+
+	double totalCover = ap->HERBCOVER() + ap->SHRUBCOVER();
+	double herbAbundance = ap->HERBCOVER() / totalCover * 100;
+	double shrubAbundance = ap->SHRUBCOVER() / totalCover * 100;
+
+	//$ TODO make the preferences dynamic
+	if (ap->disturbances[year].getActionSubType().compare("COW") == 0)
+	{
+		herbPreference = 99;
+		shrubPreference = 1;
+	}
+	else
+	{
+		herbPreference = 50;
+		shrubPreference = 50;
+	}
+
+	double oldHerbBiomass = ap->herbFuel;
+	double oldShrubBiomass = ap->shrubBiomass;
+
+	double herbRatio = herbPreference * herbAbundance;
+	double shrubRatio = shrubPreference * shrubAbundance;
+	double herbsPerShrub = herbRatio / shrubRatio;
+
+	if (herbsPerShrub < 1)	{ herbsPerShrub = 1; }
+	double herbReduction = (1 - 1/herbsPerShrub) * ap->biomassReductionTotal;
+	ap->herbFuel = ap->herbFuel - herbReduction;
+
+	double shrubBiomassReduction = (1 /herbsPerShrub) * ap->biomassReductionTotal;
+	if (ap->herbFuel < 0)
+	{
+		shrubBiomassReduction += ap->herbFuel * -1;
+		ap->herbFuel = 0.1;
+	}
+	ap->shrub1HourFoliage -= shrubBiomassReduction;
 	if (ap->shrub1HourFoliage < 0)
 	{
-		ap->herbFuels += ap->shrub1HourFoliage;
-		ap->shrub1HourFoliage = 0;
-	}
-	if (ap->herbFuels < 0)
-	{
-		ap->shrub1HourWB += ap->herbFuels;
-		ap->herbFuels = 0;
+		ap->shrub1HourWB += ap->shrub1HourFoliage;
+		ap->shrub1HourFoliage = 0.1;
 	}
 	if (ap->shrub1HourWB < 0)
 	{
 		ap->shrub10Hour += ap->shrub1HourWB;
-		ap->shrub1HourWB = 0;
+		ap->shrub1HourWB = 0.1;
 	}
+
+	if (ap->herbCover > 0)
+	{
+		double herbReductionRatio = ap->herbFuel / oldHerbBiomass;
+		ap->herbCover = ap->herbCover * herbReductionRatio;
+		if (ap->herbCover < 0) { ap->herbCover = 0.1; }
+		ap->herbHeight = ap->herbHeight * herbReductionRatio;
+		if (ap->herbHeight < 0) { ap->herbHeight = 0.1; }
+	}
+
+	double newShrubBiomass = ap->shrub1HourFoliage + ap->shrub1HourWB + ap->shrub10Hour + ap->shrub100Hour + ap->shrub1000Hour;
+	double shrubReductionRatio = newShrubBiomass / oldShrubBiomass;
+	double numShrubs = (double)ap->shrubRecords.size();
+	for (auto &s : ap->shrubRecords)
+	{
+		//s->cover = s->cover * shrubReductionRatio * (1 / numShrubs);
+		s->cover = s->cover * shrubReductionRatio;
+		if (s->cover < 0) { s->cover = 0.1; }
+	}
+
+	ap->herbBiomass = ap->herbFuel * ap->GRAMS_TO_POUNDS;
+	ap->shrubBiomass = newShrubBiomass;
+	ap->total1HrFuel = ap->herbFuel + ap->shrub1HourWB + ap->shrub1HourFoliage;
 }

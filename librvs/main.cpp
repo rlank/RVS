@@ -3,7 +3,7 @@
 /// Desc: Driver for RVS. Build as execultable and			   ///
 /// this becomes the program entry point                       ///
 /// Base Class(es): none                                       ///
-/// Last Modified: 23 Feb 15                                   ///
+/// Last Modified: 05 May 16                                   ///
 /// ********************************************************** ///
 
 #include <ctime>
@@ -37,6 +37,15 @@ bool* SUPPRESS_MSG = new bool(true);
 const char* DEBUG_FILE = "RVS_Debug.txt";
 string* CLIMATE = new string("Normal");
 bool* USE_MEM = new bool(true);
+char* RVS_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_in.db";
+char* OUT_DB_PATH = "";
+
+// Define runmode
+// 1: normal sim
+// 2: single year FCCS shrub test
+// 3: 5 year herb test
+// 4: shrub equation test
+const int* runmode = new int(3);
 
 
 void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, 
@@ -60,30 +69,39 @@ void run(
 		Succession::SuccessionDriver* sd,
 		Disturbance::DisturbanceDriver* dd));
 
+void randomClimate();
 
 int main(int argc, char* argv[])
 {   
+	//std::cout << argc << std::endl;
+	//for (int i = 0; i < argc; i++)
+	//{
+	//	std::cout << argv[i] << std::endl;
+	//}
 
-	if (runmode == 1)
+	if (*runmode == 1)
 	{
+		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_cowgraze_500.db";
 		run(&simulate);
 	}
-	else if (runmode == 2)
+	else if (*runmode == 2)
 	{
 		*YEARS = 1;
+		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_FCCS_test.db";
 		run(&simulate);
 	}
-	else if (runmode == 3)
+	else if (*runmode == 3)
 	{
 		*YEARS = 5;
+		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_herb_test.db";
 		run(&fiveYearHerbTest);
 	}
-	else if (runmode == 4)
+	else if (*runmode == 4)
 	{
 		*YEARS = 1;
+		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_shrub_test.db";
 		shrubEquationTest();
 	}
-	
 
 	return (*RC);
 }
@@ -112,6 +130,8 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 	vector<int> plotcounts = bdio->query_analysis_plots();
 	map<int, AnalysisPlot*> aps;
 
+	bdio->write_debug_msg("Starting simulation");
+
 	///////////////////////////////////////////////////////////////////////
 	/// Load analysis plots and shrub records into a map keyed by plot id
 	///////////////////////////////////////////////////////////////////////
@@ -129,6 +149,8 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 		*RC = sqlite3_step(plots_dt->getStmt());
 	}
 
+	bdio->write_debug_msg("Plots loaded");
+
 	RVS::DataManagement::DataTable* shrub_dt = bdio->query_shrubs_table();
 
 	int plot_id = 0;
@@ -140,12 +162,22 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 		*RC = sqlite3_step(shrub_dt->getStmt());
 	}
 
+	for (auto &p : plotcounts)
+	{
+		currentPlot = aps[p];
+		currentPlot->update_shrubvalues();
+	}
+
+	bdio->write_debug_msg("Plants loaded");
+
 	map<int, vector<RVS::Disturbance::DisturbAction>> disturbances = ddio->query_disturbance_input();
 
 	for (auto &d : disturbances)
 	{
 		aps[d.first]->setDisturbances(d.second);
 	}
+
+	bdio->write_debug_msg("Disturbances loaded");
 
 	std::cout << "Done." << std::endl;
 
@@ -202,8 +234,10 @@ void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot,
 		std::cout << "====================" << std::endl;
 	}
 
-	RC = sd->SuccessionMain(year, currentPlot);
-	//RC = dd->DisturbanceMain(year, currentPlot);
+	//randomClimate();
+
+	RC = sd->SuccessionMain(year, CLIMATE, currentPlot);
+	RC = dd->DisturbanceMain(year, currentPlot);
 	RC = bd->BioMain(year, CLIMATE, currentPlot);
 	RC = fd->FuelsMain(year, currentPlot);
 }
@@ -329,4 +363,27 @@ void shrubEquationTest()
 	dfile = unique_ptr<ofstream>(new ofstream(DEBUG_FILE, ios::app));
 	*dfile << ctime(&t) << "\n";
 	dfile->close();
+}
+
+void randomClimate()
+{
+	int i = rand() % 5;
+	switch (i)
+	{
+	case 0:
+		*CLIMATE = "Dry";
+		break;
+	case 1:
+		*CLIMATE = "Mid-Dry";
+		break;
+	case 2:
+		*CLIMATE = "Normal";
+		break;
+	case 3:
+		*CLIMATE = "Mid-Wet";
+		break;
+	case 4:
+		*CLIMATE = "Wet";
+		break;
+	}
 }

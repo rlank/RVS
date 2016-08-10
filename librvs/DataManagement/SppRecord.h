@@ -22,6 +22,7 @@ namespace RVS { namespace Biomass { class BiomassDriver; } }
 namespace RVS { namespace Biomass { class BiomassEqDriver; } }
 namespace RVS { namespace Fuels   { class FuelsDriver; } }
 namespace RVS { namespace Succession { class SuccessionDriver; } }
+namespace RVS { namespace Disturbance { class DisturbanceDriver; } }
 
 using namespace RVS::DataManagement;
 
@@ -35,6 +36,7 @@ namespace DataManagement
 		friend class RVS::Fuels::FuelsDriver;
 		friend class RVS::Biomass::BiomassEqDriver;
 		friend class RVS::Succession::SuccessionDriver;
+		friend class RVS::Disturbance::DisturbanceDriver;
 
 	public:
 		SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);

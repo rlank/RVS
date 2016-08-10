@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+#include <queue>
 #include <vector>
 
 #include "DataTable.h"
@@ -88,20 +89,22 @@ namespace DataManagement
 		inline const double HERB_FUEL() { return herbFuel * GRAMS_TO_POUNDS; }
 		inline const double FUEL_TOTAL() { return (shrub1HourWB + shrub1HourFoliage + shrub10Hour + shrub100Hour + shrub1000Hour + herbFuel) * GRAMS_TO_POUNDS; }
 
+		
 		// Fuel model for the plot
 		inline int FBFM() { return calcFBFM == 0 ? defaultFBFM : calcFBFM; }
 		inline const string FBFM_NAME() { return fbfmName; }
 
 		inline int CURRENT_SUCCESSION_STAGE() { return currentStage; }
-		inline int TIME_IN_SUCCESSION_STAGE() { return timeInSuccessionStage; }
 		inline string CURRENT_STAGE_TYPE() { return currentStageType; }
-		inline int YEAR_OFFSET() { return startingYearsOffset; }
+		inline int PLOT_AGE() { return plotAge; }
 
 		const float GRAMS_TO_POUNDS = 0.00220462f;
 		const float POUNDS_TO_GRAMS = 453.592f;
 
 		void push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
 		void push_shrub(RVS::DataManagement::SppRecord* record);
+		void update_shrubvalues();
+
 
 		// Get NDVI for the requested level
 		double getNDVI(string level, bool useRand);
@@ -110,9 +113,8 @@ namespace DataManagement
 
 		std::vector<RVS::Disturbance::DisturbAction> getDisturbancesForYear(int year);
 		inline void setDisturbances(vector<RVS::Disturbance::DisturbAction> dists) { disturbances = dists; }
-
-		inline double HERB_DISTURB_AMOUNT() { return herbBiomassReduction; }
-		inline double SHRUB_DISTURB_AMOUNT() { return shrubBiomassReduction; }
+		// Returns the reduction amount in lbs/ac from grazing
+		inline double BIOMASS_DISTURB_AMOUNT() { return biomassReductionTotal * GRAMS_TO_POUNDS; }
 
 	private:
 		int plot_id;
@@ -150,16 +152,18 @@ namespace DataManagement
 		double rawProduction;
 		// Production allocated for herbs, reduced by shrub cover
 		double primaryProduction;
+		// Hold 3 previous years of primary production for holdover calculation
+		double* previousHerbProductions;
 		// Shrub biomass for whole plot (g/ac)
 		double shrubBiomass;
 
 		double shrubAvgStem;
 
 		// Sum of 1, 10, 100 hour shrub fuels (g)
-		double shrubFuels;
+		//double shrubFuels;
 		// Herb fuel of the plot. Calculation :: production + holdover (lbs/ac)
-		double herbFuels;
-
+		//double herbFuels;
+		
 		//////////////// FUELS //////////////////
 		//all values held in grams or grams/ac///
 		/////////////////////////////////////////
@@ -187,8 +191,8 @@ namespace DataManagement
 
 		int currentStage = 0;
 		string currentStageType;
-		int timeInSuccessionStage = 0;
-		int startingYearsOffset = 0;
+		int plotAge = 0;
+		int timeInHerbStage = 0;
 
 		// Builds the AnalysisPlot by querying the appropriate tables(s) in the database
 		void buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
@@ -196,10 +200,10 @@ namespace DataManagement
 		void buildInitialFuels(RVS::DataManagement::DIO* dio);
 
 		vector<RVS::Disturbance::DisturbAction> disturbances;
-		bool disturbed;
-		double herbBiomassReduction;
-		double shrubBiomassReduction;
-
+		bool disturbed = false;
+		bool burned = false;
+		// Total biomass to be removed via disturbance in g/ac
+		double biomassReductionTotal;
 
 	};
 }

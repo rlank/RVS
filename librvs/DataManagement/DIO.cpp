@@ -119,7 +119,7 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const c
 			*RC = sqlite3_reset(dt->getStmt());
 			*RC = sqlite3_step(dt->getStmt());
 			*(dt->STATUS()) = *RC;
-			checkDBStatus(db, sql);
+			//checkDBStatus(db, sql);
 		}
 	}
 	else
@@ -129,9 +129,9 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const c
 
 		// Prepare SQL query as object code
 		*RC = sqlite3_prepare_v2(db, sql, nByte, &stmt, NULL);
-		checkDBStatus(db, sql);
+		//checkDBStatus(db, sql);
 		*RC = sqlite3_step(stmt);
-		checkDBStatus(db, sql);
+		//checkDBStatus(db, sql);
 		dt = shared_ptr<DataTable>(new DataTable(stmt));
 
 		if (addToActive) { activeQueries.insert(pair<string, shared_ptr<DataTable>>(sql, dt)); }
@@ -487,6 +487,16 @@ void RVS::DataManagement::DIO::query_fuels_basic_info(const int* bps, int* fbfm,
 	getVal(dt->getStmt(), column, fbfm);
 	column = dt->Columns[FC_ISDRY_FIELD];
 	getVal(dt->getStmt(), column, isDry);
+
+	if (*RC == 101)
+	{
+		stringstream* s = new stringstream();
+		*s << "Fuels input not found for BPS " << *bps << ", assuming DRY climate";
+		const char* c = streamToCharPtr(s);
+		write_debug_msg(c);
+
+		*isDry = true;
+	}
 }
 
 int* RVS::DataManagement::DIO::finalizeQueries(void)

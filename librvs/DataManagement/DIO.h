@@ -71,6 +71,9 @@ namespace DataManagement
 		int* write_output(void);
 		void write_debug_msg(const char* msg);
 
+		// Converts a std::stringstream to a char pointer (array)
+		char* streamToCharPtr(std::stringstream* stream);
+
 	protected:
 		virtual int* create_output_table() = 0;
 		virtual int* create_intermediate_table() = 0;
@@ -79,9 +82,6 @@ namespace DataManagement
 
 		RVS::DataManagement::DataTable* prep_datatable(const char* sql, sqlite3* db, bool addToActive=true, bool reset=false);
 		
-		// Converts a std::stringstream to a char pointer (array)
-		char* streamToCharPtr(std::stringstream* stream);
-
 		/// Base query function. All the public functions only define the selection string.
 		const char* query_base(const char* table);
 		const char* query_base(const char* table, const char* field);

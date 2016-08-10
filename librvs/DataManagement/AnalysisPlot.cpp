@@ -15,18 +15,19 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	herbBiomass = 0;
 	herbHoldoverBiomass = 0;
 	shrubBiomass = 0;
-	shrubFuels = 0;
-	herbFuels = 0;
 	defaultFBFM = 0;
 	calcFBFM = 0;
-	dryClimate = false;
+	dryClimate = true;
 	shrubRecords = vector<SppRecord*>();
 	ndviValues = vector<double>();
 	precipValues = vector<double>();
 	disturbances = vector<Disturbance::DisturbAction>();
 	disturbed = false;
-	herbBiomassReduction = 0;
-	shrubBiomassReduction = 0;
+
+	previousHerbProductions = new double[3];
+	previousHerbProductions[0] = 0;
+	previousHerbProductions[1] = 0;
+	previousHerbProductions[2] = 0;
 
 	// Order matters here!
 	buildAnalysisPlot(dio, dt);
@@ -89,6 +90,18 @@ void AnalysisPlot::push_shrub(RVS::DataManagement::SppRecord* record)
 	shrubRecords.push_back(record);
 }
 
+void AnalysisPlot::update_shrubvalues()
+{
+	shrubCover = 0;
+	shrubHeight = 0;
+	double runningHeight = 0;
+	for (auto &s : shrubRecords)
+	{
+		shrubCover += s->COVER();
+		runningHeight += s->HEIGHT();
+	}
+	shrubHeight = runningHeight / shrubRecords.size();
+}
 
 void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 {

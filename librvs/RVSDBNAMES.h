@@ -23,10 +23,10 @@ namespace RVS
 	static const char* FUEL_EQUATION_TABLE = "Fuel_Equation";
 	static const char* FUEL_BPS_ATTR_TABLE = "BPS_Fuelmodels";
 	static const char* FUEL_CLASSRULES_TABLE = "Fuel_ClassRules";
-	static const char* SUCCESSION_TABLE = "BPS_Growth_Rates";
+	static const char* SUCCESSION_TABLE = "BPS_Growth_Rates_Full";
 	static const char* PLANTS_TABLE = "Plants";
 	static const char* HERB_GROWTH_TABLE = "Herb_Growth";
-	static const char* DISTURBANCE_PLOT_TABLE = "Disturbance_Plots_NoFire";
+	static const char* DISTURBANCE_PLOT_TABLE = "Dist_yearlyCowGraze";
 	static const char* DISTURBANCE_TABLE = "Disturbance";
 	// ********************
 
@@ -166,6 +166,7 @@ namespace RVS
 
 	static const char* DISTURBANCE_HERB_FIELD = "herb_disturbance";
 	static const char* DISTURBANCE_SHRUB_FIELD = "shrub_disturbance";
+	static const char* DISTURBANCE_AMOUNT_FIELD = "disturbance_amount";
 
 	// ********************
 }
