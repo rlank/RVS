@@ -64,7 +64,7 @@ namespace DataManagement
 		// Herbaceous cover (%)
 		inline double HERBCOVER() { return herbCover; }
 
-		inline void HERB_RESET_TEST_ONLY() { herbBiomass = 0; }
+		inline void HERB_RESET_TEST_ONLY() { previousHerbProductions[0] = 0; }
 
 		// Total herb biomass (lbs/ac)
 		inline double HERBBIOMASS() { return herbBiomass; }

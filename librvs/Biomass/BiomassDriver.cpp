@@ -83,8 +83,6 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 		ap->herbHoldoverBiomass = holdover;
 	}
 
-	//totalHerbBiomass = calcAttenuation(totalHerbBiomass);
-
 	// Save output data
 
 	// Push new production to queue

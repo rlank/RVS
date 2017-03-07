@@ -63,7 +63,7 @@ int* RVS::Disturbance::DisturbanceDriver::DisturbanceMain(int year, RVS::DataMan
 					grazeType = cow;
 				}
 
-				//$ TODO get the parameter names from the database
+				// $TODO get the parameter names from the database
 				grazePlot(grazeType, params["NUMBER"], params["AREA"], params["LENGTH"]);
 			}
 		}

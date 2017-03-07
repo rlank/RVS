@@ -3,7 +3,6 @@
 // field names for input/output. Eventually, this will
 // be replaced by the RVS Dataloader which will load
 // data into expected tables.
-// Last Modified: 18 Apr 16
 //############################################//
 
 #pragma once
@@ -23,10 +22,10 @@ namespace RVS
 	static const char* FUEL_EQUATION_TABLE = "Fuel_Equation";
 	static const char* FUEL_BPS_ATTR_TABLE = "BPS_Fuelmodels";
 	static const char* FUEL_CLASSRULES_TABLE = "Fuel_ClassRules";
-	static const char* SUCCESSION_TABLE = "BPS_Growth_Rates_Full";
+	static const char* SUCCESSION_TABLE = "BPS_Growth_Rates";
 	static const char* PLANTS_TABLE = "Plants";
 	static const char* HERB_GROWTH_TABLE = "Herb_Growth";
-	static const char* DISTURBANCE_PLOT_TABLE = "Dist_yearlyCowGraze";
+	static const char* DISTURBANCE_PLOT_TABLE = "Dist_year7fire";
 	static const char* DISTURBANCE_TABLE = "Disturbance";
 	// ********************
 

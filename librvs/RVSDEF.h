@@ -1,6 +1,5 @@
 //############################################//
 // Preproccessor directives for RVS 
-// Last Modified: 18 Apr 16
 //############################################//
 
 #pragma once
@@ -28,8 +27,6 @@ extern bool* USE_MEM;
 #endif
 
 
-
-//$$ TODO Define multithreading environment
 #ifndef USEMULTIT
 	#define USEMULTIT 0
 #endif

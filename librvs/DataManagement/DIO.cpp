@@ -7,7 +7,6 @@ sqlite3* RVS::DataManagement::DIO::rvsdb;
 // RVS ouput database
 sqlite3* RVS::DataManagement::DIO::outdb;
 
-//map<string, RVS::DataManagement::DataTable*> RVS::DataManagement::DIO::activeQueries;
 map<string, shared_ptr<RVS::DataManagement::DataTable>> RVS::DataManagement::DIO::activeQueries;
 vector<const char*> RVS::DataManagement::DIO::queuedWrites;
 

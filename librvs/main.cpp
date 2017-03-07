@@ -37,6 +37,7 @@ bool* SUPPRESS_MSG = new bool(true);
 const char* DEBUG_FILE = "RVS_Debug.txt";
 string* CLIMATE = new string("Normal");
 bool* USE_MEM = new bool(true);
+bool* RANDOM_CLIMATE = new bool(true);
 char* RVS_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_in.db";
 char* OUT_DB_PATH = "";
 
@@ -45,7 +46,7 @@ char* OUT_DB_PATH = "";
 // 2: single year FCCS shrub test
 // 3: 5 year herb test
 // 4: shrub equation test
-const int* runmode = new int(3);
+const int* runmode = new int(1);
 
 
 void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, 
@@ -79,9 +80,10 @@ int main(int argc, char* argv[])
 	//	std::cout << argv[i] << std::endl;
 	//}
 
+	
 	if (*runmode == 1)
 	{
-		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_cowgraze_500.db";
+		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_random.db";
 		run(&simulate);
 	}
 	else if (*runmode == 2)
@@ -102,6 +104,8 @@ int main(int argc, char* argv[])
 		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_shrub_test.db";
 		shrubEquationTest();
 	}
+	
+
 
 	return (*RC);
 }
@@ -234,7 +238,7 @@ void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot,
 		std::cout << "====================" << std::endl;
 	}
 
-	//randomClimate();
+	if (*RANDOM_CLIMATE) { randomClimate(); }
 
 	RC = sd->SuccessionMain(year, CLIMATE, currentPlot);
 	RC = dd->DisturbanceMain(year, currentPlot);
@@ -255,7 +259,7 @@ void fiveYearHerbTest(int year, RVS::DataManagement::AnalysisPlot* currentPlot,
 	else if (year == 4) { *CLIMATE = "Wet"; }
 
 	currentPlot->HERB_RESET_TEST_ONLY();
-
+	RC = sd->SuccessionMain(year, CLIMATE, currentPlot);
 	RC = bd->BioMain(year, CLIMATE, currentPlot);
 	RC = fd->FuelsMain(year, currentPlot);
 }

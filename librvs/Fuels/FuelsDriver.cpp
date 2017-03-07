@@ -17,11 +17,6 @@ int* RVS::Fuels::FuelsDriver::FuelsMain(int year, RVS::DataManagement::AnalysisP
 
 	vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 
-	if (ap->PLOT_ID() == 66)
-	{
-		int asdasdasd = 0;
-	}
-
 	int plot_num = ap->PLOT_ID();
 	int evt_num = ap->EVT_NUM();
 	int bps = ap->BPS_NUM();
@@ -258,6 +253,13 @@ double RVS::Fuels::FuelsDriver::calc1000HrFuel(double ht)
 
 void RVS::Fuels::FuelsDriver::applyDisturbance(int year)
 {
+	vector<RVS::Disturbance::DisturbAction> disturbances = ap->getDisturbancesForYear(year);
+
+	// Fire is handled in the DisturbanceDriver, so skip if fire
+	// $TODO this assumes fire is the only action (or first action) for the year
+	if (disturbances[0].getActionType().compare("FIRE") == 0) { return; }
+
+	// If it's a graze, go ahead and set up reduction ratios and priorities
 	double herbPreference = 0;
 	double shrubPreference = 0;
 
@@ -265,67 +267,69 @@ void RVS::Fuels::FuelsDriver::applyDisturbance(int year)
 	double herbAbundance = ap->HERBCOVER() / totalCover * 100;
 	double shrubAbundance = ap->SHRUBCOVER() / totalCover * 100;
 
-	//$ TODO make the preferences dynamic
-	if (ap->disturbances[year].getActionSubType().compare("COW") == 0)
+	// $TODO make the preferences dynamic
+	for (auto &d : disturbances)
 	{
-		herbPreference = 99;
-		shrubPreference = 1;
-	}
-	else
-	{
-		herbPreference = 50;
-		shrubPreference = 50;
-	}
+		if (d.getActionSubType().compare("COW") == 0)
+		{
+			herbPreference = 99;
+			shrubPreference = 1;
+		}
+		else
+		{
+			herbPreference = 50;
+			shrubPreference = 50;
+		}
 
-	double oldHerbBiomass = ap->herbFuel;
-	double oldShrubBiomass = ap->shrubBiomass;
+		double oldHerbBiomass = ap->herbFuel;
+		double oldShrubBiomass = ap->shrubBiomass;
 
-	double herbRatio = herbPreference * herbAbundance;
-	double shrubRatio = shrubPreference * shrubAbundance;
-	double herbsPerShrub = herbRatio / shrubRatio;
+		double herbRatio = herbPreference * herbAbundance;
+		double shrubRatio = shrubPreference * shrubAbundance;
+		double herbsPerShrub = herbRatio / shrubRatio;
 
-	if (herbsPerShrub < 1)	{ herbsPerShrub = 1; }
-	double herbReduction = (1 - 1/herbsPerShrub) * ap->biomassReductionTotal;
-	ap->herbFuel = ap->herbFuel - herbReduction;
+		if (herbsPerShrub < 1)	{ herbsPerShrub = 1; }
+		double herbReduction = (1 - 1 / herbsPerShrub) * ap->biomassReductionTotal;
+		ap->herbFuel = ap->herbFuel - herbReduction;
 
-	double shrubBiomassReduction = (1 /herbsPerShrub) * ap->biomassReductionTotal;
-	if (ap->herbFuel < 0)
-	{
-		shrubBiomassReduction += ap->herbFuel * -1;
-		ap->herbFuel = 0.1;
+		double shrubBiomassReduction = (1 / herbsPerShrub) * ap->biomassReductionTotal;
+		if (ap->herbFuel < 0)
+		{
+			shrubBiomassReduction += ap->herbFuel * -1;
+			ap->herbFuel = 0.1;
+		}
+		ap->shrub1HourFoliage -= shrubBiomassReduction;
+		if (ap->shrub1HourFoliage < 0)
+		{
+			ap->shrub1HourWB += ap->shrub1HourFoliage;
+			ap->shrub1HourFoliage = 0.1;
+		}
+		if (ap->shrub1HourWB < 0)
+		{
+			ap->shrub10Hour += ap->shrub1HourWB;
+			ap->shrub1HourWB = 0.1;
+		}
+
+		if (ap->herbCover > 0)
+		{
+			double herbReductionRatio = ap->herbFuel / oldHerbBiomass;
+			ap->herbCover = ap->herbCover * herbReductionRatio;
+			if (ap->herbCover < 0) { ap->herbCover = 0.1; }
+			ap->herbHeight = ap->herbHeight * herbReductionRatio;
+			if (ap->herbHeight < 0) { ap->herbHeight = 0.1; }
+		}
+
+		double newShrubBiomass = ap->shrub1HourFoliage + ap->shrub1HourWB + ap->shrub10Hour + ap->shrub100Hour + ap->shrub1000Hour;
+		double shrubReductionRatio = newShrubBiomass / oldShrubBiomass;
+		double numShrubs = (double)ap->shrubRecords.size();
+		for (auto &s : ap->shrubRecords)
+		{
+			s->cover = s->cover * shrubReductionRatio;
+			if (s->cover < 0) { s->cover = 0.1; }
+		}
+
+		ap->herbBiomass = ap->herbFuel * ap->GRAMS_TO_POUNDS;
+		ap->shrubBiomass = newShrubBiomass;
+		ap->total1HrFuel = ap->herbFuel + ap->shrub1HourWB + ap->shrub1HourFoliage;
 	}
-	ap->shrub1HourFoliage -= shrubBiomassReduction;
-	if (ap->shrub1HourFoliage < 0)
-	{
-		ap->shrub1HourWB += ap->shrub1HourFoliage;
-		ap->shrub1HourFoliage = 0.1;
-	}
-	if (ap->shrub1HourWB < 0)
-	{
-		ap->shrub10Hour += ap->shrub1HourWB;
-		ap->shrub1HourWB = 0.1;
-	}
-
-	if (ap->herbCover > 0)
-	{
-		double herbReductionRatio = ap->herbFuel / oldHerbBiomass;
-		ap->herbCover = ap->herbCover * herbReductionRatio;
-		if (ap->herbCover < 0) { ap->herbCover = 0.1; }
-		ap->herbHeight = ap->herbHeight * herbReductionRatio;
-		if (ap->herbHeight < 0) { ap->herbHeight = 0.1; }
-	}
-
-	double newShrubBiomass = ap->shrub1HourFoliage + ap->shrub1HourWB + ap->shrub10Hour + ap->shrub100Hour + ap->shrub1000Hour;
-	double shrubReductionRatio = newShrubBiomass / oldShrubBiomass;
-	double numShrubs = (double)ap->shrubRecords.size();
-	for (auto &s : ap->shrubRecords)
-	{
-		//s->cover = s->cover * shrubReductionRatio * (1 / numShrubs);
-		s->cover = s->cover * shrubReductionRatio;
-		if (s->cover < 0) { s->cover = 0.1; }
-	}
-
-	ap->herbBiomass = ap->herbFuel * ap->GRAMS_TO_POUNDS;
-	ap->shrubBiomass = newShrubBiomass;
-	ap->total1HrFuel = ap->herbFuel + ap->shrub1HourWB + ap->shrub1HourFoliage;
 }

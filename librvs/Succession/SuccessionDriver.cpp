@@ -26,23 +26,13 @@ int* SuccessionDriver::SuccessionMain(int year, string* climate, RVS::DataManage
 	//*s << "PLOT_ID: " << ap->PLOT_ID() << ". STARTING.";
 	//const char* c = sdio->streamToCharPtr(s);
 	//sdio->write_debug_msg(c);
-
-	// DEBUG plot break point
-	if (ap->PLOT_ID() == 69 && year == 16)
-	{
-		int asd = 0;
-	}
-	if (ap->PLOT_ID() == 3)
-	{
-		int dsds = 0;
-	}
 	
 	// TRUE: Do not model // FALSE: Model
 	bool* doNotModel = new bool(false);
 
 	// Load the (up to) 3 succession stages' values
 	loadSuccessionVals(doNotModel);
-
+	
 	// Calculate herbaceous production
 	double* yhat = new double;
 	double* lower = new double;
@@ -57,7 +47,7 @@ int* SuccessionDriver::SuccessionMain(int year, string* climate, RVS::DataManage
 	ap->primaryProduction = production;
 	ap->lower_confidence = *lower;
 	ap->upper_confidence = *upper;
-
+	
 	// Get the current succession stage. Values are 0-3, with 0 indicating not yet classified
 	// and -1 indicating uncharacteristic (unclassifiable) plot
 	int sclass = ap->CURRENT_SUCCESSION_STAGE();
@@ -143,10 +133,10 @@ int* SuccessionDriver::SuccessionMain(int year, string* climate, RVS::DataManage
 			growStage(successionStrParameters[sclass], successionNumParameters[sclass]);
 		}
 	}
-
+	
 	// Grow herbs
 	growHerbs(&(ap->herbCover), &(ap->herbHeight), &(ap->primaryProduction));
-
+	
 	// attenuate shrubs and herbs(if sum(cover) > 100, find ratio and reduce)
 	if (ap->herbCover + ap->shrubCover > 100)
 	{
@@ -155,6 +145,7 @@ int* SuccessionDriver::SuccessionMain(int year, string* climate, RVS::DataManage
 		ap->shrubCover = (ap->shrubCover / total) * 100;
 	}
 
+	
 	ap->currentStage = sclass;
 
 	sdio->write_output_record(&year, ap);
@@ -166,7 +157,7 @@ int* SuccessionDriver::SuccessionMain(int year, string* climate, RVS::DataManage
 	{
 		ap->currentStage += 1;
 	}
-
+	
 	return RC;
 }
 
@@ -242,7 +233,7 @@ int SuccessionDriver::determineCurrentClass()
 				}
 				
 
-				height = ap->SHRUBHEIGHT(); //$ TODO this isn't calculted until BiomassDriver
+				height = ap->SHRUBHEIGHT(); 
 			}
 			
 
@@ -326,7 +317,7 @@ void SuccessionDriver::growStage(map<string, string> strVals, map<string, double
 
 	if (growthStage.compare("S") == 0)
 	{
-		if (shrubs->empty())  //TODO need to have "bob override" to always use input data if applicable. This is needed now because of what DISTURBANCE will do
+		if (shrubs->empty())  
 		{
 			list<string> newspecies = makeSpeciesList(strVals);
 			for (string s : newspecies)
@@ -344,6 +335,7 @@ void SuccessionDriver::growStage(map<string, string> strVals, map<string, double
 
 		double divCover = 0;
 		double divHeight = 0;
+
 		// We cannot allow cover to exceed 100, so check that growth won't go over max
 		if (ap->shrubCover + cov_growth >= 100)
 		{ 
@@ -383,7 +375,7 @@ void SuccessionDriver::growHerbs(double* herbCover, double* herbHeight, double* 
 	sdio->query_herb_growth_coefs(ap->BPS_MODEL_NUM(), coverRate, herbRate);
 
 	double cover = *coverRate * newProduction;
-	double height = *herbRate * newProduction * 100;  // Why is there 100 here?  Seems to be conversion
+	double height = *herbRate * newProduction * 100;  
 
 	if (cover + ap->SHRUBCOVER() > 98)
 	{
