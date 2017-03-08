@@ -19,9 +19,12 @@ int* RVS::Biomass::BiomassDIO::create_output_table()
 		PLOT_NAME_FIELD << " TEXT, " << \
 		YEAR_OUT_FIELD << " INTEGER NOT NULL, " << \
 		BPS_NUM_FIELD << " INTEGER NOT NULL, " << \
+		BPS_MODEL_FIELD << " TEXT, " << \
 		GROUP_ID_FIELD << " TEXT, " << \
+		"NDVI REAL, " << "PPT REAL, " << \
 		BIOMASS_SHRUB_OUT_FIELD << " REAL, " << \
 		BIOMASS_HERB_OUT_FIELD << " REAL, " << \
+		BIOMASS_RAW_PRODUCTION_FIELD << " REAL," << \
 		BIOMASS_HERB_PP_FIELD << " REAL, " << \
 		BIOMASS_HERB_HOLDOVER_FIELD << " REAL, " << \
 		BIOMASS_TOTAL_OUT_FIELD << " REAL, " << \
@@ -32,7 +35,10 @@ int* RVS::Biomass::BiomassDIO::create_output_table()
 		LOWER_BOUND_FIELD << " REAL, " << \
 		UPPER_BOUND_FIELD << " REAL, " << \
 		"range" << " REAL, " << \
-		S2Y_FIELD << " REAL);";
+		S2Y_FIELD << " REAL, " << \
+		DISTURBANCE_AMOUNT_FIELD << " REAL, " << \
+		LATITUDE_FIELD << " FLOAT, " << \
+		LONGITUDE_FIELD << " FLOAT);";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
@@ -49,10 +55,13 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		PLOT_NAME_FIELD << ", " << \
 		YEAR_OUT_FIELD << ", " << \
 		BPS_NUM_FIELD << ", " << \
+		BPS_MODEL_FIELD << ", " << \
 		GROUP_ID_FIELD << ", " << \
+		"NDVI, PPT, " << \
 		BIOMASS_TOTAL_OUT_FIELD << ", "<< \
 		BIOMASS_SHRUB_OUT_FIELD << ", " << \
 		BIOMASS_HERB_OUT_FIELD << ", " << \
+		BIOMASS_RAW_PRODUCTION_FIELD << ", " << \
 		BIOMASS_HERB_PP_FIELD << ", " << \
 		BIOMASS_HERB_HOLDOVER_FIELD << ", " << \
 		HERB_COVER_FIELD << ", " << \
@@ -62,16 +71,23 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		LOWER_BOUND_FIELD << ", " << \
 		UPPER_BOUND_FIELD << ", " << \
 		"range" << ", " << \
-		S2Y_FIELD << ") " << \
+		S2Y_FIELD << ", " << \
+		DISTURBANCE_AMOUNT_FIELD << ", " << \
+		LATITUDE_FIELD << ", " << \
+		LONGITUDE_FIELD << ") " << \
 		"VALUES (" << \
 		ap->PLOT_ID() << ",\"" << \
 		ap->PLOT_NAME() << "\"," << \
 		*year << "," << \
 		ap->BPS_NUM() << ",\"" << \
+		ap->BPS_MODEL_NUM() << "\",\"" << \
 		ap->GRP_ID() << "\"," << \
+		ap->getNDVI(*CLIMATE, false) << "," << \
+		ap->getPPT(*CLIMATE, false) << "," << \
 		ap->TOTALBIOMASS() << "," << \
 		ap->SHRUBBIOMASS() << "," << \
 		ap->HERBBIOMASS() << "," << \
+		ap->RAWPRODUCTION() << "," << \
 		ap->PRIMARYPRODUCTION() << "," << \
 		ap->HERBHOLDOVER() << "," << \
 		ap->HERBCOVER() << "," << \
@@ -81,7 +97,10 @@ int* RVS::Biomass::BiomassDIO::write_output_record(int* year, RVS::DataManagemen
 		ap->LOWER_BOUND() << "," << \
 		ap->UPPER_BOUND() << "," << \
 		(ap->UPPER_BOUND() - ap->LOWER_BOUND()) << "," << \
-		ap->S2Y() << ");";
+		ap->S2Y() << "," << \
+		ap->BIOMASS_DISTURB_AMOUNT() << "," << \
+		std::setprecision(10) << ap->LATITUDE() << "," << \
+		std::setprecision(10) << ap->LONGITUDE() << ");";
 
 	char* sql = new char;
 	sql = streamToCharPtr(&sqlstream);
@@ -194,18 +213,18 @@ RVS::DataManagement::DataTable* RVS::Biomass::BiomassDIO::query_equation_table(i
 	return dt;
 }
 
-void RVS::Biomass::BiomassDIO::query_biogroup_coefs(int bps, double* group_const, double* ndvi_grp_interact, double* ppt_grp_interact, std::string* grp_id, bool covariance)
+void RVS::Biomass::BiomassDIO::query_biogroup_coefs(string bps_model, double* group_const, double* ndvi_grp_interact, double* ppt_grp_interact, std::string* grp_id, bool covariance)
 {
-	if (bps == 0)
+	if (bps_model.compare("base") == 0)
 	{
 		*grp_id = "Rip2";
 	}
 	else
 	{
-		//const char* sql1 = query_base(BIOMASS_MACROGROUP_TABLE, BPS_NUM_FIELD, bps);
-		//RVS::DataManagement::DataTable* dt1 = prep_datatable(sql1, rvsdb);
-		//getVal(dt1->getStmt(), dt1->Columns[GROUP_ID_FIELD], grp_id);
-		*grp_id = "G333";
+		const char* sql1 = query_base(BIOMASS_MACROGROUP_TABLE, BPS_MODEL_FIELD, bps_model);
+		RVS::DataManagement::DataTable* dt1 = prep_datatable(sql1, rvsdb);
+		getVal(dt1->getStmt(), dt1->Columns[GROUP_ID_FIELD], grp_id);
+		//*grp_id = "G333";
 	}
 
 	std::stringstream sqlstream;
@@ -231,33 +250,6 @@ void RVS::Biomass::BiomassDIO::query_biogroup_coefs(int bps, double* group_const
 	getVal(dt2->getStmt(), dt2->Columns[PRCP_INTERACT_FIELD], ppt_grp_interact);
 }
 
-double** RVS::Biomass::BiomassDIO::query_covariance_matrix()
-{
-	const char* sql = query_base(COVARIANCE_TABLE);
-	RVS::DataManagement::DataTable* dt = prep_datatable(sql, rvsdb);
-	std::stringstream sqlstream;
-
-	int colNum = dt->numCols();
-
-	double** covariance_matrix = new double*[102];
-
-	int row = 0;
-	int col = 0;
-	double val = 0;
-
-	for (row = 0; row < colNum; row++)
-	{
-		covariance_matrix[row] = new double[102];
-
-		for (col = 0; col < colNum; col++)
-		{
-			getVal(dt->getStmt(), col, &val);
-			covariance_matrix[row][col] = val;
-		}
-		sqlite3_step(dt->getStmt());
-	}
-	return covariance_matrix;
-}
 
 int RVS::Biomass::BiomassDIO::find_group_index(string* grp_id)
 {
@@ -281,35 +273,3 @@ int RVS::Biomass::BiomassDIO::find_group_index(string* grp_id)
 	return row;
 }
 
-void RVS::Biomass::BiomassDIO::query_herb_growth_coefs(string bps_model, double* cov_rate, double* ht_rate)
-{
-	const char* sql = query_base(HERB_GROWTH_TABLE, BPS_MODEL_FIELD, bps_model);
-	RVS::DataManagement::DataTable* dt;
-	*cov_rate = 0;
-	*ht_rate = 0;
-	try
-	{
-		dt = prep_datatable(sql, rvsdb);
-		getVal(dt->getStmt(), dt->Columns[HERB_CC_GROWTH_FIELD], cov_rate);
-		getVal(dt->getStmt(), dt->Columns[HERB_HT_GROWTH_FIELD], ht_rate);
-	}
-	catch (RVS::DataManagement::DataNotFoundException dex)
-	{
-		string bps;
-		if (bps_model.length() == 6)
-		{
-			bps = bps_model.substr(1);
-		}
-		else
-		{
-			bps = bps_model.substr(2);
-		}
-		sql = query_base(HERB_GROWTH_TABLE, "BPS_CODE", stoi(bps));
-		dt = prep_datatable(sql, rvsdb);
-	
-		getVal(dt->getStmt(), dt->Columns[HERB_CC_GROWTH_FIELD], cov_rate);
-		getVal(dt->getStmt(), dt->Columns[HERB_HT_GROWTH_FIELD], ht_rate);
-	}
-
-	
-}

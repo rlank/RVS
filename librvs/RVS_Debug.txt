@@ -1,0 +1,221 @@
+Wed Aug 10 11:44:04 2016
+
+10/08/16 11:44:04 Starting simulation
+10/08/16 11:44:04 Fuels input not found for BPS 10540, assuming DRY climate
+10/08/16 11:44:04 Fuels input not found for BPS 10270, assuming DRY climate
+10/08/16 11:44:04 Fuels input not found for BPS 10280, assuming DRY climate
+10/08/16 11:44:04 Fuels input not found for BPS 10280, assuming DRY climate
+10/08/16 11:44:04 Fuels input not found for BPS 11590, assuming DRY climate
+10/08/16 11:44:04 Fuels input not found for BPS 11590, assuming DRY climate
+10/08/16 11:44:04 Plots loaded
+10/08/16 11:44:04 Plants loaded
+10/08/16 11:44:04 Disturbances loaded
+10/08/16 11:44:04 PLOT_ID: 23. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 23. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 25. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 25. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 26. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 26. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 27. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 27. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 28. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 28. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 29. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 29. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 30. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 30. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 32. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 32. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 53. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 53. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 56. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 56. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 57. Stems per acre equation not found for ARPR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 57. Shrub biomass equation not found for ARPR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 64. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 64. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 65. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 65. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 71. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 71. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 72. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 72. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 73. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 73. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 74. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 74. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 75. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 75. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 76. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 76. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 77. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 77. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 Year 0 finished
+10/08/16 11:44:04 PLOT_ID: 23. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 23. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 25. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 25. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 26. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 26. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 27. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 27. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 28. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 28. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 29. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 29. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 30. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 30. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 32. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 32. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 53. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 53. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 56. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 56. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 57. Stems per acre equation not found for ARPR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 57. Shrub biomass equation not found for ARPR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 64. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 64. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 65. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 65. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 71. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 71. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 72. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 72. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 73. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 73. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 74. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 74. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 75. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 75. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 76. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 76. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 77. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 77. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 Year 1 finished
+10/08/16 11:44:04 PLOT_ID: 23. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 23. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 25. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 25. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 26. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 26. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 27. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 27. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 28. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 28. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 29. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 29. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 30. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 30. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 32. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 32. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:04 PLOT_ID: 53. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 53. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 56. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 56. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 57. Stems per acre equation not found for ARPR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 57. Shrub biomass equation not found for ARPR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 64. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 64. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 65. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 65. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:04 PLOT_ID: 71. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 71. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 72. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 72. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:04 PLOT_ID: 73. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 73. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 74. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 74. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 75. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 75. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 76. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 76. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 77. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 77. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 Year 2 finished
+10/08/16 11:44:05 PLOT_ID: 23. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 23. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 25. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 25. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 26. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 26. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 27. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 27. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 28. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 28. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 29. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 29. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 30. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 30. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 32. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 32. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 53. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 53. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 56. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 56. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 57. Stems per acre equation not found for ARPR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 57. Shrub biomass equation not found for ARPR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 64. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:05 PLOT_ID: 64. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:05 PLOT_ID: 65. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:05 PLOT_ID: 65. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:05 PLOT_ID: 71. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 71. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 72. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 72. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 73. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 73. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 74. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 74. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 75. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 75. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 76. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 76. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 77. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 77. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 Year 3 finished
+10/08/16 11:44:05 PLOT_ID: 23. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 23. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 25. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 25. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 26. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 26. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 27. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 27. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 28. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 28. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 29. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 29. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 30. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 30. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 32. Stems per acre equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 32. Shrub biomass equation not found for CHRYS9, using ARTR
+10/08/16 11:44:05 PLOT_ID: 53. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 53. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 56. Stems per acre equation not found for RHTR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 56. Shrub biomass equation not found for RHTR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 57. Stems per acre equation not found for ARPR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 57. Shrub biomass equation not found for ARPR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 64. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:05 PLOT_ID: 64. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:05 PLOT_ID: 65. Stems per acre equation not found for RHMI3, using ARTR
+10/08/16 11:44:05 PLOT_ID: 65. Shrub biomass equation not found for RHMI3, using ARTR
+10/08/16 11:44:05 PLOT_ID: 71. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 71. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 72. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 72. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 73. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 73. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 74. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 74. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 75. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 75. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 76. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 76. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 77. Stems per acre equation not found for CECR, using ARTR
+10/08/16 11:44:05 PLOT_ID: 77. Shrub biomass equation not found for CECR, using ARTR
+10/08/16 11:44:05 Year 4 finished
+10/08/16 11:44:05 Closing InputDB connection
+10/08/16 11:44:05 Closing InputDB connection
+Wed Aug 10 11:44:05 2016
+

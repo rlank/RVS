@@ -22,21 +22,22 @@ int* BiomassEqDriver::BioMain(int equationNumber, RVS::DataManagement::AnalysisP
 	std::vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
 	double totalShrubCover = 0;
 	double runShrubHeight = 0;
-	RVS::DataManagement::SppRecord* record = NULL;
+	double runShrubStem = 0;
+	double averageHeight = 0;
+	double averageStem = 0;
 
-	for (int r = 0; r < shrubs->size(); r++)
+	for (auto &s : *shrubs)
 	{
-		record = shrubs->at(r);
 
-		double stemsPerAcre = calcStemsPerAcre(record);
-		record->stemsPerAcre = stemsPerAcre;
-		double singleBiomass = calcShrubBiomass(equationNumber, record);
+		double stemsPerAcre = calcStemsPerAcre(s);
+		s->stemsPerAcre = stemsPerAcre;
+		double singleBiomass = calcShrubBiomass(equationNumber, s);
 
-		record->shrubBiomass = singleBiomass;
-		record->exShrubBiomass = singleBiomass * stemsPerAcre;
+		s->shrubBiomass = singleBiomass;
+		s->exShrubBiomass = singleBiomass * stemsPerAcre;
 
 		// Write this result to the intermediate table
-		RC = bdio->write_intermediate_record(&equationNumber, ap, record);
+		RC = bdio->write_intermediate_record(&equationNumber, ap, s);
 	}
 
 
@@ -69,15 +70,14 @@ double BiomassEqDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 {
 	// Lookup the equation number from the crosswalk table
 	int equationNumber = 0;
-	try
+
+	equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), STEMS_PER_ACRE_EQUATION_FIELD);
+
+	if (equationNumber == 0)
 	{
-		equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), "PCH");
+		equationNumber = bdio->query_crosswalk_table(BIOMASS_BACKUP_SPP_CODE, STEMS_PER_ACRE_EQUATION_FIELD);
 	}
-	catch (RVS::DataManagement::DataNotFoundException dex)
-	{
-		equationNumber = bdio->query_crosswalk_table("ARTR2", "PCH");
-	}
-	
+
 	record->pchEqNum = equationNumber;
 	
 	double* coefs = new double[4];
