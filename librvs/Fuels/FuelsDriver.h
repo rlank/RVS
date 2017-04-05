@@ -8,13 +8,11 @@
 
 #pragma once
 
-#ifndef FUELSDRIVER_H
-#define FUELSDRIVER_H
-
 #include <iostream>
 #include <map>
 
 #include "../DataManagement/AnalysisPlot.h"
+#include "../Disturbance/DisturbAction.h"
 #include "FuelsDIO.h"
 #include "FuelsEquations.h"
 
@@ -39,30 +37,26 @@ namespace Fuels
 		// Toggle debugging messages
 		bool suppress_messages;
 
-		// Calculates the percent of live. 100-this is the percent of dead
-		double calcPercentLive(RVS::DataManagement::SppRecord* spp, int fuelClass);
-		// (Temporary) hard-coded list of equations to calculate percent live
-		vector<int> makePercentLiveList(int fuelClass);
-		// (Temporary) hard-coded list of equations to calculate percent dead
-		vector<int> makePercentDeadList(int fuelClass);
-
+		DataManagement::AnalysisPlot* ap;
+		
 		// Processes a record in the equation table to calculate a fuel value
 		double calcShrubFuel(int equationNumber, RVS::DataManagement::SppRecord* spp);
 
-		// Determine which FBFM classification table to use by checking rules
-		std::string determineFBFMClassTable(RVS::DataManagement::AnalysisPlot* ap);
-
-		// Use class ruleset to determine FBFM
-		int calcFBFM(std::string classTable, RVS::DataManagement::AnalysisPlot* ap);
-
-		int calcFBFMGrass(std::string classTable, RVS::DataManagement::AnalysisPlot* ap);
-		int calcFBFMShrub(std::string classTable, RVS::DataManagement::AnalysisPlot* ap);
-		int calcFBFMMixed(std::string classTable, RVS::DataManagement::AnalysisPlot* ap);
+		// Current FBFM
+		string calcFBFMDry();
+		string calcFBFMHumid();
 
 		int switchClimateFBFM(RVS::DataManagement::DataTable* dt, RVS::DataManagement::AnalysisPlot* ap);
 
+		double calc1HrFuel(double biomass);
+		double calc1HrWoodBark(double biomass);
+		double calc1HrFoliage(double biomass);
+
+		double calc10HrFuel(double biomass);
+		double calc100HrFuel(double biomass);
+		double calc1000HrFuel(double height);
+
+		void applyDisturbance(int year);
 	};
 }
 }
-
-#endif

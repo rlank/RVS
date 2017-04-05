@@ -45,7 +45,8 @@ namespace Biomass
 		static double eq_1058(double cf1, double cf2, double cf3, double p1);
 		static double eq_basicBAT(double cf1, double cf2, double length, double width);
 		static double eq_1153(double cf1, double cf2, double cf3, double length, double width, double height);
-		static double eq_1160(double cf1, double cf2, double cf3, double p1);
+		static double eq_1160(double cf1, double cf2, double p1);
+		static double eq_1161(double cf1, double cf2, double p1);
 
 		static double shunt(std::string equation, std::map<std::string, double> variables);
 	};

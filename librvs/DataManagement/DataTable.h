@@ -9,9 +9,6 @@
 
 #pragma once
 
-#ifndef DATATABLE_H
-#define DATATABLE_H
-
 #include <map>
 
 #include <sqlite3.h>
@@ -51,5 +48,3 @@ namespace DataManagement
 	};
 }
 }
-
-#endif

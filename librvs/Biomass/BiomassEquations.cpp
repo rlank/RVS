@@ -87,7 +87,11 @@ double RVS::Biomass::BiomassEquations::eq_BAT(int equationNumber, double* coefs,
 	}
 	else if (equationNumber == 1160)
 	{
-		biomass = eq_1160(coefs[0], coefs[1], coefs[2], params->at("VOL"));
+		biomass = eq_1160(coefs[0], coefs[1], params->at("VOL"));
+	}
+	else if (equationNumber == 1161)
+	{
+		biomass = eq_1161(coefs[0], coefs[1], params->at("VOL"));
 	}
 	else
 	{
@@ -208,9 +212,15 @@ double RVS::Biomass::BiomassEquations::eq_basicBAT(double cf1, double cf2, doubl
 	return biomass;
 }
 
-double RVS::Biomass::BiomassEquations::eq_1160(double cf1, double cf2, double cf3, double p1)
+double RVS::Biomass::BiomassEquations::eq_1160(double cf1, double cf2, double p1)
 {
-	double biomass = ((cf1 + cf2 * p1) * cf3) * 453.592;
+	double biomass = (cf1 + cf2 * p1);
+	return biomass;
+}
+
+double RVS::Biomass::BiomassEquations::eq_1161(double cf1, double cf2, double p1)
+{
+	double biomass = cf1 * (p1 / cf2);
 	return biomass;
 }
 

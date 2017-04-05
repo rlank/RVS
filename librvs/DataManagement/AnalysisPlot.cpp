@@ -15,20 +15,23 @@ AnalysisPlot::AnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataManagement::D
 	herbBiomass = 0;
 	herbHoldoverBiomass = 0;
 	shrubBiomass = 0;
-	shrubFuels = 0;
-	herbFuels = 0;
 	defaultFBFM = 0;
 	calcFBFM = 0;
-	dryClimate = false;
-	shrubRecords = std::vector<SppRecord*>();
-	ndviValues = std::vector<double>();
-	precipValues = std::vector<double>();
-	totalFuels = std::map<std::string, double>();
-	
+	dryClimate = true;
+	shrubRecords = vector<SppRecord*>();
+	ndviValues = vector<double>();
+	precipValues = vector<double>();
+	disturbances = vector<Disturbance::DisturbAction>();
+	disturbed = false;
+
+	previousHerbProductions = new double[3];
+	previousHerbProductions[0] = 0;
+	previousHerbProductions[1] = 0;
+	previousHerbProductions[2] = 0;
+
 	// Order matters here!
 	buildAnalysisPlot(dio, dt);
-	//fallback_bps_num = dio->query_backup_bps(huc);
-	//buildInitialFuels(dio);
+	buildInitialFuels(dio);
 }
 
 AnalysisPlot::~AnalysisPlot(void)
@@ -45,10 +48,11 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 	dio->getVal(stmt, dt->Columns[EVT_NUM_FIELD], &evt_num);
 	dio->getVal(stmt, dt->Columns[BPS_NUM_FIELD], &bps_num);
 	dio->getVal(stmt, dt->Columns[BPS_MODEL_FIELD], &bps_model_num);
-	dio->getVal(stmt, dt->Columns[HUC_FIELD], &huc);
 	dio->getVal(stmt, dt->Columns[HERB_COVER_FIELD], &herbCover);
 	dio->getVal(stmt, dt->Columns[HERB_HEIGHT_FIELD], &herbHeight);
 	dio->getVal(stmt, dt->Columns[SUCCESSION_CLASS_FIELD], &currentStage);
+	dio->getVal(stmt, dt->Columns[LATITUDE_FIELD], &latitude);
+	dio->getVal(stmt, dt->Columns[LONGITUDE_FIELD], &longitude);
 
 	int colCount = sqlite3_column_count(stmt);
 	std::string ndvi = "NDVI";
@@ -72,9 +76,7 @@ void AnalysisPlot::buildAnalysisPlot(RVS::DataManagement::DIO* dio, RVS::DataMan
 		{
 			precipValues.push_back(*aval);
 		}
-
 	}
-	return;
 }
 
 void AnalysisPlot::push_shrub(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt)
@@ -88,44 +90,51 @@ void AnalysisPlot::push_shrub(RVS::DataManagement::SppRecord* record)
 	shrubRecords.push_back(record);
 }
 
+void AnalysisPlot::update_shrubvalues()
+{
+	shrubCover = 0;
+	shrubHeight = 0;
+	double runningHeight = 0;
+	for (auto &s : shrubRecords)
+	{
+		shrubCover += s->COVER();
+		runningHeight += s->HEIGHT();
+	}
+	shrubHeight = runningHeight / shrubRecords.size();
+}
+
 void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
 {
-	try
-	{
-		dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
-	}
-	catch (RVS::DataManagement::DataNotFoundException &ex)
-	{
-		dio->query_fuels_basic_info(&fallback_bps_num, &defaultFBFM, &dryClimate);
-	}
+	dio->query_fuels_basic_info(&bps_num, &defaultFBFM, &dryClimate);
 }
+
 
 double AnalysisPlot::getNDVI(string level, bool useRand)
 {
 	double ndvi = 0;
 	if (level.compare("Dry") == 0)
 	{
-		ndvi = ndviValues.at(0);
+		ndvi = ndviValues[0];
 	}
 	else if (level.compare("Mid-Dry") == 0)
 	{
-		ndvi = ndviValues.at(1);
+		ndvi = ndviValues[1];
 	}
 	else if (level.compare("Mid-Wet") == 0)
 	{
-		ndvi = ndviValues.at(3);
+		ndvi = ndviValues[3];
 	}
 	else if (level.compare("Wet") == 0)
 	{
-		ndvi = ndviValues.at(4);
+		ndvi = ndviValues[4];
 	}
 	else if (level.compare("Normal") == 0)
 	{
-		ndvi = ndviValues.at(2);
+		ndvi = ndviValues[2];
 	}
 	else
 	{
-		ndvi = ndviValues.at(2);
+		ndvi = ndviValues[2];
 	}
 
 	if (useRand)
@@ -142,27 +151,27 @@ double AnalysisPlot::getPPT(string level, bool useRand)
 	double ppt = 0;
 	if (level.compare("Dry") == 0)
 	{
-		ppt = precipValues.at(0);
+		ppt = precipValues[0];
 	}
 	else if (level.compare("Mid-Dry") == 0)
 	{
-		ppt = precipValues.at(1);
+		ppt = precipValues[1];
 	}
 	else if (level.compare("Mid-Wet") == 0)
 	{
-		ppt = precipValues.at(3);
+		ppt = precipValues[3];
 	}
 	else if (level.compare("Wet") == 0)
 	{
-		ppt = precipValues.at(4);
+		ppt = precipValues[4];
 	}
 	else if (level.compare("Normal") == 0)
 	{
-		ppt = precipValues.at(2);
+		ppt = precipValues[2];
 	}
 	else
 	{
-		ppt = precipValues.at(2);
+		ppt = precipValues[2];
 	}
 
 
@@ -173,4 +182,19 @@ double AnalysisPlot::getPPT(string level, bool useRand)
 	}
 
 	return ppt;
+}
+
+vector<RVS::Disturbance::DisturbAction> RVS::DataManagement::AnalysisPlot::getDisturbancesForYear(int year)
+{
+	vector<Disturbance::DisturbAction> yearDisturbances = vector<Disturbance::DisturbAction>();
+
+	for (auto d : disturbances)
+	{
+		if (d.getActionYear() == year)
+		{
+			yearDisturbances.push_back(d);
+		}
+	}
+
+	return yearDisturbances;
 }

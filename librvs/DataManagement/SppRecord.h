@@ -22,6 +22,7 @@ namespace RVS { namespace Biomass { class BiomassDriver; } }
 namespace RVS { namespace Biomass { class BiomassEqDriver; } }
 namespace RVS { namespace Fuels   { class FuelsDriver; } }
 namespace RVS { namespace Succession { class SuccessionDriver; } }
+namespace RVS { namespace Disturbance { class DisturbanceDriver; } }
 
 using namespace RVS::DataManagement;
 
@@ -35,6 +36,7 @@ namespace DataManagement
 		friend class RVS::Fuels::FuelsDriver;
 		friend class RVS::Biomass::BiomassEqDriver;
 		friend class RVS::Succession::SuccessionDriver;
+		friend class RVS::Disturbance::DisturbanceDriver;
 
 	public:
 		SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
@@ -66,8 +68,6 @@ namespace DataManagement
 		const float GRAMS_TO_POUNDS = 0.00220462f;
 
 		// Fuels results
-		inline std::map<std::string, int> FUEL_EQUS() { return fuelEqs; }
-		inline std::map<std::string, double> FUEL_VALUES() { return fuelValues; }
 		
 		// Return a parameter (length, width, height) by name
 		double requestValue(std::string parameterName);
@@ -89,18 +89,16 @@ namespace DataManagement
 
 		// Biomass values
 		double shrubBiomass;  // grams
-		double exShrubBiomass;  // lbs/ac
+		double exShrubBiomass;  // grams
 		int pchEqNum;
 		int batEqNum;
 
 		// Fuels collection
-		std::map<std::string, int> fuelEqs;
-		std::map<std::string, double> fuelValues;
-		double crl1;  // Percent live, 1hr, calculated value (in Fuels) (0-100)
-		double crl2;  // Percent live, 10hr, calculated value (in Fuels) (0-100)
-		double crl3;  // Percent live, 100hr, calculated value (in Fuels) (0-100)
 
-
+		double fuel1hr;
+		double fuel10hr;
+		double fuel100hr;
+		double fuel1000hr;
 	};
 }
 }
