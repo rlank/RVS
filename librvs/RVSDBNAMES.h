@@ -10,8 +10,8 @@
 namespace RVS
 {
 	// Primary table names. Replace with externs as needed
-	static const char* RVS_INPUT_TABLE = "Plots_FCCS";
-	static const char* SHRUB_INPUT_TABLE = "Shrubs_FCCS";
+	static const char* RVS_INPUT_TABLE = "Plots_2007";
+	static const char* SHRUB_INPUT_TABLE = "Shrubs_None";
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
 	static const char* BIOMASS_EQUATION_TABLE = "Bio_Equation";
 	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT3";
@@ -22,7 +22,8 @@ namespace RVS
 	static const char* FUEL_EQUATION_TABLE = "Fuel_Equation";
 	static const char* FUEL_BPS_ATTR_TABLE = "BPS_Fuelmodels";
 	static const char* FUEL_CLASSRULES_TABLE = "Fuel_ClassRules";
-	static const char* SUCCESSION_TABLE = "BPS_Growth_Rates";
+	//static const char* SUCCESSION_TABLE = "BPS_Growth_Rates";
+	static const char* SUCCESSION_TABLE = "Growth_Kit";
 	static const char* PLANTS_TABLE = "Plants";
 	static const char* HERB_GROWTH_TABLE = "Herb_Growth";
 	static const char* DISTURBANCE_PLOT_TABLE = "Dist_year7fire";

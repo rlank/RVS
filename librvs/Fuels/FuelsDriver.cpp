@@ -254,6 +254,7 @@ double RVS::Fuels::FuelsDriver::calc1000HrFuel(double ht)
 void RVS::Fuels::FuelsDriver::applyDisturbance(int year)
 {
 	vector<RVS::Disturbance::DisturbAction> disturbances = ap->getDisturbancesForYear(year);
+	if (disturbances.empty()) { return; }
 
 	// Fire is handled in the DisturbanceDriver, so skip if fire
 	// $TODO this assumes fire is the only action (or first action) for the year
