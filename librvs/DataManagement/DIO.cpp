@@ -144,7 +144,7 @@ RVS::DataManagement::DataTable* RVS::DataManagement::DIO::prep_datatable(const c
 
 int* RVS::DataManagement::DIO::write_output(void)
 {
-	char* err;
+	char* err = new char();
 	*RC = sqlite3_exec(outdb, "BEGIN TRANSACTION", NULL, NULL, &err);
 
 	for (int w = 0; w < queuedWrites.size(); w++)

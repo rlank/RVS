@@ -32,13 +32,13 @@ using namespace RVS;
 using namespace RVS::DataManagement;
 
 int* RC = new int(SQLITE_OK);
-int* YEARS = new int(50);
+int* YEARS = new int(5);
 bool* SUPPRESS_MSG = new bool(true);
 const char* DEBUG_FILE = "RVS_Debug.txt";
 string* CLIMATE = new string("Normal");
 bool* USE_MEM = new bool(true);
-bool* RANDOM_CLIMATE = new bool(true);
-char* RVS_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_in.db";
+bool* RANDOM_CLIMATE = new bool(false);
+char* RVS_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_in.db";
 char* OUT_DB_PATH = "";
 
 // Define runmode
@@ -83,25 +83,25 @@ int main(int argc, char* argv[])
 	
 	if (*runmode == 1)
 	{
-		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_random.db";
+		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_kit.db";
 		run(&simulate);
 	}
 	else if (*runmode == 2)
 	{
 		*YEARS = 1;
-		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_FCCS_test.db";
+		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_FCCS_test.db";
 		run(&simulate);
 	}
 	else if (*runmode == 3)
 	{
 		*YEARS = 5;
-		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_herb_test.db";
+		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_herb_test.db";
 		run(&fiveYearHerbTest);
 	}
 	else if (*runmode == 4)
 	{
 		*YEARS = 1;
-		OUT_DB_PATH = "C:/Users/robblankston/Documents/GitHub/RVS/rvs_out_shrub_test.db";
+		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_shrub_test.db";
 		shrubEquationTest();
 	}
 	
@@ -174,6 +174,7 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 
 	bdio->write_debug_msg("Plants loaded");
 
+	/*
 	map<int, vector<RVS::Disturbance::DisturbAction>> disturbances = ddio->query_disturbance_input();
 
 	for (auto &d : disturbances)
@@ -182,6 +183,7 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 	}
 
 	bdio->write_debug_msg("Disturbances loaded");
+	*/
 
 	std::cout << "Done." << std::endl;
 
@@ -241,7 +243,7 @@ void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot,
 	if (*RANDOM_CLIMATE) { randomClimate(); }
 
 	RC = sd->SuccessionMain(year, CLIMATE, currentPlot);
-	RC = dd->DisturbanceMain(year, currentPlot);
+	//RC = dd->DisturbanceMain(year, currentPlot);
 	RC = bd->BioMain(year, CLIMATE, currentPlot);
 	RC = fd->FuelsMain(year, currentPlot);
 }

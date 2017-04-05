@@ -12,6 +12,8 @@
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+*.opendb
+
 
 # Build results
 
