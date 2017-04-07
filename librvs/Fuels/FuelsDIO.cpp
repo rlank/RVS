@@ -19,6 +19,7 @@ int* RVS::Fuels::FuelsDIO::create_output_table()
 		PLOT_NAME_FIELD << " TEXT, " << \
 		YEAR_OUT_FIELD << " INT NOT NULL," << \
 		BPS_NUM_FIELD << " INT NOT NULL," << \
+		BPS_MODEL_FIELD << " TEXT NOT NULL," << \
 		FC_ISDRY_FIELD << " BOOLEAN, " << \
 		AVG_SHRUB_HEIGHT_FIELD << " REAL," << \
 		TOT_SHRUB_COVER_FIELD << " REAL," << \
@@ -50,6 +51,7 @@ int* RVS::Fuels::FuelsDIO::write_output_record(int* year, RVS::DataManagement::A
 		PLOT_NAME_FIELD << ", " << \
 		YEAR_OUT_FIELD << ", " << \
 		BPS_NUM_FIELD << ", " << \
+		BPS_MODEL_FIELD << ", " << \
 		FC_ISDRY_FIELD << ", " << \
 		AVG_SHRUB_HEIGHT_FIELD << "," << \
 		TOT_SHRUB_COVER_FIELD << "," << \
@@ -69,6 +71,7 @@ int* RVS::Fuels::FuelsDIO::write_output_record(int* year, RVS::DataManagement::A
 		ap->PLOT_NAME() << "\"," << \
 		*year << "," << \
 		ap->BPS_NUM() << "," << \
+		ap->BPS_MODEL_NUM() << "," << \
 		ap->ISDRY() << ", " << \
 		ap->SHRUBHEIGHT() << ", " << \
 		ap->SHRUBCOVER() << ", " << \

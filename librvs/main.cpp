@@ -32,7 +32,7 @@ using namespace RVS;
 using namespace RVS::DataManagement;
 
 int* RC = new int(SQLITE_OK);
-int* YEARS = new int(5);
+int* YEARS = new int(19);
 bool* SUPPRESS_MSG = new bool(true);
 const char* DEBUG_FILE = "RVS_Debug.txt";
 string* CLIMATE = new string("Normal");
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 	
 	if (*runmode == 1)
 	{
-		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_kit.db";
+		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_kit_2003.db";
 		run(&simulate);
 	}
 	else if (*runmode == 2)

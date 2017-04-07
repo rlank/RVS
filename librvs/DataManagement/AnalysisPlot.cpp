@@ -94,13 +94,22 @@ void AnalysisPlot::update_shrubvalues()
 {
 	shrubCover = 0;
 	shrubHeight = 0;
-	double runningHeight = 0;
-	for (auto &s : shrubRecords)
+
+	if (shrubRecords.size() > 0)
 	{
-		shrubCover += s->COVER();
-		runningHeight += s->HEIGHT();
+		double runningHeight = 0;
+		for (auto &s : shrubRecords)
+		{
+			shrubCover += s->COVER();
+			runningHeight += s->HEIGHT();
+		}
+		shrubHeight = runningHeight / shrubRecords.size();
 	}
-	shrubHeight = runningHeight / shrubRecords.size();
+	else
+	{
+		shrubHeight = 0.0;
+	}
+	
 }
 
 void AnalysisPlot::buildInitialFuels(RVS::DataManagement::DIO* dio)
