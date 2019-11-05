@@ -93,7 +93,15 @@ int* SuccessionDriver::SuccessionMain(int year, string* climate, RVS::DataManage
 	// When using sclass to get parameters, remember stages are (1-3) but array is (0-2)
 	ap->currentStageType = successionStrParameters[sclass - 1]["cohort_type"];
 
-	
+	// Check if this type of succession stage is even supported
+	if (ap->currentStageType.compare("S") != 0 && ap->currentStageType.compare("H") != 0)
+	{
+		stringstream* s = new stringstream();
+		*s << "PLOT_ID: " << ap->PLOT_ID() << ". Not a S or H plot. RVS does not model (grow shrubs).";
+		const char* c = sdio->streamToCharPtr(s);
+		sdio->write_debug_msg(c);
+	}
+
 	// get rounded midpoint year for stage
 	// add rounded midpoint to actual years(startage + rounded midpoint length) = adjusted midpoint
 	int midpoint = 0;

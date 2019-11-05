@@ -183,6 +183,11 @@ double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
 	double expanded = EXPANSION_FACTOR / (singleStem * .0001);
 	// Return the expanded amount as a function of percent cover
 	double stemsPerAcre = expanded * (record->COVER() / 100);
+
+	// 9/27/2017 new stems per acre reduction calculation, fixes performance at low heights
+	double reduction = exp(0.0809 * record->HEIGHT()) * 0.0053;
+	if (reduction <= 0.453595949) { stemsPerAcre *= reduction; }
+
 	return stemsPerAcre;
 }
 
