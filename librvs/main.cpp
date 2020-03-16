@@ -3,7 +3,7 @@
 /// Desc: Driver for RVS. Build as execultable and			   ///
 /// this becomes the program entry point                       ///
 /// Base Class(es): none                                       ///
-/// Last Modified: 05 May 16                                   ///
+/// Last Modified: 11 Nov 19                                   ///
 /// ********************************************************** ///
 
 #include <ctime>
@@ -75,37 +75,26 @@ void randomClimate();
 int main(int argc, char* argv[])
 {   
 	//std::cout << argc << std::endl;
-	//for (int i = 0; i < argc; i++)
-	//{
-	//	std::cout << argv[i] << std::endl;
-	//}
+	for (int i = 0; i < argc; i++)
+	{
+		std::cout << argv[i] << std::endl;
+	}
 
-	
-	if (*runmode == 1)
+
+	if (argc == 4)
+	{
+		RVS_DB_PATH = argv[1];
+		OUT_DB_PATH = argv[2];
+		*YEARS = atoi(argv[3]);
+	}
+	else
 	{
 		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_c.db";
-		run(&simulate);
-	}
-	else if (*runmode == 2)
-	{
-		*YEARS = 1;
-		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_FCCS_test.db";
-		run(&simulate);
-	}
-	else if (*runmode == 3)
-	{
-		*YEARS = 5;
-		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_herb_test.db";
-		run(&fiveYearHerbTest);
-	}
-	else if (*runmode == 4)
-	{
-		*YEARS = 1;
-		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_shrub_test.db";
-		shrubEquationTest();
 	}
 	
 
+	run(&simulate);
+	
 
 	return (*RC);
 }

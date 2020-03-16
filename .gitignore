@@ -9,7 +9,7 @@
 *.suo
 *.user
 *.sln.docstates
-*.vcxproj
+#*.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
 *.opendb
