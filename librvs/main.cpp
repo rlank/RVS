@@ -3,7 +3,7 @@
 /// Desc: Driver for RVS. Build as execultable and			   ///
 /// this becomes the program entry point                       ///
 /// Base Class(es): none                                       ///
-/// Last Modified: 05 May 16                                   ///
+/// Last Modified: 11 Nov 19                                   ///
 /// ********************************************************** ///
 
 #include <ctime>
@@ -32,7 +32,7 @@ using namespace RVS;
 using namespace RVS::DataManagement;
 
 int* RC = new int(SQLITE_OK);
-int* YEARS = new int(5);
+int* YEARS = new int(20);
 bool* SUPPRESS_MSG = new bool(true);
 const char* DEBUG_FILE = "RVS_Debug.txt";
 string* CLIMATE = new string("Normal");
@@ -75,37 +75,26 @@ void randomClimate();
 int main(int argc, char* argv[])
 {   
 	//std::cout << argc << std::endl;
-	//for (int i = 0; i < argc; i++)
-	//{
-	//	std::cout << argv[i] << std::endl;
-	//}
+	for (int i = 0; i < argc; i++)
+	{
+		std::cout << argv[i] << std::endl;
+	}
 
-	
-	if (*runmode == 1)
+
+	if (argc == 4)
 	{
-		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_kit.db";
-		run(&simulate);
+		RVS_DB_PATH = argv[1];
+		OUT_DB_PATH = argv[2];
+		*YEARS = atoi(argv[3]);
 	}
-	else if (*runmode == 2)
+	else
 	{
-		*YEARS = 1;
-		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_FCCS_test.db";
-		run(&simulate);
-	}
-	else if (*runmode == 3)
-	{
-		*YEARS = 5;
-		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_herb_test.db";
-		run(&fiveYearHerbTest);
-	}
-	else if (*runmode == 4)
-	{
-		*YEARS = 1;
-		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_shrub_test.db";
-		shrubEquationTest();
+		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_c.db";
 	}
 	
 
+	run(&simulate);
+	
 
 	return (*RC);
 }
@@ -176,6 +165,7 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 
 	/*
 	map<int, vector<RVS::Disturbance::DisturbAction>> disturbances = ddio->query_disturbance_input();
+	std::cout << "Loading disturbances..." << std::endl;
 
 	for (auto &d : disturbances)
 	{

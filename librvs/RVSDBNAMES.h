@@ -10,11 +10,11 @@
 namespace RVS
 {
 	// Primary table names. Replace with externs as needed
-	static const char* RVS_INPUT_TABLE = "Plots_2007";
-	static const char* SHRUB_INPUT_TABLE = "Shrubs_None";
+	static const char* RVS_INPUT_TABLE = "Plots_Active";
+	static const char* SHRUB_INPUT_TABLE = "Shrubs_Active";
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
 	static const char* BIOMASS_EQUATION_TABLE = "Bio_Equation";
-	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT3";
+	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT";
 	static const char* BIOMASS_GROUP_COEFS_TABLE = "Bio_Group_Coef_Cross";
 	static const char* BIOMASS_GROUP_COVARIANCE_TABLE = "Bio_Group_Covariance_Cross";
 	static const char* COVARIANCE_TABLE = "Covariance_Matrix_NoGroup";
@@ -22,8 +22,7 @@ namespace RVS
 	static const char* FUEL_EQUATION_TABLE = "Fuel_Equation";
 	static const char* FUEL_BPS_ATTR_TABLE = "BPS_Fuelmodels";
 	static const char* FUEL_CLASSRULES_TABLE = "Fuel_ClassRules";
-	//static const char* SUCCESSION_TABLE = "BPS_Growth_Rates";
-	static const char* SUCCESSION_TABLE = "Growth_Kit";
+	static const char* SUCCESSION_TABLE = "BPS_Combined_Growthrates";
 	static const char* PLANTS_TABLE = "Plants";
 	static const char* HERB_GROWTH_TABLE = "Herb_Growth";
 	static const char* DISTURBANCE_PLOT_TABLE = "Dist_year7fire";
@@ -122,7 +121,7 @@ namespace RVS
 	static const char* SUCCESSION_SPECIES_2_FIELD = "Species2";
 	static const char* SUCCESSION_SPECIES_3_FIELD = "Species3";
 	static const char* SUCCESSION_SPECIES_4_FIELD = "Species4";
-	static const char* SUCCESSION_CLASS_FIELD = "SCLASS";
+	static const char* SUCCESSION_CLASS_FIELD = "sclass";
 
 	// ********************
 

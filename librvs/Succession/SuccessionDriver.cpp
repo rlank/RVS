@@ -97,34 +97,39 @@ int* SuccessionDriver::SuccessionMain(int year, string* climate, RVS::DataManage
 	if (ap->currentStageType.compare("S") != 0 && ap->currentStageType.compare("H") != 0)
 	{
 		stringstream* s = new stringstream();
-		*s << "PLOT_ID: " << ap->PLOT_ID() << ". Not a S or H plot. RVS will not model (grow shrubs).";
+		*s << "PLOT_ID: " << ap->PLOT_ID() << ". Not a S or H plot. RVS does not model (grow shrubs).";
 		const char* c = sdio->streamToCharPtr(s);
 		sdio->write_debug_msg(c);
 	}
+
+	// get rounded midpoint year for stage
+	// add rounded midpoint to actual years(startage + rounded midpoint length) = adjusted midpoint
+	int midpoint = 0;
+	int adjust = 0;
+	string stage;
+
+	midpoint = (int)successionNumParameters[sclass - 1]["midpoint"];
+	adjust = (int)successionNumParameters[sclass - 1]["startAge"];
+	midpoint += adjust;
+	stage = successionStrParameters[sclass - 1]["cover_type"];
+
+	bool isLate = stage.compare("L") == 0 ? true : false;
+
+	shrubs = ap->SHRUB_RECORDS();
+	// If the plot is not at the midpoint of the current stage, or if it's late stage,
+	// grow the current succession stage. Growth for next stage begins halfway through
+	// the current succession stage
+
+	int useAge = stage.compare("H") == 0 ? ap->timeInHerbStage : ageOfPlot;
+	if (stage.compare("H") == 0) { ap->timeInHerbStage += 1; }
+
+	if (useAge < midpoint || isLate)
+	{
+		growStage(successionStrParameters[sclass - 1], successionNumParameters[sclass - 1]);
+	}
 	else
 	{
-		// get rounded midpoint year for stage
-		// add rounded midpoint to actual years(startage + rounded midpoint length) = adjusted midpoint
-		int midpoint = 0;
-		int adjust = 0;
-		string stage;
-
-		midpoint = (int)successionNumParameters[sclass - 1]["midpoint"];
-		adjust = (int)successionNumParameters[sclass - 1]["startAge"];
-		midpoint += adjust;
-		stage = successionStrParameters[sclass - 1]["cover_type"];
-
-		bool isLate = stage.compare("Late") == 0 ? true : false;
-
-		shrubs = ap->SHRUB_RECORDS();
-		// If the plot is not at the midpoint of the current stage, or if it's late stage,
-		// grow the current succession stage. Growth for next stage begins halfway through
-		// the current succession stage
-
-		int useAge = stage.compare("H") == 0 ? ap->timeInHerbStage : ageOfPlot;
-		if (stage.compare("H") == 0) { ap->timeInHerbStage += 1; }
-
-		if (useAge < midpoint || isLate)
+		if (sclass >= successionNumParameters.size()) 
 		{
 			growStage(successionStrParameters[sclass - 1], successionNumParameters[sclass - 1]);
 		}
@@ -132,6 +137,7 @@ int* SuccessionDriver::SuccessionMain(int year, string* climate, RVS::DataManage
 		{
 			growStage(successionStrParameters[sclass], successionNumParameters[sclass]);
 		}
+		
 	}
 	
 	// Grow herbs
@@ -207,7 +213,7 @@ int SuccessionDriver::determineCurrentClass()
 	double cover = 0;
 	double height = 0;
 
-	// This loop attemps to advance succession stages until the logic fails (cover and height do not
+	// This loop attemps to diminish succession stages until the logic fails (cover and height do not
 	// exceed maximum conditions). It also checks that the stage exists, as some classes only have
 	// 1 or 2 succession stages
 	for (int i = successionNumParameters.size() - 1; i >= 0; --i)
@@ -315,7 +321,7 @@ void SuccessionDriver::growStage(map<string, string> strVals, map<string, double
 	double max_height = numVals["max_ht"];
 	double max_cover = numVals["max_cov"];
 
-	if (growthStage.compare("S") == 0)
+	if (growthStage.compare("H") != 0)
 	{
 		if (shrubs->empty())  
 		{
