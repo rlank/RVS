@@ -1,15 +1,9 @@
 #include "DisturbAction.h"
 
-
-RVS::Disturbance::DisturbAction::DisturbAction(int actionYear, string actionType, string actionSubType, map<string, double> params)
+namespace RVS
 {
-	this->actionYear = actionYear;
-	this->actionType = actionType;
-	this->actionSubType = actionSubType;
-	this->params = params;
+namespace Disturbance
+{
+	// Class implementation is primarily inlined in header for C++20 value type performance.
 }
-
-
-RVS::Disturbance::DisturbAction::~DisturbAction()
-{
 }

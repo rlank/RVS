@@ -1,7 +1,7 @@
 /// ********************************************************** ///
-/// Name: BiomassEqDriver.h                                      ///
-/// Desc:           ///
-/// Base Class(es): none                                       ///
+/// Name: BiomassEqDriver.h                                    ///
+/// Desc: Driver for executing individual biomass equations.   ///
+/// Standard: C++20                                            ///
 /// ********************************************************** ///
 
 #pragma once
@@ -24,28 +24,23 @@ namespace RVS
 		{
 		public:
 			// Constructor
-			// <param name="level">The lookup level to use for primary production (herb biomass)</param>
-			// <param name="suppress_messages">Optional. Toggle to 'true' to suppress console messages. Useful when threading.</param>
 			BiomassEqDriver(RVS::Biomass::BiomassDIO* bdio, bool suppress_messages = false);
-			virtual ~BiomassEqDriver(void);
+			virtual ~BiomassEqDriver(void) = default;
 
 			// <returns>Return code. 0 indicates a clean run.</returns>
 			int* BioMain(int equationNumber, RVS::DataManagement::AnalysisPlot* ap);
 
-			const float EXPANSION_FACTOR = 4046.8564224f;
+			static constexpr double EXPANSION_FACTOR = 4046.8564224;
 
 		private:
 			RVS::Biomass::BiomassDIO* bdio;
-			RVS::DataManagement::AnalysisPlot* ap;
+			RVS::DataManagement::AnalysisPlot* ap = nullptr;
 			bool suppress_messages;
 
-
-
 			// Constants for herbaceous biomass calculation
-			//$$ TODO get these from DB, not const
-			const float INTERCEPT = -19.4346f;
-			const float LN_PRECIP = 0.141f;
-			const float LN_NDVI = 3.0056f;
+			static constexpr double INTERCEPT = -19.4346;
+			static constexpr double LN_PRECIP = 0.141;
+			static constexpr double LN_NDVI = 3.0056;
 
 			double calcShrubBiomass(int equationNumber, RVS::DataManagement::SppRecord* record);
 			double calcStemsPerAcre(RVS::DataManagement::SppRecord* record);
@@ -53,4 +48,4 @@ namespace RVS
 	}
 }
 
-#endif
+#endif // BIOMASSEQDRIVER_H

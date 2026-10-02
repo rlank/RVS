@@ -1,49 +1,77 @@
 /// ********************************************************** ///
 /// Name: DisturbanceDriver.h                                  ///
-/// Desc:                                                      ///
+/// Desc: Driver for fire and grazing disturbances.            ///
+/// Standard: C++20                                            ///
 /// ********************************************************** ///
 
 #pragma once
 
+#ifndef DISTURBANCEDRIVER_H
+#define DISTURBANCEDRIVER_H
+
 #include <iostream>
 #include <map>
+#include <string>
+#include <string_view>
 
 #include "../DataManagement/AnalysisPlot.h"
 #include "DisturbanceDIO.h"
-
-using namespace std;
 
 namespace RVS
 {
 namespace Disturbance
 {
+	/// \brief Scoped enumeration for grazer types
+	enum class GrazeType : uint8_t
+	{
+		Cow,
+		Sheep,
+		Goat
+	};
+
 	class DisturbanceDriver
 	{
 	public:
-		DisturbanceDriver(RVS::Disturbance::DisturbanceDIO* fdio, bool suppress_messages = false);
-		virtual ~DisturbanceDriver(void);
+		// Backward compatibility aliases for legacy code
+		using GRAZE_TYPE = GrazeType;
+		static constexpr GrazeType cow = GrazeType::Cow;
+		static constexpr GrazeType sheep = GrazeType::Sheep;
+		static constexpr GrazeType goat = GrazeType::Goat;
 
-		// Main Disturbance calculation function. Expects an AnalysisPlot object (with biomass information)
-		int* DisturbanceMain(int year, RVS::DataManagement::AnalysisPlot* ap);
+		explicit DisturbanceDriver(RVS::Disturbance::DisturbanceDIO* ddio, const bool suppress_messages = false);
+		virtual ~DisturbanceDriver() = default;
 
-		enum GRAZE_TYPE {cow, sheep, goat};
+		/// \brief Main Disturbance calculation entry point.
+		/// \param year Current simulation year
+		/// \param ap Analysis plot
+		/// \return Status code (0 on success)
+		[[nodiscard]] int DisturbanceMain(const int year, RVS::DataManagement::AnalysisPlot* ap);
 
 	private:
-		DataManagement::AnalysisPlot* ap;
+		DataManagement::AnalysisPlot* ap = nullptr;
+		RVS::Disturbance::DisturbanceDIO* ddio = nullptr;
+		bool suppress_messages = false;
 
-		void burnPlot(const string fireType, float intensity);
+		static constexpr double COW_MULTIPLIER = 26.0;
+		static constexpr double SMALL_MULTIPLIER = 5.2;
 
-		// Graze. Takes number of grazers, area of plot in acres, and graze time in days
-		void grazePlot(GRAZE_TYPE grazeType, double numberGrazers, double plotArea, double grazeTime);
-		
-		// Disturbance Input/Output module
-		RVS::Disturbance::DisturbanceDIO* ddio;
-		// Toggle debugging messages
-		bool suppress_messages;
+		void burnPlot(std::string_view fireType, const float intensity);
 
-		double cow_multiplier = 26;
-		double small_multiplier = 5.2;
-
+		/// \brief Graze calculation.
+		/// Mathematical formulation:
+		/// \f[
+		///   R_{\text{lbs/ac}} = \frac{M_{\text{type}} \cdot N_{\text{grazers}} \cdot T_{\text{days}}}{A_{\text{acres}}}
+		/// \f]
+		/// \f[
+		///   \Delta_{\text{biomass}} = R_{\text{lbs/ac}} \cdot K_{\text{lbs}\to\text{g}}
+		/// \f]
+		void grazePlot(
+			const GrazeType grazeType,
+			const double numberGrazers,
+			const double plotArea,
+			const double grazeTime);
 	};
 }
 }
+
+#endif // DISTURBANCEDRIVER_H

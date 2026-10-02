@@ -1,0 +1,29 @@
+[package]
+name = "rvs_core"
+version = "0.1.0"
+edition = "2021"
+description = "High-performance mathematical kernel, SoA batch engine, and async tile streaming for RVS"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+name = "rvs_core"
+
+[dependencies]
+rayon = "1.10"
+cxx = "1.0"
+tokio = { version = "1.38", features = ["full"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+async-trait = "0.1"
+futures = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+proptest = "1.5"
+approx = "0.5"
+
+[build-dependencies]
+cxx-build = "1.0"

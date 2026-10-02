@@ -1,0 +1,75 @@
+[project]
+name = "rvs-legacy"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    { include-group = "lint" },
+    { include-group = "test" },
+]
+lint = [
+    "ruff>=0.16.8",
+    "ty>=0.0.81",
+]
+test = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["tests"]
+extend-exclude = [".agents"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D", "COM812", "ISC001"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "ANN",
+    "S101",
+    "PT009",
+    "PT027",
+    "ARG",
+    "PLR",
+    "SLF001",
+    "CPY001",
+    "BLE001",
+    "ERA001",
+    "PLC0415",
+    "E501",
+    "PTH",
+    "S608",
+    "S603",
+    "PLW1510",
+    "FBT",
+    "F841",
+    "RUF",
+    "B007",
+    "S311",
+    "T201",
+    "DTZ",
+    "E741",
+    "S102",
+    "TRY",
+    "N802",
+    "PIE",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ty.terminal]
+error-on-warning = true
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.rules]
+possibly-unresolved-reference = "error"
+unused-ignore-comment = "warn"
+

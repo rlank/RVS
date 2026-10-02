@@ -468,12 +468,17 @@ impl AsyncDataLoader for MockStreamingDataLoader {
             };
 
             tokio::select! {
+                biased;
                 _ = cancel.cancelled() => {
                     self.producer_cancelled.store(true, Ordering::SeqCst);
                     return Err(DataLoaderError::Cancelled);
                 }
                 res = sender.send(tile) => {
                     if res.is_err() {
+                        if cancel.is_cancelled() {
+                            self.producer_cancelled.store(true, Ordering::SeqCst);
+                            return Err(DataLoaderError::Cancelled);
+                        }
                         // Channel closed by consumer
                         return Ok(());
                     }

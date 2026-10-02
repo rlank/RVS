@@ -1,19 +1,25 @@
 /// ********************************************************** ///
 /// Name: main.cpp                                             ///
-/// Desc: Driver for RVS. Build as execultable and			   ///
-/// this becomes the program entry point                       ///
+/// Desc: Driver for RVS. Build as executable and              ///
+///       this becomes the program entry point                 ///
 /// Base Class(es): none                                       ///
-/// Last Modified: 11 Nov 19                                   ///
+/// Standard: C++20                                            ///
 /// ********************************************************** ///
 
+#include <algorithm>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <exception>
 #include <iostream>
+#include <map>
+#include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "RVSDEF.h"
+#include "RvsCoreBridge.h"
 #include "DataManagement/DIO.h"
 #include "DataManagement/AnalysisPlot.h"
 #include "DataManagement/RVSException.h"
@@ -31,23 +37,37 @@ using namespace std;
 using namespace RVS;
 using namespace RVS::DataManagement;
 
-int* RC = new int(SQLITE_OK);
-int* YEARS = new int(20);
-bool* SUPPRESS_MSG = new bool(true);
-const char* DEBUG_FILE = "RVS_Debug.txt";
-string* CLIMATE = new string("Normal");
-bool* USE_MEM = new bool(true);
-bool* RANDOM_CLIMATE = new bool(false);
-char* RVS_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_in.db";
-char* OUT_DB_PATH = "";
+// Modernized static storage variables eliminating naked `new` global allocations.
+static int g_rc = SQLITE_OK;
+int* RC = &g_rc;
 
-// Define runmode
+static int g_years = 20;
+int* YEARS = &g_years;
+
+static bool g_suppress_msg = true;
+bool* SUPPRESS_MSG = &g_suppress_msg;
+
+const char* DEBUG_FILE = "RVS_Debug.txt";
+
+static std::string g_climate = "Normal";
+string* CLIMATE = &g_climate;
+
+static bool g_use_mem = true;
+bool* USE_MEM = &g_use_mem;
+
+static bool g_random_climate = false;
+bool* RANDOM_CLIMATE = &g_random_climate;
+
+char* RVS_DB_PATH = const_cast<char*>("rvs_demo.db");
+char* OUT_DB_PATH = const_cast<char*>("rvs_out_demo.db");
+
+// Define runmode:
 // 1: normal sim
 // 2: single year FCCS shrub test
 // 3: 5 year herb test
 // 4: shrub equation test
-const int* runmode = new int(1);
-
+static const int g_runmode = 1;
+const int* runmode = &g_runmode;
 
 void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot, 
 	Biomass::BiomassDriver* bd, 
@@ -74,14 +94,12 @@ void randomClimate();
 
 int main(int argc, char* argv[])
 {   
-	//std::cout << argc << std::endl;
 	for (int i = 0; i < argc; i++)
 	{
 		std::cout << argv[i] << std::endl;
 	}
 
-
-	if (argc == 4)
+	if (argc >= 4)
 	{
 		RVS_DB_PATH = argv[1];
 		OUT_DB_PATH = argv[2];
@@ -89,12 +107,18 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		OUT_DB_PATH = "C:/Users/robbl/Documents/GitHub/RVS/rvs_out_c.db";
+		if (std::filesystem::exists("rvs_demo.db"))
+		{
+			RVS_DB_PATH = const_cast<char*>("rvs_demo.db");
+		}
+		else if (std::filesystem::exists("../rvs_demo.db"))
+		{
+			RVS_DB_PATH = const_cast<char*>("../rvs_demo.db");
+		}
+		OUT_DB_PATH = const_cast<char*>("rvs_out_demo.db");
 	}
-	
 
 	run(&simulate);
-	
 
 	return (*RC);
 }
@@ -106,7 +130,7 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 	Disturbance::DisturbanceDriver* dd))
 {
 	time_t t = time(NULL);
-	unique_ptr<ofstream> dfile(new ofstream(DEBUG_FILE, ios::out));
+	auto dfile = std::make_unique<ofstream>(DEBUG_FILE, ios::out);
 	*dfile << ctime(&t) << "\n";
 	dfile->close();
 
@@ -114,31 +138,28 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 	/// User execution args ///
 	///////////////////////////
 
-	/// Get DIO ready for queries
-	Biomass::BiomassDIO* bdio = new Biomass::BiomassDIO();
-	Fuels::FuelsDIO* fdio = new Fuels::FuelsDIO();
-	Succession::SuccessionDIO* sdio = new Succession::SuccessionDIO();
-	Disturbance::DisturbanceDIO* ddio = new Disturbance::DisturbanceDIO();
+	/// Get DIO ready for queries with RAII
+	auto bdio = std::make_unique<Biomass::BiomassDIO>();
+	auto fdio = std::make_unique<Fuels::FuelsDIO>();
+	auto sdio = std::make_unique<Succession::SuccessionDIO>();
+	auto ddio = std::make_unique<Disturbance::DisturbanceDIO>();
 
 	vector<int> plotcounts = bdio->query_analysis_plots();
-	map<int, AnalysisPlot*> aps;
+	map<int, std::unique_ptr<AnalysisPlot>> aps;
 
 	bdio->write_debug_msg("Starting simulation");
 
-	///////////////////////////////////////////////////////////////////////
-	/// Load analysis plots and shrub records into a map keyed by plot id
-	///////////////////////////////////////////////////////////////////////
-
 	std::cout << SQLITE_VERSION << std::endl << SQLITE_SOURCE_ID << std::endl;
 	std::cout << "Loading records..." << std::endl;
-	AnalysisPlot* currentPlot = NULL;
+	AnalysisPlot* currentPlot = nullptr;
 
 	RVS::DataManagement::DataTable* plots_dt = bdio->query_input_table();
 
 	while (*RC == SQLITE_ROW)
 	{
-		currentPlot = new AnalysisPlot(fdio, plots_dt);
-		aps.insert(pair<int, AnalysisPlot*>(currentPlot->PLOT_ID(), currentPlot));
+		auto plot = std::make_unique<AnalysisPlot>(fdio.get(), plots_dt);
+		int pid = plot->PLOT_ID();
+		aps.emplace(pid, std::move(plot));
 		*RC = sqlite3_step(plots_dt->getStmt());
 	}
 
@@ -150,41 +171,40 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 	while (*RC == SQLITE_ROW)
 	{
 		bdio->getVal(shrub_dt->getStmt(), shrub_dt->Columns[PLOT_NUM_FIELD], &plot_id);
-		currentPlot = aps[plot_id];
-		currentPlot->push_shrub(bdio, shrub_dt);
+		if (aps.count(plot_id))
+		{
+			currentPlot = aps[plot_id].get();
+			currentPlot->push_shrub(bdio.get(), shrub_dt);
+		}
 		*RC = sqlite3_step(shrub_dt->getStmt());
 	}
 
 	for (auto &p : plotcounts)
 	{
-		currentPlot = aps[p];
-		currentPlot->update_shrubvalues();
+		if (aps.count(p))
+		{
+			currentPlot = aps[p].get();
+			currentPlot->update_shrubvalues();
+		}
 	}
 
-	bdio->write_debug_msg("Plants loaded");
-
-	/*
 	map<int, vector<RVS::Disturbance::DisturbAction>> disturbances = ddio->query_disturbance_input();
-	std::cout << "Loading disturbances..." << std::endl;
 
 	for (auto &d : disturbances)
 	{
-		aps[d.first]->setDisturbances(d.second);
+		if (aps.count(d.first))
+		{
+			aps[d.first]->setDisturbances(d.second);
+		}
 	}
 
-	bdio->write_debug_msg("Disturbances loaded");
-	*/
-
+	bdio->write_debug_msg("Plants loaded");
 	std::cout << "Done." << std::endl;
 
-	///////////////////////////////
-	/// Prepare for simulation
-	///////////////////////////////
-
-	Biomass::BiomassDriver bd = Biomass::BiomassDriver(bdio, *SUPPRESS_MSG);
-	Fuels::FuelsDriver fd = Fuels::FuelsDriver(fdio, *SUPPRESS_MSG);
-	Succession::SuccessionDriver sd = Succession::SuccessionDriver(sdio, *SUPPRESS_MSG);
-	Disturbance::DisturbanceDriver dd = Disturbance::DisturbanceDriver(ddio, *SUPPRESS_MSG);
+	Biomass::BiomassDriver bd(bdio.get(), *SUPPRESS_MSG);
+	Fuels::FuelsDriver fd(fdio.get(), *SUPPRESS_MSG);
+	Succession::SuccessionDriver sd(sdio.get(), *SUPPRESS_MSG);
+	Disturbance::DisturbanceDriver dd(ddio.get(), *SUPPRESS_MSG);
 
 	for (int year = 0; year < *YEARS; year++)
 	{
@@ -194,8 +214,11 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 
 		for (int &p : plotcounts)
 		{
-			currentPlot = aps[p];
-			simFunc(year, currentPlot, &bd, &fd, &sd, &dd);
+			if (aps.count(p))
+			{
+				currentPlot = aps[p].get();
+				simFunc(year, currentPlot, &bd, &fd, &sd, &dd);
+			}
 		}
 
 		stringstream ss;
@@ -205,14 +228,13 @@ void run(void(*simFunc)(int year, RVS::DataManagement::AnalysisPlot* currentPlot
 
 	bdio->write_output();
 
-	delete bdio;
-	delete fdio;
-	delete sdio;
+	// RAII cleanup: aps container automatically frees all AnalysisPlot instances
+	aps.clear();
 
 	std::cout << std::endl << "Ran to completion." << std::endl;
 
 	t = time(NULL);
-	dfile = unique_ptr<ofstream>(new ofstream(DEBUG_FILE, ios::app));
+	dfile = std::make_unique<ofstream>(DEBUG_FILE, ios::app);
 	*dfile << ctime(&t) << "\n";
 	dfile->close();
 }
@@ -232,10 +254,10 @@ void simulate(int year, RVS::DataManagement::AnalysisPlot* currentPlot,
 
 	if (*RANDOM_CLIMATE) { randomClimate(); }
 
-	RC = sd->SuccessionMain(year, CLIMATE, currentPlot);
-	//RC = dd->DisturbanceMain(year, currentPlot);
-	RC = bd->BioMain(year, CLIMATE, currentPlot);
-	RC = fd->FuelsMain(year, currentPlot);
+	*RC = sd->SuccessionMain(year, CLIMATE ? *CLIMATE : "", currentPlot);
+	*RC = dd->DisturbanceMain(year, currentPlot);
+	*RC = bd->BioMain(year, CLIMATE ? *CLIMATE : "", currentPlot);
+	*RC = fd->FuelsMain(year, currentPlot);
 }
 
 void fiveYearHerbTest(int year, RVS::DataManagement::AnalysisPlot* currentPlot,
@@ -251,15 +273,15 @@ void fiveYearHerbTest(int year, RVS::DataManagement::AnalysisPlot* currentPlot,
 	else if (year == 4) { *CLIMATE = "Wet"; }
 
 	currentPlot->HERB_RESET_TEST_ONLY();
-	RC = sd->SuccessionMain(year, CLIMATE, currentPlot);
-	RC = bd->BioMain(year, CLIMATE, currentPlot);
-	RC = fd->FuelsMain(year, currentPlot);
+	*RC = sd->SuccessionMain(year, CLIMATE ? *CLIMATE : "", currentPlot);
+	*RC = bd->BioMain(year, CLIMATE ? *CLIMATE : "", currentPlot);
+	*RC = fd->FuelsMain(year, currentPlot);
 }
 
 void shrubEquationTest()
 {
 	time_t t = time(NULL);
-	unique_ptr<ofstream> dfile(new ofstream(DEBUG_FILE, ios::out));
+	auto dfile = std::make_unique<ofstream>(DEBUG_FILE, ios::out);
 	*dfile << ctime(&t) << "\n";
 	dfile->close();
 
@@ -268,13 +290,13 @@ void shrubEquationTest()
 	///////////////////////////
 
 	/// Get DIO ready for queries
-	Biomass::BiomassDIO* bdio = new Biomass::BiomassDIO();
-	Fuels::FuelsDIO* fdio = new Fuels::FuelsDIO();
-	Succession::SuccessionDIO* sdio = new Succession::SuccessionDIO();
-	Disturbance::DisturbanceDIO* ddio = new Disturbance::DisturbanceDIO();
+	auto bdio = std::make_unique<Biomass::BiomassDIO>();
+	auto fdio = std::make_unique<Fuels::FuelsDIO>();
+	auto sdio = std::make_unique<Succession::SuccessionDIO>();
+	auto ddio = std::make_unique<Disturbance::DisturbanceDIO>();
 
 	vector<int> plotcounts = bdio->query_analysis_plots();
-	map<int, AnalysisPlot*> aps;
+	map<int, std::unique_ptr<AnalysisPlot>> aps;
 
 	///////////////////////////////////////////////////////////////////////
 	/// Load analysis plots and shrub records into a map keyed by plot id
@@ -282,14 +304,15 @@ void shrubEquationTest()
 
 	std::cout << SQLITE_VERSION << std::endl << SQLITE_SOURCE_ID << std::endl;
 	std::cout << "Loading records..." << std::endl;
-	AnalysisPlot* currentPlot = NULL;
+	AnalysisPlot* currentPlot = nullptr;
 
 	RVS::DataManagement::DataTable* plots_dt = bdio->query_input_table();
 
 	while (*RC == SQLITE_ROW)
 	{
-		currentPlot = new AnalysisPlot(fdio, plots_dt);
-		aps.insert(pair<int, AnalysisPlot*>(currentPlot->PLOT_ID(), currentPlot));
+		auto plot = std::make_unique<AnalysisPlot>(fdio.get(), plots_dt);
+		int pid = plot->PLOT_ID();
+		aps.emplace(pid, std::move(plot));
 		*RC = sqlite3_step(plots_dt->getStmt());
 	}
 
@@ -299,8 +322,11 @@ void shrubEquationTest()
 	while (*RC == SQLITE_ROW)
 	{
 		bdio->getVal(shrub_dt->getStmt(), shrub_dt->Columns[PLOT_NUM_FIELD], &plot_id);
-		currentPlot = aps[plot_id];
-		currentPlot->push_shrub(bdio, shrub_dt);
+		if (aps.count(plot_id))
+		{
+			currentPlot = aps[plot_id].get();
+			currentPlot->push_shrub(bdio.get(), shrub_dt);
+		}
 		*RC = sqlite3_step(shrub_dt->getStmt());
 	}
 
@@ -308,22 +334,26 @@ void shrubEquationTest()
 
 	for (auto &d : disturbances)
 	{
-		aps[d.first]->setDisturbances(d.second);
+		if (aps.count(d.first))
+		{
+			aps[d.first]->setDisturbances(d.second);
+		}
 	}
 
 	std::cout << "Done." << std::endl;
 
-	Biomass::BiomassEqDriver beqd = Biomass::BiomassEqDriver(bdio, *SUPPRESS_MSG);
-	vector<int> testEquations = vector<int>();
+	Biomass::BiomassEqDriver beqd(bdio.get(), *SUPPRESS_MSG);
+	vector<int> testEquations;
 	ifstream equationsFile;
-	equationsFile.open("C:\\Users\\robblankston\\Documents\\GitHub\\RVS\\librvs\\biomass_text_equations.txt");
+	equationsFile.open("librvs/biomass_text_equations.txt");
 	string line;
 	if (equationsFile.is_open())
 	{
 		while (getline(equationsFile, line))
 		{
-			if (line[0] != '#')
+			if (!line.empty() && line[0] != '#')
 			{
+				line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
 				line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
 				int eqNum = std::stoi(line);
 				testEquations.push_back(eqNum);
@@ -332,15 +362,22 @@ void shrubEquationTest()
 		equationsFile.close();
 	}
 
-	for (vector<int>::iterator it = testEquations.begin(); it != testEquations.end(); ++it)
+	for (auto it = testEquations.begin(); it != testEquations.end(); ++it)
 	{
 		std::cout << "\n===================================" << std::endl;
 		std::cout << "EQUATION " << *it << std::endl;
 		std::cout << "===================================\n" << std::endl;
 		for (int &p : plotcounts)
 		{
-			currentPlot = aps[p];
-			RC = beqd.BioMain(*it, currentPlot);
+			if (aps.count(p))
+			{
+				currentPlot = aps[p].get();
+				int* res = beqd.BioMain(*it, currentPlot);
+				if (res)
+				{
+					*RC = *res;
+				}
+			}
 		}
 		stringstream ss;
 		ss << "EQUATION " << *it << " finished";
@@ -349,14 +386,13 @@ void shrubEquationTest()
 
 	bdio->write_output();
 
-	delete bdio;
-	delete fdio;
-	delete sdio;
+	// RAII cleanup: aps container automatically frees all AnalysisPlot instances
+	aps.clear();
 
 	std::cout << std::endl << "Ran to completion." << std::endl;
 
 	t = time(NULL);
-	dfile = unique_ptr<ofstream>(new ofstream(DEBUG_FILE, ios::app));
+	dfile = std::make_unique<ofstream>(DEBUG_FILE, ios::app);
 	*dfile << ctime(&t) << "\n";
 	dfile->close();
 }

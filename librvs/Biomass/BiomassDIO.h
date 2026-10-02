@@ -8,10 +8,9 @@
 #ifndef BIOMASSDIO_H
 #define BIOMASSDIO_H
 
+#include <cstring>
 #include <iomanip>
 #include <string>
-
-#include <boost/any.hpp>
 
 #include "../DataManagement/AnalysisPlot.h"
 #include "../DataManagement/DataTable.h"
@@ -47,11 +46,11 @@ namespace Biomass
 
 		
 
-		int find_group_index(string* grp_id);
+		int find_group_index(std::string* grp_id);
 
 		// Return a collection of required values for herbaceous biomass calculation.
 		// Takes the macro group ID as parameter
-		void query_biogroup_coefs(string bps_model, double* group_const, double* ndvi_grp_interact, double* ppt_grp_interact, std::string* grp_id, bool covariance);
+		void query_biogroup_coefs(const std::string& bps_model, double* group_const, double* ndvi_grp_interact, double* ppt_grp_interact, std::string* grp_id, bool covariance);
 
 		
 	};

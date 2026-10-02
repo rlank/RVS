@@ -2,6 +2,8 @@
 // Preproccessor directives for RVS 
 //############################################//
 
+#include <string>
+
 #pragma once
 
 extern int* RC;

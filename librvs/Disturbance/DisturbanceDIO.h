@@ -1,13 +1,18 @@
 /// ********************************************************** ///
 /// Name: DisturbanceDIO.h                                     ///
-/// Desc: 				                                       ///
+/// Desc: Data Input/output class for Disturbance module.      ///
+/// Standard: C++20                                            ///
 /// Base Class(es): DIO.h                                      ///
 /// ********************************************************** ///
 
 #pragma once
 
+#ifndef DISTURBANCEDIO_H
+#define DISTURBANCEDIO_H
+
 #include <map>
 #include <string>
+#include <vector>
 
 #include "../DataManagement/AnalysisPlot.h"
 #include "../DataManagement/DataTable.h"
@@ -15,34 +20,32 @@
 #include "../DataManagement/SppRecord.h"
 #include "../RVSDBNAMES.h"
 #include "../RVSDEF.h"
-
+#include "DisturbAction.h"
 
 namespace RVS
 {
 namespace Disturbance
 {
-	class DisturbanceDIO : 
-		public RVS::DataManagement::DIO
+	class DisturbanceDIO : public RVS::DataManagement::DIO
 	{
 	public:
-		DisturbanceDIO(void);
-		virtual ~DisturbanceDIO(void);
+		DisturbanceDIO();
+		virtual ~DisturbanceDIO() = default;
 
 		//## DB functions ##//
-		int* create_output_table();
-		int* create_intermediate_table();
-		int* write_output_record(int* year, RVS::DataManagement::AnalysisPlot* ap);
-		int* write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* spp);
+		int* create_output_table() override;
+		int* create_intermediate_table() override;
+		int* write_output_record(int* year, RVS::DataManagement::AnalysisPlot* ap) override;
+		int* write_intermediate_record(int* year, RVS::DataManagement::AnalysisPlot* ap, RVS::DataManagement::SppRecord* spp) override;
 
 		//## Query functions ##//
-
-		//virtual DataTable* query_equation_table(int equation_number);
-		map<int, vector<DisturbAction>> query_disturbance_input();
+		[[nodiscard]] std::map<int, std::vector<DisturbAction>> query_disturbance_input();
 		
 	private:
 		void query_parameters_table();
-		map<string, map<string, vector<string>>> availableActions;
+		std::map<std::string, std::map<std::string, std::vector<std::string>>> availableActions;
 	};
 }
 }
 
+#endif // DISTURBANCEDIO_H

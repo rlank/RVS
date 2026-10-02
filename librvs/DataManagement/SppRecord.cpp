@@ -1,10 +1,8 @@
 #include "SppRecord.h"
 
-using RVS::DataManagement::SppRecord;
+#include <utility>
 
-/// ******************************************* ///
-/// SppRecrod.cpp                               ///
-/// ******************************************* ///
+using RVS::DataManagement::SppRecord;
 
 //## Constructors/Destructors ##//
 SppRecord::SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt)
@@ -13,84 +11,90 @@ SppRecord::SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTab
 	buildRecord(dio, dt);
 }
 
-SppRecord::SppRecord(string spp_code, double height, double cover, string dom_spp)
+SppRecord::SppRecord(std::string spp_code, const double height, const double cover, std::string dom_spp)
 {
 	initialize_object();
-	buildRecord(spp_code, height, cover, dom_spp);
-}
-
-SppRecord::~SppRecord(void)
-{
+	buildRecord(std::move(spp_code), height, cover, std::move(dom_spp));
 }
 
 void SppRecord::initialize_object()
 {
 	dom_spp = "";
 	spp_code = "";
-	height = 0;
-	cover = 0;
-	width = 0;
-	shrubBiomass = 0;
-	stemsPerAcre = 0;
-	shrubBiomass = 0;
-	exShrubBiomass = 0;
+	height = 0.0;
+	cover = 0.0;
+	width = 0.0;
+	stemsPerAcre = 0.0;
+	shrubBiomass = 0.0;
+	exShrubBiomass = 0.0;
 	pchEqNum = 0;
 	batEqNum = 0;
+	fuel1hr = 0.0;
+	fuel10hr = 0.0;
+	fuel100hr = 0.0;
+	fuel1000hr = 0.0;
 }
 
 void SppRecord::buildRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt)
 {
+	if (!dio || !dt)
+	{
+		return;
+	}
+
 	sqlite3_stmt* stmt = dt->getStmt();
+	if (!stmt)
+	{
+		return;
+	}
 
-	int column = 0;
-	column = dt->Columns[DOM_SPP_FIELD];
-	dio->getVal(stmt, dt->Columns[DOM_SPP_FIELD], &dom_spp);
-	column = dt->Columns[SPP_CODE_FIELD];
-	dio->getVal(stmt, dt->Columns[SPP_CODE_FIELD], &spp_code);
-	column = dt->Columns[BIOMASS_HEIGHT_FIELD];
-	dio->getVal(stmt, dt->Columns[BIOMASS_HEIGHT_FIELD], &height);
-	column = dt->Columns[BIOMASS_COVER_FIELD];
-	dio->getVal(stmt, dt->Columns[BIOMASS_COVER_FIELD], &cover);
-
+	if (dt->Columns.count(DOM_SPP_FIELD))
+	{
+		dio->getVal(stmt, dt->Columns[DOM_SPP_FIELD], &dom_spp);
+	}
+	if (dt->Columns.count(SPP_CODE_FIELD))
+	{
+		dio->getVal(stmt, dt->Columns[SPP_CODE_FIELD], &spp_code);
+	}
+	if (dt->Columns.count(BIOMASS_HEIGHT_FIELD))
+	{
+		dio->getVal(stmt, dt->Columns[BIOMASS_HEIGHT_FIELD], &height);
+	}
+	if (dt->Columns.count(BIOMASS_COVER_FIELD))
+	{
+		dio->getVal(stmt, dt->Columns[BIOMASS_COVER_FIELD], &cover);
+	}
 }
 
-void SppRecord::buildRecord(string spp_code, double height, double cover, string dom_spp)
+void SppRecord::buildRecord(std::string spp_code, const double height, const double cover, std::string dom_spp)
 {
-	this->spp_code = spp_code;
+	this->spp_code = std::move(spp_code);
 	this->height = height;
 	this->cover = cover;
-	this->dom_spp = dom_spp;
+	this->dom_spp = std::move(dom_spp);
 }
 
-double SppRecord::requestValue(std::string parameterName)
+double SppRecord::requestValue(std::string_view parameterName) const
 {
-	double ret = 0.0;
-	if (parameterName.compare("WID") == 0)
+	if (parameterName == "LEN" || parameterName == "LENGTH")
 	{
-		ret = width;
+		return width;
 	}
-	else if (parameterName.compare("HT") == 0)
+	if (parameterName == "WID" || parameterName == "WIDTH")
 	{
-		ret = height;
+		return width;
 	}
-	else if (parameterName.compare("LEN") == 0)
+	if (parameterName == "HT" || parameterName == "HEIGHT")
 	{
-		ret = width; // we assume circles
+		return height;
 	}
-	else if (parameterName.compare("COV") == 0)
+	if (parameterName == "VOL" || parameterName == "VOLUME")
 	{
-		ret = cover;
+		return (width * width * height) / 1000.0; // dm^3
 	}
-	else if (parameterName.compare("BIO") == 0)
+	if (parameterName == "COV" || parameterName == "COVER")
 	{
-		ret = shrubBiomass;
+		return cover;
 	}
-	else if (parameterName.compare("VOL") == 0)
-	{
-		ret = width * width * height;
-	}
-
-	return ret;
+	return 0.0;
 }
-
-

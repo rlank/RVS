@@ -1,590 +1,565 @@
 #include "SuccessionDriver.h"
 
-using RVS::Succession::SuccessionDriver;
-double** RVS::Succession::SuccessionDriver::covariance_matrix = 0;
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <sstream>
 
-SuccessionDriver::SuccessionDriver(RVS::Succession::SuccessionDIO* sdio, bool suppress_messages)
+namespace RVS
 {
-	this->sdio = sdio;
-	this->suppress_messages = suppress_messages;
-
-	SuccessionDriver::covariance_matrix = sdio->query_covariance_matrix();
-}
-
-
-SuccessionDriver::~SuccessionDriver(void)
+namespace Succession
 {
-}
+	std::vector<std::vector<double>> SuccessionDriver::covariance_matrix = {};
 
-int* SuccessionDriver::SuccessionMain(int year, string* climate, RVS::DataManagement::AnalysisPlot* ap)
-{
-	this->ap = ap;
-	this->shrubs = ap->SHRUB_RECORDS();
-	this->climate = climate;
-
-	//stringstream* s = new stringstream();
-	//*s << "PLOT_ID: " << ap->PLOT_ID() << ". STARTING.";
-	//const char* c = sdio->streamToCharPtr(s);
-	//sdio->write_debug_msg(c);
-	
-	// TRUE: Do not model // FALSE: Model
-	bool* doNotModel = new bool(false);
-
-	// Load the (up to) 3 succession stages' values
-	loadSuccessionVals(doNotModel);
-	
-	// Calculate herbaceous production
-	double* yhat = new double;
-	double* lower = new double;
-	double* upper = new double;
-	double production = 0;
-
-	
-	*yhat = calcProduction(year);
-	calcConfidence(year, *yhat, lower, upper, 0);
-	production = exp(*yhat) * SMEAR;
-	
-	ap->primaryProduction = production;
-	ap->lower_confidence = *lower;
-	ap->upper_confidence = *upper;
-	
-	// Get the current succession stage. Values are 0-3, with 0 indicating not yet classified
-	// and -1 indicating uncharacteristic (unclassifiable) plot
-	int sclass = ap->CURRENT_SUCCESSION_STAGE();
-	// Landfire uses codes other than 1-3, so as long as it's not an error code (>100) just 
-	// assume late stage (3)
-	if (sclass > 3 && sclass < 100) { sclass = 3; }
-
-	// Attempt to retreive plot age
-	int ageOfPlot = ap->plotAge;
-	
-	// When sclass is 0, it needs to be detected and defined. 
-	if (sclass == 0 || ap->burned)
+	SuccessionDriver::SuccessionDriver(RVS::Succession::SuccessionDIO* sdio, const bool suppress_messages)
+		: sdio(sdio), suppress_messages(suppress_messages)
 	{
-		sclass = determineCurrentClass();
-		// If sclass == -1, no classification could be made and it's uncharacteristic
-		// so don't attempt to calculate plot age
-		if (sclass != -1)
+		if (sdio)
 		{
-			ageOfPlot = plotAge(sclass);
-			ap->plotAge = ageOfPlot;
+			SuccessionDriver::covariance_matrix = sdio->query_covariance_matrix();
 		}
-		ap->currentStage = sclass;
 	}
 
-	if (sclass == -1 || sclass == -99)
+	int SuccessionDriver::SuccessionMain(const int year, std::string_view climate, RVS::DataManagement::AnalysisPlot* ap)
 	{
-		if (*doNotModel)
+		this->ap = ap;
+		if (!ap || !sdio)
 		{
-			stringstream* s = new stringstream();
-			*s << "PLOT_ID: " << ap->PLOT_ID() << ". RVS does not model this BPS.";
-			const char* c = sdio->streamToCharPtr(s);
+			return -1;
+		}
+
+		this->shrubs = ap->SHRUB_RECORDS();
+		this->current_climate = std::string(climate);
+
+		// Flag for BPS modeling eligibility
+		bool doNotModel = false;
+
+		// Load the (up to) 3 succession stages' values
+		loadSuccessionVals(doNotModel);
+
+		// Calculate herbaceous production on the stack
+		const double yhat = calcProduction(year);
+		double lower = 0.0;
+		double upper = 0.0;
+		calcConfidence(year, yhat, lower, upper, 0.0);
+		const double production = std::exp(yhat) * SMEAR;
+
+		ap->primaryProduction = production;
+		ap->lower_confidence = lower;
+		ap->upper_confidence = upper;
+
+		// Get current succession stage (0-3, 0 = unclassified, -1 = uncharacteristic)
+		int sclass = ap->CURRENT_SUCCESSION_STAGE();
+		if (sclass > 3 && sclass < 100)
+		{
+			sclass = 3;
+		}
+
+		int ageOfPlot = ap->plotAge;
+
+		// When sclass is 0 or plot burned, re-detect
+		if (sclass == 0 || ap->burned)
+		{
+			sclass = determineCurrentClass();
+			if (sclass != -1)
+			{
+				ageOfPlot = plotAge(sclass);
+				ap->plotAge = ageOfPlot;
+			}
+			ap->currentStage = sclass;
+		}
+
+		if (sclass == -1 || sclass == -99)
+		{
+			if (doNotModel)
+			{
+				std::stringstream s;
+				s << "PLOT_ID: " << ap->PLOT_ID() << ". RVS does not model this BPS.";
+				const char* c = sdio->streamToCharPtr(&s);
+				sdio->write_debug_msg(c);
+				ap->currentStage = -99;
+			}
+
+			ap->plotAge += 1;
+			ap->currentStageType = "U";
+
+			const int rc = sdio->write_output_record(year, ap);
+			return rc;
+		}
+
+		// When using sclass to get parameters, stages are (1-3) but 0-indexed vector is (0-2)
+		const size_t stageIndex = static_cast<size_t>(sclass - 1);
+		if (stageIndex < successionStrParameters.size())
+		{
+			ap->currentStageType = successionStrParameters[stageIndex]["cohort_type"];
+		}
+
+		// Check if this type of succession stage is supported
+		if (ap->currentStageType != "S" && ap->currentStageType != "H")
+		{
+			std::stringstream s;
+			s << "PLOT_ID: " << ap->PLOT_ID() << ". Cohort type " << ap->currentStageType << " not supported in RVS.";
+			const char* c = sdio->streamToCharPtr(&s);
 			sdio->write_debug_msg(c);
-			ap->currentStage = -99;
+
+			ap->plotAge += 1;
+			const int rc = sdio->write_output_record(year, ap);
+			return rc;
 		}
 
-		ap->plotAge += 1;
-		ap->currentStageType = "U";
+		// Check if transitioning to next stage
+		const bool nextStage = (stageIndex < successionNumParameters.size()) &&
+			(ageOfPlot == static_cast<int>(successionNumParameters[stageIndex]["endAge"]));
 
-		sdio->write_output_record(&year, ap);
-		return RC;
-	}
-
-	// When using sclass to get parameters, remember stages are (1-3) but array is (0-2)
-	ap->currentStageType = successionStrParameters[sclass - 1]["cohort_type"];
-
-	// Check if this type of succession stage is even supported
-	if (ap->currentStageType.compare("S") != 0 && ap->currentStageType.compare("H") != 0)
-	{
-		stringstream* s = new stringstream();
-		*s << "PLOT_ID: " << ap->PLOT_ID() << ". Not a S or H plot. RVS does not model (grow shrubs).";
-		const char* c = sdio->streamToCharPtr(s);
-		sdio->write_debug_msg(c);
-	}
-
-	// get rounded midpoint year for stage
-	// add rounded midpoint to actual years(startage + rounded midpoint length) = adjusted midpoint
-	int midpoint = 0;
-	int adjust = 0;
-	string stage;
-
-	midpoint = (int)successionNumParameters[sclass - 1]["midpoint"];
-	adjust = (int)successionNumParameters[sclass - 1]["startAge"];
-	midpoint += adjust;
-	stage = successionStrParameters[sclass - 1]["cover_type"];
-
-	bool isLate = stage.compare("L") == 0 ? true : false;
-
-	shrubs = ap->SHRUB_RECORDS();
-	// If the plot is not at the midpoint of the current stage, or if it's late stage,
-	// grow the current succession stage. Growth for next stage begins halfway through
-	// the current succession stage
-
-	int useAge = stage.compare("H") == 0 ? ap->timeInHerbStage : ageOfPlot;
-	if (stage.compare("H") == 0) { ap->timeInHerbStage += 1; }
-
-	if (useAge < midpoint || isLate)
-	{
-		growStage(successionStrParameters[sclass - 1], successionNumParameters[sclass - 1]);
-	}
-	else
-	{
-		if (sclass >= successionNumParameters.size()) 
+		if (!nextStage)
 		{
-			growStage(successionStrParameters[sclass - 1], successionNumParameters[sclass - 1]);
+			if (stageIndex < successionNumParameters.size() && stageIndex < successionStrParameters.size())
+			{
+				growStage(successionStrParameters[stageIndex], successionNumParameters[stageIndex]);
+			}
 		}
 		else
 		{
-			growStage(successionStrParameters[sclass], successionNumParameters[sclass]);
-		}
-		
-	}
-	
-	// Grow herbs
-	growHerbs(&(ap->herbCover), &(ap->herbHeight), &(ap->primaryProduction));
-	
-	// attenuate shrubs and herbs(if sum(cover) > 100, find ratio and reduce)
-	if (ap->herbCover + ap->shrubCover > 100)
-	{
-		double total = ap->herbCover + ap->shrubCover;
-		ap->herbCover = (ap->herbCover / total) * 100;
-		ap->shrubCover = (ap->shrubCover / total) * 100;
-	}
-
-	
-	ap->currentStage = sclass;
-
-	sdio->write_output_record(&year, ap);
-
-	if (successionStrParameters[sclass - 1]["cover_type"].compare("H")) { }
-	ap->plotAge += 1;
-
-	if (ageOfPlot == successionNumParameters[sclass - 1]["endAge"])
-	{
-		ap->currentStage += 1;
-	}
-	
-	return RC;
-}
-
-void SuccessionDriver::loadSuccessionVals(bool* doNotModel)
-{
-	successionStrParameters = vector<map<string, string>>();
-	successionNumParameters = vector<map<string, double>>();
-
-	// Declare 3 cohort value maps. Not all may be used.
-	map<string, string> strVals_primary = map<string, string>();
-	map<string, double> numVals_primary = map<string, double>();
-
-	map<string, string> strVals_secondary = map<string, string>();
-	map<string, double> numVals_secondary = map<string, double>();
-
-	map<string, string> strVals_tertiary = map<string, string>();
-	map<string, double> numVals_tertiary = map<string, double>();
-
-	bool lastCohort = false;
-
-	// Populate the first succession stage
-	lastCohort = sdio->get_succession_data(ap->BPS_MODEL_NUM(), &strVals_primary, &numVals_primary, doNotModel);
-	// If there's another stage, populate secondary cohort
-	if (!lastCohort)
-	{
-		lastCohort = sdio->get_succession_data(ap->BPS_MODEL_NUM(), &strVals_secondary, &numVals_secondary, doNotModel);
-	}
-	// If there's a final stage, populate the tertiary cohort
-	if (!lastCohort)
-	{
-		lastCohort = sdio->get_succession_data(ap->BPS_MODEL_NUM(), &strVals_tertiary, &numVals_tertiary, doNotModel);
-	}
-
-	successionNumParameters.push_back(numVals_primary);
-	successionNumParameters.push_back(numVals_secondary);
-	successionNumParameters.push_back(numVals_tertiary);
-	
-	successionStrParameters.push_back(strVals_primary);
-	successionStrParameters.push_back(strVals_secondary);
-	successionStrParameters.push_back(strVals_tertiary);
-}
-
-int SuccessionDriver::determineCurrentClass()
-{
-	int sclass = 0;
-
-	double cover = 0;
-	double height = 0;
-
-	// This loop attemps to diminish succession stages until the logic fails (cover and height do not
-	// exceed maximum conditions). It also checks that the stage exists, as some classes only have
-	// 1 or 2 succession stages
-	for (int i = successionNumParameters.size() - 1; i >= 0; --i)
-	{
-		if (successionNumParameters[i].size() > 0)
-		{
-			
-			if (successionStrParameters[i]["cohort_type"].compare("H") == 0)
+			const size_t nextIndex = static_cast<size_t>(sclass);
+			if (nextIndex < successionNumParameters.size() && nextIndex < successionStrParameters.size())
 			{
-				cover = ap->HERBCOVER();
-				height = ap->HERBHEIGHT();
+				growStage(successionStrParameters[nextIndex], successionNumParameters[nextIndex]);
+			}
+			else if (stageIndex < successionNumParameters.size() && stageIndex < successionStrParameters.size())
+			{
+				growStage(successionStrParameters[stageIndex], successionNumParameters[stageIndex]);
+			}
+		}
+
+		// Grow herbs using modernized HerbGrowthResult
+		const HerbGrowthResult herbResult = growHerbs(ap->primaryProduction);
+		ap->herbCover = herbResult.cover;
+		ap->herbHeight = herbResult.height;
+
+		// Attenuate shrubs and herbs if total cover > 100
+		if (ap->herbCover + ap->shrubCover > 100.0)
+		{
+			const double total = ap->herbCover + ap->shrubCover;
+			ap->herbCover = (ap->herbCover / total) * 100.0;
+			ap->shrubCover = (ap->shrubCover / total) * 100.0;
+		}
+
+		ap->currentStage = sclass;
+
+		const int rc = sdio->write_output_record(year, ap);
+
+		ap->plotAge += 1;
+
+		if (stageIndex < successionNumParameters.size() &&
+			ageOfPlot == static_cast<int>(successionNumParameters[stageIndex]["endAge"]))
+		{
+			ap->currentStage += 1;
+		}
+
+		return rc;
+	}
+
+	void SuccessionDriver::loadSuccessionVals(bool& doNotModel)
+	{
+		successionStrParameters.clear();
+		successionNumParameters.clear();
+
+		std::map<std::string, std::string> strVals_primary;
+		std::map<std::string, double> numVals_primary;
+		std::map<std::string, std::string> strVals_secondary;
+		std::map<std::string, double> numVals_secondary;
+		std::map<std::string, std::string> strVals_tertiary;
+		std::map<std::string, double> numVals_tertiary;
+
+		bool lastCohort = sdio->get_succession_data(ap->BPS_MODEL_NUM(), strVals_primary, numVals_primary, doNotModel);
+		if (!lastCohort)
+		{
+			lastCohort = sdio->get_succession_data(ap->BPS_MODEL_NUM(), strVals_secondary, numVals_secondary, doNotModel);
+		}
+		if (!lastCohort)
+		{
+			lastCohort = sdio->get_succession_data(ap->BPS_MODEL_NUM(), strVals_tertiary, numVals_tertiary, doNotModel);
+			(void)lastCohort;
+		}
+
+		successionNumParameters.push_back(std::move(numVals_primary));
+		successionNumParameters.push_back(std::move(numVals_secondary));
+		successionNumParameters.push_back(std::move(numVals_tertiary));
+
+		successionStrParameters.push_back(std::move(strVals_primary));
+		successionStrParameters.push_back(std::move(strVals_secondary));
+		successionStrParameters.push_back(std::move(strVals_tertiary));
+	}
+
+	int SuccessionDriver::determineCurrentClass()
+	{
+		int sclass = 0;
+		int bestMidPointDist = 9999;
+
+		const double herbCover = ap->HERBCOVER();
+		const double shrubCover = ap->SHRUBCOVER();
+		const double shrubHeight = ap->SHRUBHEIGHT();
+
+		for (size_t i = 0; i < successionNumParameters.size(); ++i)
+		{
+			const auto& numVals = successionNumParameters[i];
+			const auto& strVals = successionStrParameters[i];
+
+			auto ctypeIt = strVals.find("cohort_type");
+			if (ctypeIt == strVals.end()) continue;
+			const std::string& ctype = ctypeIt->second;
+
+			if (ctype == "H")
+			{
+				if (herbCover >= numVals.at("min_cov") && herbCover <= numVals.at("max_cov"))
+				{
+					const int midPointDist = static_cast<int>(std::abs(herbCover - numVals.at("midpoint_cov")));
+					if (midPointDist < bestMidPointDist)
+					{
+						bestMidPointDist = midPointDist;
+						sclass = static_cast<int>(numVals.at("cohort"));
+					}
+				}
 			}
 			else
 			{
-				if (ap->SHRUBCOVER() <= 1)
+				if (shrubCover >= numVals.at("min_cov") && shrubCover <= numVals.at("max_cov") &&
+					shrubHeight >= numVals.at("min_ht") && shrubHeight <= numVals.at("max_ht"))
 				{
-					cover = 0;
-					for (auto &s : *(ap->SHRUB_RECORDS()))
+					const int midPointDist = static_cast<int>(std::abs(shrubCover - numVals.at("midpoint_cov")));
+					if (midPointDist < bestMidPointDist)
 					{
-						cover += s->COVER();
+						bestMidPointDist = midPointDist;
+						sclass = static_cast<int>(numVals.at("cohort"));
 					}
-					ap->shrubCover = cover;
-				}
-				
-
-				height = ap->SHRUBHEIGHT(); 
-			}
-			
-
-			// $REMINDER turned off height classification because too many uncharacteristic
-			//if (cover < successionNumParameters[i]["max_cov"] && height < successionNumParameters[i]["max_ht"])
-			//{
-			//	if (cover > successionNumParameters[i]["min_cov"] && height > successionNumParameters[i]["min_ht"])
-			//	{
-			//		sclass = i + 1;
-			//	}
-			//	
-			//}
-
-			//cover = ap->SHRUBCOVER();
-			//height = ap->SHRUBHEIGHT();
-
-			if (successionStrParameters[i]["cover_type"].compare("Late") == 0 && cover > successionNumParameters[i]["max_cov"])
-			{
-				sclass = i + 1;
-			}
-
-			if (cover < successionNumParameters[i]["max_cov"])
-			{
-					sclass = i + 1;
-			}
-		}
-	}
-
-	if (sclass == 0)
-	{
-		stringstream* s = new stringstream();
-		*s << "PLOT_ID: " << ap->PLOT_ID() << ". Plot uncharacteristic for succession.";
-		const char* c = sdio->streamToCharPtr(s);
-		sdio->write_debug_msg(c);
-
-		sclass = -1;
-	}
-
-	return sclass;
-}
-
-int SuccessionDriver::plotAge(int sclass)
-{
-	double cover = 0;
-	if (successionStrParameters[sclass - 1]["cohort_type"].compare("H") == 0)
-	{
-		cover = ap->HERBCOVER();
-	}
-	else
-	{
-		cover = ap->SHRUBCOVER();
-	}
-	int adjust = plotAgeCalculation(cover, successionStrParameters[sclass - 1], successionNumParameters[sclass - 1]);
-	return adjust;
-}
-
-int SuccessionDriver::plotAgeCalculation(double cover, map<string, string> strVals, map<string, double> numVals)
-{
-	// At this point the stage has been classified, so just need to determine how many years it's been in this stage
-	double stageStartingCover = numVals["min_cov"];
-	double coverGrowthRate = numVals["gr_cov"];
-
-	int ageOfPlot = int((cover - stageStartingCover) / coverGrowthRate) + numVals["startAge"];
-
-	return ageOfPlot;
-}
-
-void SuccessionDriver::growStage(map<string, string> strVals, map<string, double> numVals)
-{
-	RVS::DataManagement::SppRecord* record = NULL;
-
-	//determine H or S growth stage(Cohort Type)
-	string growthStage = strVals["cohort_type"];
-	//height growth amount = GR_HT_m_yr
-	double ht_growth = numVals["gr_ht"];
-	//cover growth amount = GR_CC_yr
-	double cov_growth = numVals["gr_cov"];
-
-	double max_height = numVals["max_ht"];
-	double max_cover = numVals["max_cov"];
-
-	if (growthStage.compare("H") != 0)
-	{
-		if (shrubs->empty())  
-		{
-			list<string> newspecies = makeSpeciesList(strVals);
-			for (string s : newspecies)
-			{
-				bool modelSpp = sdio->check_shrub_data_exists(s);
-				bool isShrub = sdio->check_code_is_shrub(s);
-				if (modelSpp && isShrub)
-				{ 
-					string spp_name = sdio->get_scientific_name(s);
-					SppRecord* shrub = new SppRecord(s, 0, 0, spp_name);
-					shrubs->push_back(shrub);
 				}
 			}
 		}
 
-		double divCover = 0;
-		double divHeight = 0;
-
-		// We cannot allow cover to exceed 100, so check that growth won't go over max
-		if (ap->shrubCover + cov_growth >= 100)
-		{ 
-			divCover = (99 - ap->SHRUBCOVER()) / shrubs->size();
-		}
-		else if (ap->shrubCover + cov_growth < max_cover)
+		if (sclass == 0)
 		{
-			divCover = cov_growth / shrubs->size(); 
-		}
-		else 
-		{
-			divCover = (max_cover - ap->SHRUBCOVER()) / shrubs->size();
-		}
-
-		// We allow height to grow beyond max height, as this is possible
-		if (ap->shrubHeight < max_height)
-		{
-			divHeight = ht_growth / shrubs->size();
+			std::stringstream s;
+			s << "PLOT_ID: " << ap->PLOT_ID() << ". Plot uncharacteristic for succession.";
+			const char* c = sdio->streamToCharPtr(&s);
+			sdio->write_debug_msg(c);
+			sclass = -1;
 		}
 
-		for (int r = 0; r < shrubs->size(); r++)
-		{
-			record = shrubs->at(r);
-			record->height += divHeight;
-			record->cover += divCover;
-		}
-	}
-}
-
-void SuccessionDriver::growHerbs(double* herbCover, double* herbHeight, double* production)
-{
-	double newProduction = *production;
-
-	double* coverRate = new double;
-	double* herbRate = new double;
-
-	sdio->query_herb_growth_coefs(ap->BPS_MODEL_NUM(), coverRate, herbRate);
-
-	double cover = *coverRate * newProduction;
-	double height = *herbRate * newProduction * 100;  
-
-	if (cover + ap->SHRUBCOVER() > 98)
-	{
-		*herbCover = 100 - ap->SHRUBCOVER() - 1;
-	}
-	else
-	{
-		*herbCover = cover;
+		return sclass;
 	}
 
-
-	*herbHeight = height;
-}
-
-list<string> SuccessionDriver::makeSpeciesList(map<string, string> strVals)
-{
-	list<string> species = list<string>();
-
-	if (strVals["species1"].compare("") != 0) { species.push_back(strVals["species1"]); }
-	if (strVals["species2"].compare("") != 0) { species.push_back(strVals["species2"]); }
-	if (strVals["species3"].compare("") != 0) { species.push_back(strVals["species3"]); }
-	if (strVals["species4"].compare("") != 0) { species.push_back(strVals["species4"]); }
-	
-	return species;
-}
-
-double SuccessionDriver::calcProduction(int year)
-{
-	double ndvi = ap->getNDVI(*climate, false);
-	double ppt = ap->getPPT(*climate, false);
-
-	double ln_ndvi = log(ndvi);
-	double ln_ppt = log(ppt);
-
-	double rawProduction = -5.2058235 + (ln_ppt * 0.1088213) + (ln_ndvi * 1.386304);
-	ap->rawProduction = exp(rawProduction) * SMEAR;
-
-	// Modify NDVI and PPT as a function of NOT SHRUB cover
-	double adjust = 1 - (ap->SHRUBCOVER() / 100);
-
-	ndvi = ndvi * adjust;
-	ppt = ppt * adjust;
-
-	ln_ndvi = log(ndvi);
-	ln_ppt = log(ppt);
-
-	double biomass = -5.2058235 + (ln_ppt * 0.1088213) + (ln_ndvi * 1.386304);
-	return biomass;
-}
-
-void SuccessionDriver::calcConfidence(int year, double biomass, double* lower, double* upper, double* level)
-{
-	double ndvi = ap->getNDVI(*climate, false);
-	double ppt = ap->getPPT(*climate, false);
-
-	// Modify NDVI and PPT as a function of NOT SHRUB cover
-	double adjust = 1 - (ap->SHRUBCOVER() / 100);
-
-	ndvi = ndvi * adjust;
-	ppt = ppt * adjust;
-
-	double ln_ndvi = log(ndvi);
-	double ln_ppt = log(ppt);
-
-	// Begin confidence interval code
-
-	double yhat = exp(biomass) * SMEAR;
-	double ln_yhat = biomass;
-
-	double tval = 1.961961;  // make this dynamic
-
-	double s2y = calc_s2b(&ln_ndvi, &ln_ppt);
-	double sy = sqrt(s2y);
-
-	double ln_yhat_lower = ln_yhat - tval * sy;
-	double yhat_lower = exp(ln_yhat_lower);
-	yhat_lower = yhat_lower * SMEAR;
-
-	double ln_yhat_upper = ln_yhat + tval * sy;
-	double yhat_upper = exp(ln_yhat_upper);
-	yhat_upper = yhat_upper * SMEAR;
-
-	*lower = yhat_lower;
-	*upper = yhat_upper;
-}
-
-double SuccessionDriver::calc_s2b(double* lnNDVI, double* lnPPT)
-{
-	double** dummy = new double*[1];
-	dummy[0] = new double[3];
-
-	dummy[0][0] = 1.0;
-	dummy[0][1] = *lnPPT;
-	dummy[0][2] = *lnNDVI;
-
-	double** dummyTrans = matrix_trans(dummy, 1, 3);
-
-	double** temp = matrix_mult(covariance_matrix, 3, 3, dummyTrans, 3, 1);
-
-	double** s2b = matrix_mult(dummy, 1, 3, temp, 3, 1);
-
-	ap->s2y = s2b[0][0];
-
-	return s2b[0][0];
-}
-
-/*
-double SuccessionDriver::calc_s2b(string* grp_id, double* lnNDVI, double* lnPPT)
-{
-	int index = sdio->find_group_index(grp_id);
-
-	double** dummy = generate_dummy_variables(index, lnPPT, lnNDVI);
-	double** dummyTrans = matrix_trans(dummy, 1, 102);
-
-	double** temp = matrix_mult(covariance_matrix, 102, 102, dummyTrans, 102, 1);
-
-	double** s2b = matrix_mult(dummy, 1, 102, temp, 102, 1);
-
-	ap->s2y = s2b[0][0];
-
-	return s2b[0][0];
-}
-*/
-
-double** SuccessionDriver::matrix_mult(double** A, int aRow, int aCol, double** B, int bRow, int bCol)
-{
-	const int ROW = aRow;
-	const int INNER = aCol;
-	const int COL = bCol;
-
-	double** C = new double*[ROW];
-
-	for (int row = 0; row != ROW; ++row)
+	int SuccessionDriver::plotAge(const int sclass)
 	{
-		C[row] = new double[COL];
-		for (int col = 0; col != COL; ++col)
+		double cover = 0.0;
+		const size_t stageIdx = static_cast<size_t>(sclass - 1);
+		if (stageIdx >= successionStrParameters.size() || stageIdx >= successionNumParameters.size())
 		{
-			double sum = 0;
-			for (int inner = 0; inner != INNER; ++inner)
-			{
-				sum += A[row][inner] * B[inner][col];
-			}
-			C[row][col] = sum;
+			return 0;
 		}
-	}
 
-	return C;
-}
-
-double** SuccessionDriver::matrix_trans(double** A, int aRow, int aCol)
-{
-	const int ROW = aRow;
-	const int COL = aCol;
-
-	double** B = new double*[aCol];
-
-	for (int col = 0; col != COL; ++col)
-	{
-		B[col] = new double[ROW];
-
-		for (int row = 0; row != ROW; ++row)
+		if (successionStrParameters[stageIdx]["cohort_type"] == "H")
 		{
-			B[col][row] = A[row][col];
-		}
-	}
-	return B;
-}
-
-double** SuccessionDriver::generate_dummy_variables(int index, double* lnPPT, double* lnNDVI)
-{
-	double** dummy = new double*[1];
-	dummy[0] = new double[102];
-
-	dummy[0][0] = 1.0;
-	dummy[0][1] = *lnPPT;
-	dummy[0][2] = *lnNDVI;
-
-	int counter = 1;
-	for (int i = 3; i < 102; i++)
-	{
-		if (counter == index && i < 33)
-		{
-			dummy[0][i] = 1.0;
-		}
-		else if (counter == index && i < 66)
-		{
-			dummy[0][i] = *lnPPT;
-		}
-		else if (counter == index && i < 99)
-		{
-			dummy[0][i] = *lnNDVI;
+			cover = ap->HERBCOVER();
 		}
 		else
 		{
-			dummy[0][i] = 0.0;
+			cover = ap->SHRUBCOVER();
 		}
 
-		if (counter == 33)
-		{
-			counter = 0;
-		}
-
-		counter += 1;
+		return plotAgeCalculation(cover, successionStrParameters[stageIdx], successionNumParameters[stageIdx]);
 	}
-	return dummy;
+
+	int SuccessionDriver::plotAgeCalculation(
+		const double cover,
+		const std::map<std::string, std::string>& strVals,
+		const std::map<std::string, double>& numVals) const
+	{
+		const double stageStartingCover = numVals.count("min_cov") ? numVals.at("min_cov") : 0.0;
+		const double coverGrowthRate = numVals.count("gr_cov") ? numVals.at("gr_cov") : 1.0;
+		const double startAge = numVals.count("startAge") ? numVals.at("startAge") : 0.0;
+
+		if (coverGrowthRate <= 0.0)
+		{
+			return static_cast<int>(startAge);
+		}
+
+		const int ageOfPlot = static_cast<int>((cover - stageStartingCover) / coverGrowthRate) + static_cast<int>(startAge);
+		return ageOfPlot;
+	}
+
+	void SuccessionDriver::growStage(
+		const std::map<std::string, std::string>& strVals,
+		const std::map<std::string, double>& numVals)
+	{
+		auto ctypeIt = strVals.find("cohort_type");
+		const std::string growthStage = (ctypeIt != strVals.end()) ? ctypeIt->second : "";
+
+		const double ht_growth = numVals.count("gr_ht") ? numVals.at("gr_ht") : 0.0;
+		const double cov_growth = numVals.count("gr_cov") ? numVals.at("gr_cov") : 0.0;
+		const double max_height = numVals.count("max_ht") ? numVals.at("max_ht") : 1000.0;
+		const double max_cover = numVals.count("max_cov") ? numVals.at("max_cov") : 100.0;
+
+		if (growthStage != "H")
+		{
+			if (shrubs && shrubs->empty())
+			{
+				const std::list<std::string> newspecies = makeSpeciesList(strVals);
+				for (const std::string& s : newspecies)
+				{
+					const bool modelSpp = sdio->check_shrub_data_exists(s);
+					const bool isShrub = sdio->check_code_is_shrub(s);
+					if (modelSpp && isShrub)
+					{
+						const std::string spp_name = sdio->get_scientific_name(s);
+						shrubs->push_back(new RVS::DataManagement::SppRecord(s, 0.0, 0.0, spp_name));
+					}
+				}
+			}
+
+			if (!shrubs || shrubs->empty())
+			{
+				return;
+			}
+
+			const double shrubCount = static_cast<double>(shrubs->size());
+			double divCover = 0.0;
+			double divHeight = 0.0;
+
+			if (ap->shrubCover + cov_growth >= 100.0)
+			{
+				divCover = (99.0 - ap->SHRUBCOVER()) / shrubCount;
+			}
+			else if (ap->shrubCover + cov_growth < max_cover)
+			{
+				divCover = cov_growth / shrubCount;
+			}
+			else
+			{
+				divCover = (max_cover - ap->SHRUBCOVER()) / shrubCount;
+			}
+
+			if (ap->shrubHeight < max_height)
+			{
+				divHeight = ht_growth / shrubCount;
+			}
+
+			for (auto& record : *shrubs)
+			{
+				if (record)
+				{
+					record->height += divHeight;
+					record->cover = std::clamp(record->cover + divCover, 0.0, 100.0);
+				}
+			}
+		}
+	}
+
+	HerbGrowthResult SuccessionDriver::growHerbs(const double production)
+	{
+		HerbGrowthResult result;
+		double coverRate = 0.0;
+		double herbRate = 0.0;
+
+		sdio->query_herb_growth_coefs(ap->BPS_MODEL_NUM(), coverRate, herbRate);
+
+		const double cover = coverRate * production;
+		const double height = herbRate * production * 100.0;
+
+		if (cover + ap->SHRUBCOVER() > 98.0)
+		{
+			result.cover = std::max(0.0, 100.0 - ap->SHRUBCOVER() - 1.0);
+		}
+		else
+		{
+			result.cover = cover;
+		}
+		result.height = height;
+		return result;
+	}
+
+	std::list<std::string> SuccessionDriver::makeSpeciesList(const std::map<std::string, std::string>& strVals) const
+	{
+		std::list<std::string> species;
+		for (int i = 1; i <= 4; ++i)
+		{
+			const std::string key = "species" + std::to_string(i);
+			auto it = strVals.find(key);
+			if (it != strVals.end() && !it->second.empty())
+			{
+				species.push_back(it->second);
+			}
+		}
+		return species;
+	}
+
+	void SuccessionDriver::addNewSpecies(const std::vector<std::string>& sClassSppCodes)
+	{
+		if (!shrubs) return;
+		for (const auto& s : sClassSppCodes)
+		{
+			if (sdio->check_shrub_data_exists(s) && sdio->check_code_is_shrub(s))
+			{
+				const std::string spp_name = sdio->get_scientific_name(s);
+				shrubs->push_back(new RVS::DataManagement::SppRecord(s, 0.0, 0.0, spp_name));
+			}
+		}
+	}
+
+	double SuccessionDriver::calcProduction(const int year)
+	{
+		double ndvi = ap->getNDVI(current_climate, false);
+		double ppt = ap->getPPT(current_climate, false);
+
+		const double ln_ndvi = std::log(std::max(ndvi, 0.001));
+		const double ln_ppt = std::log(std::max(ppt, 0.001));
+
+		const double rawProduction = -5.2058235 + (ln_ppt * 0.1088213) + (ln_ndvi * 1.386304);
+		ap->rawProduction = std::exp(rawProduction) * SMEAR;
+
+		const double adjust = 1.0 - (ap->SHRUBCOVER() / 100.0);
+		ndvi *= adjust;
+		ppt *= adjust;
+
+		const double adj_ln_ndvi = std::log(std::max(ndvi, 0.001));
+		const double adj_ln_ppt = std::log(std::max(ppt, 0.001));
+
+		const double biomass = -5.2058235 + (adj_ln_ppt * 0.1088213) + (adj_ln_ndvi * 1.386304);
+		return biomass;
+	}
+
+	void SuccessionDriver::calcConfidence(
+		const int year,
+		const double biomass,
+		double& lower,
+		double& upper,
+		const double level)
+	{
+		double ndvi = ap->getNDVI(current_climate, false);
+		double ppt = ap->getPPT(current_climate, false);
+
+		const double adjust = 1.0 - (ap->SHRUBCOVER() / 100.0);
+		ndvi *= adjust;
+		ppt *= adjust;
+
+		const double ln_ndvi = std::log(std::max(ndvi, 0.001));
+		const double ln_ppt = std::log(std::max(ppt, 0.001));
+
+		const double ln_yhat = biomass;
+		constexpr double tval = 1.961961;
+
+		const double s2y = calc_s2b(ln_ndvi, ln_ppt);
+		const double sy = std::sqrt(std::max(0.0, s2y));
+
+		const double ln_yhat_lower = ln_yhat - tval * sy;
+		const double yhat_lower = std::exp(ln_yhat_lower) * SMEAR;
+
+		const double ln_yhat_upper = ln_yhat + tval * sy;
+		const double yhat_upper = std::exp(ln_yhat_upper) * SMEAR;
+
+		lower = yhat_lower;
+		upper = yhat_upper;
+	}
+
+	double SuccessionDriver::calc_s2b(const double lnNDVI, const double lnPPT)
+	{
+		// Direct evaluation of quadratic form: s2b = x * Sigma * x^T
+		// where x = [1.0, lnPPT, lnNDVI]
+		const std::array<double, 3> x = { 1.0, lnPPT, lnNDVI };
+		double sum = 0.0;
+
+		if (!covariance_matrix.empty())
+		{
+			const size_t rows = std::min<size_t>(3, covariance_matrix.size());
+			for (size_t i = 0; i < rows; ++i)
+			{
+				const size_t cols = std::min<size_t>(3, covariance_matrix[i].size());
+				for (size_t j = 0; j < cols; ++j)
+				{
+					sum += x[i] * covariance_matrix[i][j] * x[j];
+				}
+			}
+		}
+
+		ap->s2y = sum;
+		return sum;
+	}
+
+	std::vector<std::vector<double>> SuccessionDriver::matrix_mult(
+		const std::vector<std::vector<double>>& A,
+		const std::vector<std::vector<double>>& B)
+	{
+		if (A.empty() || B.empty()) return {};
+		const size_t ROW = A.size();
+		const size_t INNER = A[0].size();
+		const size_t COL = B[0].size();
+
+		std::vector<std::vector<double>> C(ROW, std::vector<double>(COL, 0.0));
+		for (size_t r = 0; r < ROW; ++r)
+		{
+			for (size_t c = 0; c < COL; ++c)
+			{
+				double s = 0.0;
+				for (size_t k = 0; k < INNER; ++k)
+				{
+					s += A[r][k] * B[k][c];
+				}
+				C[r][c] = s;
+			}
+		}
+		return C;
+	}
+
+	std::vector<std::vector<double>> SuccessionDriver::matrix_trans(
+		const std::vector<std::vector<double>>& A)
+	{
+		if (A.empty()) return {};
+		const size_t ROW = A.size();
+		const size_t COL = A[0].size();
+
+		std::vector<std::vector<double>> B(COL, std::vector<double>(ROW, 0.0));
+		for (size_t c = 0; c < COL; ++c)
+		{
+			for (size_t r = 0; r < ROW; ++r)
+			{
+				B[c][r] = A[r][c];
+			}
+		}
+		return B;
+	}
+
+	std::vector<std::vector<double>> SuccessionDriver::generate_dummy_variables(
+		const int index,
+		const double lnPPT,
+		const double lnNDVI)
+	{
+		std::vector<std::vector<double>> dummy(1, std::vector<double>(102, 0.0));
+		dummy[0][0] = 1.0;
+		dummy[0][1] = lnPPT;
+		dummy[0][2] = lnNDVI;
+
+		int counter = 1;
+		for (size_t i = 3; i < 102; ++i)
+		{
+			if (counter == index && i < 33)
+			{
+				dummy[0][i] = 1.0;
+			}
+			else if (counter == index && i < 66)
+			{
+				dummy[0][i] = lnPPT;
+			}
+			else if (counter == index && i < 99)
+			{
+				dummy[0][i] = lnNDVI;
+			}
+
+			if (counter == 33)
+			{
+				counter = 0;
+			}
+			counter += 1;
+		}
+		return dummy;
+	}
+}
 }

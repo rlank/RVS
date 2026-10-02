@@ -1,22 +1,25 @@
 /// ********************************************************** ///
 /// Name: FuelsDriver.h                                        ///
 /// Desc: Main driver for the Fuels module. Contains the       ///
-/// method to calculate all fuels elements found in the        ///
-/// appropriate database. At a minimum this will be 1, 10, 100 ///
-/// hour fuels and optionally live/dead measures as well.      ///
+///       method to calculate all fuels elements found in the  ///
+///       appropriate database.                                ///
+/// Standard: C++20                                            ///
 /// ********************************************************** ///
 
 #pragma once
 
+#ifndef FUELSDRIVER_H
+#define FUELSDRIVER_H
+
 #include <iostream>
 #include <map>
+#include <string>
+#include <string_view>
 
 #include "../DataManagement/AnalysisPlot.h"
 #include "../Disturbance/DisturbAction.h"
 #include "FuelsDIO.h"
 #include "FuelsEquations.h"
-
-using namespace std;
 
 namespace RVS
 {
@@ -25,38 +28,62 @@ namespace Fuels
 	class FuelsDriver
 	{
 	public:
-		FuelsDriver(RVS::Fuels::FuelsDIO* fdio, bool suppress_messages = false);
-		virtual ~FuelsDriver(void);
+		explicit FuelsDriver(RVS::Fuels::FuelsDIO* fdio, const bool suppress_messages = false);
+		virtual ~FuelsDriver() = default;
 
-		// Main fuels calculation function. Expects an AnalysisPlot object (with biomass information)
-		int* FuelsMain(int year, RVS::DataManagement::AnalysisPlot* ap);
+		/// \brief Main fuels calculation entry point returning status code.
+		/// \param year Current simulation year
+		/// \param ap Pointer to analysis plot
+		/// \return 0 on success, non-zero on error
+		[[nodiscard]] int FuelsMain(const int year, RVS::DataManagement::AnalysisPlot* ap);
 
 	private:
 		// Fuel Input/Output module
-		RVS::Fuels::FuelsDIO* fdio;
+		RVS::Fuels::FuelsDIO* fdio = nullptr;
 		// Toggle debugging messages
-		bool suppress_messages;
+		bool suppress_messages = false;
 
-		DataManagement::AnalysisPlot* ap;
+		DataManagement::AnalysisPlot* ap = nullptr;
 		
 		// Processes a record in the equation table to calculate a fuel value
-		double calcShrubFuel(int equationNumber, RVS::DataManagement::SppRecord* spp);
+		[[nodiscard]] double calcShrubFuel(const int equationNumber, RVS::DataManagement::SppRecord* spp);
 
 		// Current FBFM
-		string calcFBFMDry();
-		string calcFBFMHumid();
+		[[nodiscard]] std::string calcFBFMDry() const;
+		[[nodiscard]] std::string calcFBFMHumid() const;
 
-		int switchClimateFBFM(RVS::DataManagement::DataTable* dt, RVS::DataManagement::AnalysisPlot* ap);
+		[[nodiscard]] int switchClimateFBFM(RVS::DataManagement::DataTable* dt, const RVS::DataManagement::AnalysisPlot* ap);
 
-		double calc1HrFuel(double biomass);
-		double calc1HrWoodBark(double biomass);
-		double calc1HrFoliage(double biomass);
+		[[nodiscard]] double calc1HrFuel(const double biomass) const noexcept
+		{
+			return FuelsEquations::calc1HrFuel(biomass);
+		}
 
-		double calc10HrFuel(double biomass);
-		double calc100HrFuel(double biomass);
-		double calc1000HrFuel(double height);
+		[[nodiscard]] double calc1HrWoodBark(const double biomass) const noexcept
+		{
+			return FuelsEquations::calc1HrWoodBark(biomass);
+		}
 
-		void applyDisturbance(int year);
+		[[nodiscard]] double calc1HrFoliage(const double biomass) const noexcept
+		{
+			return FuelsEquations::calc1HrFoliage(biomass);
+		}
+
+		[[nodiscard]] double calc10HrFuel(const double biomass) const noexcept;
+
+		[[nodiscard]] double calc100HrFuel(const double biomass) const noexcept
+		{
+			return FuelsEquations::calc100HrFuel(biomass);
+		}
+
+		[[nodiscard]] double calc1000HrFuel(const double height) const noexcept
+		{
+			return FuelsEquations::calc1000HrFuel(height);
+		}
+
+		void applyDisturbance(const int year);
 	};
 }
 }
+
+#endif // FUELSDRIVER_H

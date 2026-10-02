@@ -10,8 +10,8 @@
 namespace RVS
 {
 	// Primary table names. Replace with externs as needed
-	static const char* RVS_INPUT_TABLE = "Plots_Active";
-	static const char* SHRUB_INPUT_TABLE = "Shrubs_Active";
+	static const char* RVS_INPUT_TABLE = "Plots_FCCS";
+	static const char* SHRUB_INPUT_TABLE = "Shrubs_FCCS";
 	static const char* BIOMASS_CROSSWALK_TABLE = "Bio_Crosswalk";
 	static const char* BIOMASS_EQUATION_TABLE = "Bio_Equation";
 	static const char* BIOMASS_MACROGROUP_TABLE = "Bio_Group_LUT";

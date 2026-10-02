@@ -142,4 +142,169 @@ impl LandscapeShrubBuffers {
         );
         start..end
     }
+
+    /// Validates the 5 canonical CSR (Compressed Sparse Row) invariants:
+    ///
+    /// 1. $\operatorname{len}(\text{cell\_offsets}) = N + 1 = \text{num\_cells} + 1$
+    /// 2. $\text{cell\_offsets}[0] = 0$
+    /// 3. $\forall i \in [0, N-1], \quad \text{cell\_offsets}[i] \le \text{cell\_offsets}[i+1]$
+    /// 4. $\text{cell\_offsets}[N] = M = \text{num\_shrubs}$
+    /// 5. $\forall \text{array} \in \{\text{species\_id}, \text{cover}, \text{height}, \text{biomass}, \text{stems\_per\_acre}\}, \; \operatorname{len}(\text{array}) = M$
+    pub fn validate(&self) -> Result<(), String> {
+        // Invariant 1: cell_offsets length must equal num_cells + 1
+        if self.cell_offsets.len() != self.num_cells + 1 {
+            return Err(format!(
+                "CSR invariant 1 violated: cell_offsets length ({}) must equal num_cells + 1 ({})",
+                self.cell_offsets.len(),
+                self.num_cells + 1
+            ));
+        }
+
+        // Invariant 2: cell_offsets[0] must equal 0
+        if self.cell_offsets[0] != 0 {
+            return Err(format!(
+                "CSR invariant 2 violated: cell_offsets[0] ({}) must equal 0",
+                self.cell_offsets[0]
+            ));
+        }
+
+        // Invariant 3: Monotonic non-decreasing offsets
+        for (i, window) in self.cell_offsets.windows(2).enumerate() {
+            if window[0] > window[1] {
+                return Err(format!(
+                    "CSR invariant 3 violated: cell_offsets[{}] ({}) > cell_offsets[{}] ({}) (must be non-decreasing)",
+                    i,
+                    window[0],
+                    i + 1,
+                    window[1]
+                ));
+            }
+        }
+
+        // Invariant 4: Final offset must equal num_shrubs
+        if self.cell_offsets[self.num_cells] != self.num_shrubs {
+            return Err(format!(
+                "CSR invariant 4 violated: cell_offsets[num_cells] ({}) must equal num_shrubs ({})",
+                self.cell_offsets[self.num_cells],
+                self.num_shrubs
+            ));
+        }
+
+        // Invariant 5: Attribute buffer lengths must equal num_shrubs
+        if self.species_id.len() != self.num_shrubs {
+            return Err(format!(
+                "CSR invariant 5 violated: species_id length ({}) must equal num_shrubs ({})",
+                self.species_id.len(),
+                self.num_shrubs
+            ));
+        }
+        if self.cover.len() != self.num_shrubs {
+            return Err(format!(
+                "CSR invariant 5 violated: cover length ({}) must equal num_shrubs ({})",
+                self.cover.len(),
+                self.num_shrubs
+            ));
+        }
+        if self.height.len() != self.num_shrubs {
+            return Err(format!(
+                "CSR invariant 5 violated: height length ({}) must equal num_shrubs ({})",
+                self.height.len(),
+                self.num_shrubs
+            ));
+        }
+        if self.biomass.len() != self.num_shrubs {
+            return Err(format!(
+                "CSR invariant 5 violated: biomass length ({}) must equal num_shrubs ({})",
+                self.biomass.len(),
+                self.num_shrubs
+            ));
+        }
+        if self.stems_per_acre.len() != self.num_shrubs {
+            return Err(format!(
+                "CSR invariant 5 violated: stems_per_acre length ({}) must equal num_shrubs ({})",
+                self.stems_per_acre.len(),
+                self.num_shrubs
+            ));
+        }
+
+        Ok(())
+    }
+
+    /// Returns a slice of shrub canopy cover values for a given cell.
+    #[inline]
+    pub fn cell_shrub_cover_slice(&self, cell_idx: usize) -> &[f64] {
+        let range = self.shrub_range_for_cell(cell_idx);
+        &self.cover[range]
+    }
+
+    /// Returns a slice of shrub crown height values for a given cell.
+    #[inline]
+    pub fn cell_shrub_height_slice(&self, cell_idx: usize) -> &[f64] {
+        let range = self.shrub_range_for_cell(cell_idx);
+        &self.height[range]
+    }
+
+    /// Returns a slice of shrub biomass values for a given cell.
+    #[inline]
+    pub fn cell_shrub_biomass_slice(&self, cell_idx: usize) -> &[f64] {
+        let range = self.shrub_range_for_cell(cell_idx);
+        &self.biomass[range]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_csr_validation_success() {
+        let mut shrubs = LandscapeShrubBuffers::new(3, 4);
+        shrubs.cell_offsets = vec![0, 1, 3, 4];
+        assert!(shrubs.validate().is_ok());
+    }
+
+    #[test]
+    fn test_csr_validation_invariants() {
+        // Invariant 1: length mismatch
+        let mut s1 = LandscapeShrubBuffers::new(2, 2);
+        s1.cell_offsets = vec![0, 2]; // len 2, expected 3
+        assert!(s1.validate().is_err());
+
+        // Invariant 2: cell_offsets[0] != 0
+        let mut s2 = LandscapeShrubBuffers::new(2, 2);
+        s2.cell_offsets = vec![1, 1, 2];
+        assert!(s2.validate().is_err());
+
+        // Invariant 3: non-monotonic
+        let mut s3 = LandscapeShrubBuffers::new(2, 2);
+        s3.cell_offsets = vec![0, 2, 1];
+        assert!(s3.validate().is_err());
+
+        // Invariant 4: last offset != num_shrubs
+        let mut s4 = LandscapeShrubBuffers::new(2, 3);
+        s4.cell_offsets = vec![0, 1, 2]; // last is 2, expected 3
+        assert!(s4.validate().is_err());
+
+        // Invariant 5: attribute buffer lengths
+        let mut s5 = LandscapeShrubBuffers::new(2, 2);
+        s5.cell_offsets = vec![0, 1, 2];
+        s5.cover.pop();
+        assert!(s5.validate().is_err());
+    }
+
+    #[test]
+    fn test_shrub_slice_helpers() {
+        let mut shrubs = LandscapeShrubBuffers::new(2, 3);
+        shrubs.cell_offsets = vec![0, 2, 3];
+        shrubs.cover = vec![10.0, 20.0, 30.0];
+        shrubs.height = vec![50.0, 60.0, 70.0];
+        shrubs.biomass = vec![100.0, 200.0, 300.0];
+
+        assert_eq!(shrubs.cell_shrub_cover_slice(0), &[10.0, 20.0]);
+        assert_eq!(shrubs.cell_shrub_cover_slice(1), &[30.0]);
+        assert_eq!(shrubs.cell_shrub_height_slice(0), &[50.0, 60.0]);
+        assert_eq!(shrubs.cell_shrub_height_slice(1), &[70.0]);
+        assert_eq!(shrubs.cell_shrub_biomass_slice(0), &[100.0, 200.0]);
+        assert_eq!(shrubs.cell_shrub_biomass_slice(1), &[300.0]);
+    }
 }

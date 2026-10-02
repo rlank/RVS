@@ -140,21 +140,29 @@ librvs/sqlite3.h
 #################
 ## Python & Tooling
 #################
+# Virtual environments
 .venv/
 venv/
 env/
 ENV/
+.env/
+
+# Bytecode and compiled extensions
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyd
+*.pyo
 
 # Python Testing, Linting & Type Checking
 .pytest_cache/
 .ruff_cache/
+.ty/
 .mypy_cache/
 .pytype/
 .pyre/
+.pyright/
 .coverage
 .coverage.*
 coverage.xml
@@ -164,6 +172,7 @@ htmlcov/
 .hypothesis/
 
 # Python Distribution & Packaging
+build/
 dist/
 develop-eggs/
 downloads/
@@ -175,6 +184,8 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+__pypackages__/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -185,9 +196,20 @@ wheels/
 #################
 ## Rust
 #################
+# Build artifacts
 target/
 Cargo.lock.bak
 **/*.rs.bk
+*.rlib
+*.rmeta
+
+# Proptest & Test Regressions
+*.proptest-regressions
+proptest-regressions/
+
+# Profiling & Coverage
+*.profraw
+*.profdata
 
 #################
 ## C / C++ & Build Systems
@@ -208,8 +230,14 @@ Cargo.lock.bak
 *.gch
 *.pch
 *.d
+*.idb
+*.pdb
+*.ilk
 
-# CMake
+# Debug symbols & bundles
+*.dSYM/
+
+# CMake & Ninja Build Systems
 CMakeCache.txt
 CMakeFiles/
 CMakeScripts/
@@ -218,16 +246,27 @@ cmake-build-*/
 CMakeUserPresets.json
 compile_commands.json
 .cmake/
+.ninja_deps
+.ninja_log
 
 # Clang / Language Servers / Caches
 .clangd/
 .cache/
+.clang-tidy-cache/
 
-# Core dumps & Profiling
+# Core dumps, Sanitizers & Profiling
 core
 core.*
 vgcore.*
 gmon.out
+*.gcda
+*.gcno
+*.gcov
+asan.*
+tsan.*
+ubsan.*
+msan.*
+valgrind.*
 
 #################
 ## VS Code & Other IDEs
@@ -244,6 +283,9 @@ gmon.out
 #################
 ## AI Coding Tools & Agents
 #################
+.agents/
+.agents
+skills-lock.json
 .claude/
 .cursor/
 .cursorrules.local
@@ -256,13 +298,17 @@ cursor.log
 .roo/
 .windsurf/
 .codeium/
+.deepseek/
+.agent/
+agent-transcripts/
 e2e_results.json
 *.prompt.log
+*.agent.log
 
-# Agent run workspaces (preserve shared skills and rules)
-.agents/*
-!.agents/skills/
-!.agents/rules/
+# Agent prompt, task, and handoff markdown files
+ORIGINAL_REQUEST*.md
+TEST_INFRA*.md
+TEST_READY*.md
 
 #################
 ## Environment & Secrets
@@ -272,5 +318,3 @@ e2e_results.json
 .env.*.local
 .envrc
 !.env.example
-
-

@@ -1,6 +1,7 @@
 /// ********************************************************** ///
-/// Name: .h                                                ///
-/// Desc:        ///
+/// Name: RVSException.h                                       ///
+/// Desc: Exception classes for RVS database operations        ///
+/// Standard: C++20                                            ///
 /// ********************************************************** ///
 
 #pragma once
@@ -8,45 +9,58 @@
 #ifndef RVSEXCEPTION_H
 #define RVSEXCEPTION_H
 
-#include <iostream>
 #include <exception>
+#include <string>
+#include <string_view>
 
 namespace RVS
 {
 namespace DataManagement
 {
-	// 
 	class DataTypeMismatchException : public std::exception
 	{
 	public:
-		//DataTypeMismatchException(void) = delete;
-		inline DataTypeMismatchException(const char* sql) { this->sql = sql; }
+		explicit DataTypeMismatchException(std::string_view sql_query = "")
+			: sql_(sql_query)
+		{
+		}
 
-		virtual inline const char* what() const throw()
+		[[nodiscard]] const char* what() const noexcept override
 		{
 			return "Attempted to retrieve data of different type.";
 		}
+
+		[[nodiscard]] const std::string& sql() const noexcept
+		{
+			return sql_;
+		}
+
 	private:
-		const char* sql;
+		std::string sql_;
 	};
 
-	// 
 	class DataNotFoundException : public std::exception
 	{
 	public:
-		//DataNotFoundException(void);
-		inline DataNotFoundException(const char* sql) { this->sql = sql; }
+		explicit DataNotFoundException(std::string_view sql_query = "")
+			: sql_(sql_query)
+		{
+		}
 
-		virtual inline const char* what() const throw()
+		[[nodiscard]] const char* what() const noexcept override
 		{
 			return "Requested data not found in database.";
 		}
 
-	private:
-		const char* sql;
+		[[nodiscard]] const std::string& sql() const noexcept
+		{
+			return sql_;
+		}
 
+	private:
+		std::string sql_;
 	};
 }
 }
 
-#endif
+#endif // RVSEXCEPTION_H

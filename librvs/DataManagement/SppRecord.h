@@ -4,7 +4,7 @@
 /// associated with an AnalysisPlot. Currently these are all   ///
 /// shrub records.                                             ///
 /// Base Class(es): none                                       ///
-/// Requires: map, string, RVS_TypeDefs                        ///
+/// Standard: C++20                                            ///
 /// ********************************************************** ///
 
 #pragma once
@@ -13,6 +13,7 @@
 #define SPP_RECORD_H
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "../RVSDBNAMES.h"
@@ -23,8 +24,6 @@ namespace RVS { namespace Biomass { class BiomassEqDriver; } }
 namespace RVS { namespace Fuels   { class FuelsDriver; } }
 namespace RVS { namespace Succession { class SuccessionDriver; } }
 namespace RVS { namespace Disturbance { class DisturbanceDriver; } }
-
-using namespace RVS::DataManagement;
 
 namespace RVS
 {
@@ -40,67 +39,63 @@ namespace DataManagement
 
 	public:
 		SppRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
-		SppRecord(string spp_code, double height, double cover, string dom_spp);
-		virtual ~SppRecord(void);
+		SppRecord(std::string spp_code, double height, double cover, std::string dom_spp);
+		virtual ~SppRecord() = default;
 
-		/// General Record parameters ///
+		SppRecord(const SppRecord&) = default;
+		SppRecord& operator=(const SppRecord&) = default;
+		SppRecord(SppRecord&&) noexcept = default;
+		SppRecord& operator=(SppRecord&&) noexcept = default;
 
-		// Dominant species name
-		inline std::string DOM_SPP() { return dom_spp; }
-		// Dominant species PLANTS code
-		inline std::string SPP_CODE() { return spp_code; }
-		// HT (cm)
-		inline double HEIGHT() { return height; } 
-		// COV (%)
-		inline double COVER() { return cover; } 
-		// WID (cm)
-		inline double WIDTH() { return width; } 
-		// LEN (cm)
-		inline double LENGTH() { return width; } 
-		// stems per acre (count)
-		inline double STEMSPERACRE() { return stemsPerAcre; } 
-		inline int PCHEQNUM() { return pchEqNum; }
-		inline int BATEQNUM() { return batEqNum; }
-		
-		// Biomass result for shrub (individual biomass). coverts internal g/ac to lbs/ac
-		inline double SHRUB_SINGLE_BIOMASS() { return shrubBiomass * GRAMS_TO_POUNDS; }
-		inline double SHRUB_EX_BIOMASS() { return exShrubBiomass * GRAMS_TO_POUNDS; }
-		const float GRAMS_TO_POUNDS = 0.00220462f;
+		// Metadata
+		[[nodiscard]] const std::string& DOM_SPP() const noexcept { return dom_spp; }
+		[[nodiscard]] const std::string& SPP_CODE() const noexcept { return spp_code; }
 
-		// Fuels results
-		
-		// Return a parameter (length, width, height) by name
-		double requestValue(std::string parameterName);
-		                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+		// Morphological values
+		[[nodiscard]] double HEIGHT() const noexcept { return height; }
+		[[nodiscard]] double COVER() const noexcept { return cover; }
+		[[nodiscard]] double WIDTH() const noexcept { return width; }
+		[[nodiscard]] double STEMS_PER_ACRE() const noexcept { return stemsPerAcre; }
+		[[nodiscard]] double STEMSPERACRE() const noexcept { return stemsPerAcre; }
+
+		// Equation lookup numbers
+		[[nodiscard]] int PCHEQNUM() const noexcept { return pchEqNum; }
+		[[nodiscard]] int BATEQNUM() const noexcept { return batEqNum; }
+
+		// Biomass result for shrub (individual biomass). Converts internal g/ac to lbs/ac
+		[[nodiscard]] double SHRUB_SINGLE_BIOMASS() const noexcept { return shrubBiomass * GRAMS_TO_POUNDS; }
+		[[nodiscard]] double SHRUB_EX_BIOMASS() const noexcept { return exShrubBiomass * GRAMS_TO_POUNDS; }
+		static constexpr double GRAMS_TO_POUNDS = 0.00220462;
+
+		// Return a parameter (length, width, height, vol, cov) by name
+		[[nodiscard]] double requestValue(std::string_view parameterName) const;
+
 	protected:
 		/// General variables ///
+		std::string dom_spp;       // Dominant species name
+		std::string spp_code;      // Dominant species PLANTS code
+		double height = 0.0;       // Crown height (cm)
+		double cover = 0.0;        // ABSOLUTE cover (0-100) %
+		double width = 0.0;        // Average leaf width (cm)
+		double stemsPerAcre = 0.0; // Calculated value (in Biomass)
 
-		std::string dom_spp;  // Dominant species name
-		std::string spp_code; // Dominant species PLANTS code
-		double height; // Crown height (cm)
-		double cover;  // ABSOLUTE cover (0-100) %
-		double width;  // Average leaf width (cm)
-		double stemsPerAcre;  // calculated value (in Biomass)
-	    
-		// General protected functions //
 		virtual void initialize_object();
 		virtual void buildRecord(RVS::DataManagement::DIO* dio, RVS::DataManagement::DataTable* dt);
-		virtual void buildRecord(string spp_code, double height, double cover, string dom_spp);
+		virtual void buildRecord(std::string spp_code, double height, double cover, std::string dom_spp);
 
 		// Biomass values
-		double shrubBiomass;  // grams
-		double exShrubBiomass;  // grams
-		int pchEqNum;
-		int batEqNum;
+		double shrubBiomass = 0.0;   // grams
+		double exShrubBiomass = 0.0; // grams
+		int pchEqNum = 0;
+		int batEqNum = 0;
 
 		// Fuels collection
-
-		double fuel1hr;
-		double fuel10hr;
-		double fuel100hr;
-		double fuel1000hr;
+		double fuel1hr = 0.0;
+		double fuel10hr = 0.0;
+		double fuel100hr = 0.0;
+		double fuel1000hr = 0.0;
 	};
 }
 }
 
-#endif
+#endif // SPP_RECORD_H

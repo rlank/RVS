@@ -1,112 +1,122 @@
 #include "DisturbanceDriver.h"
 
-RVS::Disturbance::DisturbanceDriver::DisturbanceDriver(RVS::Disturbance::DisturbanceDIO* ddio, bool suppress_messages)
+namespace RVS
 {
-	this->ddio = ddio;
-	this->suppress_messages = suppress_messages;
-}
-
-RVS::Disturbance::DisturbanceDriver::~DisturbanceDriver()
+namespace Disturbance
 {
-
-}
-
-int* RVS::Disturbance::DisturbanceDriver::DisturbanceMain(int year, RVS::DataManagement::AnalysisPlot* ap)
-{
-	this->ap = ap;
-
-	if (ap->PLOT_ID() == 36)
+	DisturbanceDriver::DisturbanceDriver(RVS::Disturbance::DisturbanceDIO* ddio, const bool suppress_messages)
+		: ddio(ddio), suppress_messages(suppress_messages), ap(nullptr)
 	{
-		int asdas = 0;
 	}
 
-	vector<DisturbAction> disturbances = ap->getDisturbancesForYear(year);
-
-	if (disturbances.size() == 0)
+	int DisturbanceDriver::DisturbanceMain(const int year, RVS::DataManagement::AnalysisPlot* ap)
 	{
-		ap->disturbed = false;
-		ap->burned = false;
-		ap->biomassReductionTotal = 0;
-	}
-	else
-	{
-		const string fire = "FIRE";
-		const string graze = "GRAZE";
-			
-		ap->disturbed = true;
-
-		for (auto &d : disturbances)
+		this->ap = ap;
+		if (!ap)
 		{
-			const string action = d.getActionType();
+			return -1;
+		}
 
-			if (action.compare(fire) == 0)
+		const std::vector<DisturbAction> disturbances = ap->getDisturbancesForYear(year);
+
+		if (disturbances.empty())
+		{
+			ap->disturbed = false;
+			ap->burned = false;
+			ap->biomassReductionTotal = 0.0;
+		}
+		else
+		{
+			static constexpr std::string_view FIRE_ACTION = "FIRE";
+			static constexpr std::string_view GRAZE_ACTION = "GRAZE";
+
+			ap->disturbed = true;
+
+			for (const auto& d : disturbances)
 			{
-				burnPlot(d.getActionSubType(), 0.0);
-				ap->burned = true;
+				const std::string& action = d.getActionType();
+
+				if (action == FIRE_ACTION)
+				{
+					burnPlot(d.getActionSubType(), 0.0f);
+					ap->burned = true;
+				}
+				else if (action == GRAZE_ACTION)
+				{
+					const std::string& grazeStr = d.getActionSubType();
+					const std::map<std::string, double>& params = d.getParameters();
+					GrazeType grazeType = GrazeType::Cow;
+
+					if (grazeStr == "SHEEP")
+					{
+						grazeType = GrazeType::Sheep;
+					}
+					else if (grazeStr == "GOAT")
+					{
+						grazeType = GrazeType::Goat;
+					}
+					else
+					{
+						grazeType = GrazeType::Cow;
+					}
+
+					const double numberGrazers = params.count("NUMBER") ? params.at("NUMBER") : 0.0;
+					const double plotArea = params.count("AREA") ? params.at("AREA") : 1.0;
+					const double grazeTime = params.count("LENGTH") ? params.at("LENGTH") : 0.0;
+
+					grazePlot(grazeType, numberGrazers, plotArea, grazeTime);
+				}
 			}
-			else if (action.compare(graze) == 0)
+		}
+
+		return 0;
+	}
+
+	void DisturbanceDriver::burnPlot(std::string_view fireType, const float intensity)
+	{
+		if (!ap) return;
+
+		ap->herbHeight = 1.0;
+		ap->herbCover = 1.0;
+		ap->primaryProduction = 0.0;
+		ap->herbHoldoverBiomass = 0.0;
+		ap->previousHerbProductions.fill(0.0);
+
+		if (ap->SHRUB_RECORDS())
+		{
+			for (auto& s : *(ap->SHRUB_RECORDS()))
 			{
-				const string grazeStr = d.getActionSubType();
-				map<string, double> params = d.getParameters();
-				GRAZE_TYPE grazeType;
-
-				if (grazeStr.compare("SHEEP") == 0)
+				if (s)
 				{
-					grazeType = sheep;
+					s->height = 0.01;
+					s->cover = 0.01;
 				}
-				else if (grazeStr.compare("GOAT") == 0)
-				{
-					grazeType = goat;
-				}
-				else
-				{
-					grazeType = cow;
-				}
-
-				// $TODO get the parameter names from the database
-				grazePlot(grazeType, params["NUMBER"], params["AREA"], params["LENGTH"]);
 			}
 		}
 	}
-	return RC;
-}
 
-void RVS::Disturbance::DisturbanceDriver::burnPlot(const string fireType, float intensity)
-{
-	ap->herbHeight = 1;
-	ap->herbCover = 1;
-	ap->primaryProduction = 0;
-	ap->herbHoldoverBiomass = 0;
-	ap->previousHerbProductions[0] = 0;
-	ap->previousHerbProductions[1] = 0;
-	ap->previousHerbProductions[2] = 0;
-
-
-	for (auto &s : *(ap->SHRUB_RECORDS()))
+	void DisturbanceDriver::grazePlot(
+		const GrazeType grazeType,
+		const double numberGrazers,
+		const double plotArea,
+		const double grazeTime)
 	{
-		s->height = 0.01;
-		s->cover = 0.01;
+		if (!ap || plotArea <= 0.0) return;
+
+		double multiplier = COW_MULTIPLIER;
+		switch (grazeType)
+		{
+		case GrazeType::Cow:
+			multiplier = COW_MULTIPLIER;
+			break;
+		case GrazeType::Sheep:
+		case GrazeType::Goat:
+			multiplier = SMALL_MULTIPLIER;
+			break;
+		}
+
+		const double removeAmountLbs = (multiplier * numberGrazers * grazeTime) / plotArea;
+		ap->biomassReductionTotal = removeAmountLbs * ap->POUNDS_TO_GRAMS;
 	}
 }
-
-void RVS::Disturbance::DisturbanceDriver::grazePlot(GRAZE_TYPE grazeType, double numberGrazers, double plotArea, double grazeTime)
-{
-	// The removeAmount is calculated in lbs/ac and saved as g/ac
-	double removeAmount;
-
-	switch (grazeType)
-	{
-	case cow:
-		removeAmount = (cow_multiplier * numberGrazers * grazeTime) / plotArea;
-		break;
-	case sheep:
-	case goat:
-		removeAmount = (small_multiplier * numberGrazers * grazeTime) / plotArea;
-		break;
-	default:
-		break;
-	}
-
-	ap->biomassReductionTotal = removeAmount * ap->POUNDS_TO_GRAMS;
 }
-

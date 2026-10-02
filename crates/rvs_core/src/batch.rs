@@ -7,16 +7,9 @@
 use rayon::prelude::*;
 use crate::soa::{LandscapeCellBuffers, LandscapeCellBuffersMutView, LandscapeShrubBuffers};
 use crate::biomass::*;
-use crate::fuels::*;
 use crate::succession::*;
-use crate::disturbance::*;
 
-/// In-memory reference coefficients catalog eliminating runtime database queries.
-#[derive(Debug, Clone, Default)]
-pub struct ReferenceData {
-    pub shrub_eq_cf1: Vec<f64>,
-    pub shrub_eq_cf2: Vec<f64>,
-}
+pub use crate::data_loader::ReferenceData;
 
 /// Batch biomass evaluation across all cells and shrub sub-canopy layers using Rayon.
 pub fn batch_evaluate_biomass(
@@ -111,13 +104,18 @@ pub fn batch_evaluate_biomass(
         shrubs.num_shrubs
     );
 
+    if n == 0 {
+        return;
+    }
+
     // Parallel cell-level canopy competition attenuation
     cells.herb_biomass
         .par_iter_mut()
-        .zip(cells.herb_cover.par_iter())
-        .zip(cells.herb_height.par_iter())
-        .zip(cells.shrub_cover.par_iter())
-        .zip(cells.shrub_height.par_iter())
+        .with_min_len(1024)
+        .zip(cells.herb_cover.par_iter().with_min_len(1024))
+        .zip(cells.herb_height.par_iter().with_min_len(1024))
+        .zip(cells.shrub_cover.par_iter().with_min_len(1024))
+        .zip(cells.shrub_height.par_iter().with_min_len(1024))
         .for_each(|((((hb, &hc), &hh), &sc), &sh)| {
             *hb = calc_attenuation(*hb, hc, hh, sc, sh);
         });
@@ -125,9 +123,10 @@ pub fn batch_evaluate_biomass(
     // Parallel shrub stems per acre calculation
     shrubs.stems_per_acre
         .par_iter_mut()
-        .zip(shrubs.height.par_iter())
-        .zip(shrubs.cover.par_iter())
-        .zip(shrubs.species_id.par_iter())
+        .with_min_len(1024)
+        .zip(shrubs.height.par_iter().with_min_len(1024))
+        .zip(shrubs.cover.par_iter().with_min_len(1024))
+        .zip(shrubs.species_id.par_iter().with_min_len(1024))
         .for_each(|(((stems, &h), &c), &sp)| {
             let sp_idx = sp as usize;
             let cf1 = refs.shrub_eq_cf1.get(sp_idx).copied().unwrap_or(1.0);
@@ -159,12 +158,27 @@ pub fn batch_evaluate_fuels(
         n
     );
 
+    if n == 0 {
+        return;
+    }
+
+    if !cure_rate.is_finite() {
+        out_1hr_fuel.par_iter_mut().with_min_len(2048).for_each(|f| *f = 0.0);
+        return;
+    }
+
+    let cure_clamped = cure_rate.clamp(0.0, 1.0);
+
     out_1hr_fuel
         .par_iter_mut()
-        .zip(cells.herb_biomass.par_iter())
+        .with_min_len(2048)
+        .zip(cells.herb_biomass.par_iter().with_min_len(2048))
         .for_each(|(fuel_1hr, &herb_b)| {
-            let herb_fine = calc_herb_loading(herb_b, cure_rate);
-            *fuel_1hr = calc_total_1hr_fuel(0.0, 0.0, herb_fine);
+            if !herb_b.is_finite() {
+                *fuel_1hr = 0.0;
+            } else {
+                *fuel_1hr = herb_b.max(0.0) * cure_clamped;
+            }
         });
 }
 
@@ -190,9 +204,14 @@ pub fn batch_evaluate_succession(
         n
     );
 
+    if n == 0 {
+        return;
+    }
+
     cells.shrub_height
         .par_iter_mut()
-        .zip(cells.shrub_cover.par_iter_mut())
+        .with_min_len(2048)
+        .zip(cells.shrub_cover.par_iter_mut().with_min_len(2048))
         .for_each(|(h, c)| {
             *h = scale_shrub_height(*h, delta_shrub_ht);
             *c = scale_shrub_cover(*c, delta_shrub_cov);
@@ -220,11 +239,34 @@ pub fn batch_evaluate_disturbance_graze(
         n
     );
 
+    if n == 0 {
+        return;
+    }
+
+    if !utilization_pct.is_finite() {
+        cells.herb_biomass.par_iter_mut().with_min_len(1024).for_each(|b| *b = 0.0);
+        cells.herb_height.par_iter_mut().with_min_len(1024).for_each(|h| *h = 0.0);
+        return;
+    }
+
+    let u = utilization_pct.clamp(0.0, 100.0) / 100.0;
+    let biomass_factor = (1.0 - u).clamp(0.0, 1.0);
+    let height_factor = biomass_factor.powf(0.7);
+
     cells.herb_biomass
         .par_iter_mut()
-        .zip(cells.herb_height.par_iter_mut())
+        .with_min_len(1024)
+        .zip(cells.herb_height.par_iter_mut().with_min_len(1024))
         .for_each(|(b, h)| {
-            *b = calc_graze_biomass_reduction(*b, utilization_pct);
-            *h = calc_graze_height_reduction(*h, utilization_pct);
+            *b = if !b.is_finite() || *b <= 0.0 {
+                0.0
+            } else {
+                (*b * biomass_factor).max(0.0)
+            };
+            *h = if !h.is_finite() || *h <= 0.0 {
+                0.0
+            } else {
+                (*h * height_factor).max(0.0)
+            };
         });
 }

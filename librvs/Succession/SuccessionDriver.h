@@ -1,6 +1,8 @@
 /// ********************************************************** ///
-/// Name: SuccessionDriver.h                                      ///
-/// Desc:           ///
+/// Name: SuccessionDriver.h                                   ///
+/// Desc: Main driver for the Succession module. Models stage  ///
+///       transitions, herbaceous growth, and allometrics.     ///
+/// Standard: C++20                                            ///
 /// Base Class(es): none                                       ///
 /// ********************************************************** ///
 
@@ -11,6 +13,10 @@
 
 #include <iostream>
 #include <list>
+#include <map>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "SuccessionDIO.h"
 #include "../DataManagement/AnalysisPlot.h"
@@ -20,53 +26,92 @@ namespace RVS
 {
 namespace Succession
 {
+	/// \brief Struct encapsulating herbaceous growth result
+	struct HerbGrowthResult
+	{
+		double cover = 0.0;   ///< Herbaceous canopy cover (%)
+		double height = 0.0;  ///< Herbaceous height (cm)
+	};
+
 	class SuccessionDriver
 	{
 	public:
-		
-		SuccessionDriver(RVS::Succession::SuccessionDIO* sdio, bool suppress_messages = false);
-		virtual ~SuccessionDriver(void);
+		explicit SuccessionDriver(RVS::Succession::SuccessionDIO* sdio, const bool suppress_messages = false);
+		virtual ~SuccessionDriver() = default;
 
-        int* SuccessionMain(int year, string* climate, RVS::DataManagement::AnalysisPlot* ap);
+		/// \brief Main succession driver entry point.
+		/// \param year Current simulation year
+		/// \param climate Climate scenario name ("Normal", "Dry", "Wet", etc.)
+		/// \param ap Pointer to analysis plot
+		/// \return Status code (0 on success)
+		[[nodiscard]] int SuccessionMain(const int year, std::string_view climate, RVS::DataManagement::AnalysisPlot* ap);
 
 	private:
-		RVS::Succession::SuccessionDIO* sdio;
-		RVS::DataManagement::AnalysisPlot* ap;
-		vector<RVS::DataManagement::SppRecord*>* shrubs;
-		bool suppress_messages;
-		string* climate;
+		RVS::Succession::SuccessionDIO* sdio = nullptr;
+		RVS::DataManagement::AnalysisPlot* ap = nullptr;
+		std::vector<RVS::DataManagement::SppRecord*>* shrubs = nullptr;
+		bool suppress_messages = false;
+		std::string current_climate;
 
-		const float MSE = 0.1276825f;
-		const float SMEAR = 1.06431775f;
-		static double** covariance_matrix;
+		static constexpr float MSE = 0.1276825f;
+		static constexpr float SMEAR = 1.06431775f;
 
-		vector<map<string, string>> successionStrParameters;
-		vector<map<string, double>> successionNumParameters;
+		// Replaced static double** with modern 2D vector
+		static std::vector<std::vector<double>> covariance_matrix;
 
-		void loadSuccessionVals(bool* doNotModel);
+		std::vector<std::map<std::string, std::string>> successionStrParameters;
+		std::vector<std::map<std::string, double>> successionNumParameters;
 
-		int determineCurrentClass();
+		void loadSuccessionVals(bool& doNotModel);
+
+		[[nodiscard]] int determineCurrentClass();
 		
-		int plotAge(int sclass);
-		int plotAgeCalculation(double cover, map<string, string> strVals, map<string, double> numVals);
+		[[nodiscard]] int plotAge(const int sclass);
+		[[nodiscard]] int plotAgeCalculation(
+			const double cover,
+			const std::map<std::string, std::string>& strVals,
+			const std::map<std::string, double>& numVals) const;
 
-		void growStage(map<string, string> strVals, map<string, double> numVals);
+		void growStage(
+			const std::map<std::string, std::string>& strVals,
+			const std::map<std::string, double>& numVals);
 
-		void growHerbs(double* herbCover, double* herbHeight, double* production);
+		/// \brief Eliminates out-parameter raw pointers; computes herb growth.
+		[[nodiscard]] HerbGrowthResult growHerbs(const double production);
 
-		list<string> makeSpeciesList(map<string, string> strVals);
-		void addNewSpecies(vector<string> sClassSppCodes);
+		/// \brief Reference overload for in-place growth update.
+		void growHerbs(double& herbCover, double& herbHeight, const double production)
+		{
+			const HerbGrowthResult res = growHerbs(production);
+			herbCover = res.cover;
+			herbHeight = res.height;
+		}
 
-		double calcProduction(int year);
-		void calcConfidence(int year, double biomass, double* lower, double* upper, double* level);
-		double calc_s2b(double* lnNDVI, double* lnPPT);
-		//double calc_s2b(string* grp_id, double* lnNDVI, double* lnPPT);
-		double** matrix_mult(double** A, int aRow, int aCol, double** B, int bRow, int bCol);
-		double** matrix_trans(double** A, int aRow, int aCol);
-		double** generate_dummy_variables(int index, double* lnPPT, double* lnNDVI);
+		[[nodiscard]] std::list<std::string> makeSpeciesList(const std::map<std::string, std::string>& strVals) const;
+		void addNewSpecies(const std::vector<std::string>& sClassSppCodes);
 
+		[[nodiscard]] double calcProduction(const int year);
+		void calcConfidence(
+			const int year,
+			const double biomass,
+			double& lower,
+			double& upper,
+			const double level = 0.0);
+
+		[[nodiscard]] double calc_s2b(const double lnNDVI, const double lnPPT);
+
+		// Modern vector-based matrix helpers
+		[[nodiscard]] static std::vector<std::vector<double>> matrix_mult(
+			const std::vector<std::vector<double>>& A,
+			const std::vector<std::vector<double>>& B);
+		[[nodiscard]] static std::vector<std::vector<double>> matrix_trans(
+			const std::vector<std::vector<double>>& A);
+		[[nodiscard]] static std::vector<std::vector<double>> generate_dummy_variables(
+			const int index,
+			const double lnPPT,
+			const double lnNDVI);
 	};
 }
 }
 
-#endif
+#endif // SUCCESSIONDRIVER_H

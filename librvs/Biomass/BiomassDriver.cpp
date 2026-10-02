@@ -1,55 +1,48 @@
 #include "BiomassDriver.h"
 
-using RVS::Biomass::BiomassDriver;
+#include <array>
+#include <cmath>
+#include <map>
+#include <numbers>
+#include <sstream>
+#include <string>
+#include <vector>
 
-
-
-BiomassDriver::BiomassDriver(RVS::Biomass::BiomassDIO* bdio, bool suppress_messages)
+namespace RVS
 {
-	this->bdio = bdio;
-	this->suppress_messages = suppress_messages;
+namespace Biomass
+{
+
+BiomassDriver::BiomassDriver(RVS::Biomass::BiomassDIO* const bdio, const bool suppress_messages)
+	: bdio(bdio)
+	, ap(nullptr)
+	, suppress_messages(suppress_messages)
+{
 }
 
-
-BiomassDriver::~BiomassDriver(void)
+int BiomassDriver::BioMain(const int year, std::string_view climate_view, RVS::DataManagement::AnalysisPlot* const analysis_plot)
 {
-}
+	this->ap = analysis_plot;
+	this->climate = std::string(climate_view);
 
-int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::AnalysisPlot* ap)
-{
-	this->ap = ap;
-	int plot_num = ap->PLOT_ID();
-	this->climate = climate;
-
-	double totalShrubBiomass = 0;
-
-	if (plot_num == 74)
-	{
-		int asdasds = 0;
-	}
+	double totalShrubBiomass = 0.0;
 
 	/////////// SHRUBS ///////////
 
-	vector<RVS::DataManagement::SppRecord*>* shrubs = ap->SHRUB_RECORDS();
-	double totalShrubCover = 0;
-	double runShrubHeight = 0;
-	double runShrubStem = 0;
-	double averageHeight = 0;
-	double averageStem = 0;
+	std::vector<RVS::DataManagement::SppRecord*>* const shrubs = ap->SHRUB_RECORDS();
+	double totalShrubCover = 0.0;
+	double runShrubHeight = 0.0;
+	double runShrubStem = 0.0;
+	double averageHeight = 0.0;
+	double averageStem = 0.0;
 
-	if (shrubs->empty())
+	if (shrubs && !shrubs->empty())
 	{
-		totalShrubCover = 0;
-		runShrubHeight = 0;
-		averageHeight = 0;
-	}
-	else
-	{
-		for (auto &s : *shrubs)
+		for (auto* const s : *shrubs)
 		{
-			double stemsPerAcre = calcStemsPerAcre(s);
+			const double stemsPerAcre = calcStemsPerAcre(s);
 			s->stemsPerAcre = stemsPerAcre;
-			double singleBiomass = calcShrubBiomass(s);
+			const double singleBiomass = calcShrubBiomass(s);
 
 			s->shrubBiomass = singleBiomass;
 			s->exShrubBiomass = singleBiomass * stemsPerAcre;
@@ -60,14 +53,24 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 			runShrubHeight += s->height * s->cover;
 		}
 
-		for (auto &s : *shrubs)
+		int intermediate_year = year;
+		for (auto* const s : *shrubs)
 		{
 			// Write this result to the intermediate table
-			RC = bdio->write_intermediate_record(&year, ap, s);
+			int* const rc_intermediate = bdio->write_intermediate_record(&intermediate_year, ap, s);
+			(void)rc_intermediate;
 		}
 
-		averageHeight = runShrubHeight / totalShrubCover;
-		averageStem = runShrubStem / totalShrubCover;
+		if (totalShrubCover > 1e-4)
+		{
+			averageHeight = runShrubHeight / totalShrubCover;
+			averageStem = runShrubStem / totalShrubCover;
+		}
+		else
+		{
+			averageHeight = 0.0;
+			averageStem = 0.0;
+		}
 	}
 
 	ap->shrubCover = totalShrubCover;
@@ -75,51 +78,79 @@ int* BiomassDriver::BioMain(int year, string* climate, RVS::DataManagement::Anal
 	ap->shrubAvgStem = averageStem;
 
 	/////////// HERBS ///////////
-	
+
 	// Apply holdover biomass if applicable and grow herbs from last year's production
-	if (ap->herbBiomass != 0)
+	if (ap->herbBiomass != 0.0)
 	{
-		double holdover = calcHerbHoldover();
+		const double holdover = calcHerbHoldover();
 		ap->herbHoldoverBiomass = holdover;
 	}
-
-	// Save output data
 
 	// Push new production to queue
 	ap->previousHerbProductions[2] = ap->previousHerbProductions[1];
 	ap->previousHerbProductions[1] = ap->previousHerbProductions[0];
 	ap->previousHerbProductions[0] = ap->primaryProduction;
 
-	//ap->herbBiomass = totalHerbBiomass + ap->herbHoldoverBiomass - ap->herbBiomassReduction;
 	ap->herbBiomass = ap->primaryProduction + ap->herbHoldoverBiomass;
-	//ap->shrubBiomass = totalShrubBiomass - ap->shrubBiomassReduction;
 	ap->shrubBiomass = totalShrubBiomass;
 	ap->totalBiomass = ap->SHRUBBIOMASS() + ap->HERBBIOMASS();
 
 	// Write output biomass record
-	RC = bdio->write_output_record(&year, ap);
+	int output_year = year;
+	int* const rc_out = bdio->write_output_record(&output_year, ap);
 
-	return RC;
+	return rc_out ? *rc_out : 0;
 }
 
-double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
+double BiomassDriver::calcCrownWidth(const double crownArea) noexcept
+{
+	if (crownArea <= 0.0)
+	{
+		return 0.0;
+	}
+	const double radius = std::sqrt(crownArea / std::numbers::pi);
+	return radius * 2.0;
+}
+
+double BiomassDriver::calcStemsPerAcrePure(
+	const double singleStemArea,
+	const double cover,
+	const double height) noexcept
+{
+	if (singleStemArea <= 0.0)
+	{
+		return 0.0;
+	}
+
+	// Expand the single stem result: cm^2 to m^2 (* 1e-4), then to acres
+	const double expanded = EXPANSION_FACTOR / (singleStemArea * 0.0001);
+	double stemsPerAcre = expanded * (cover / 100.0);
+
+	// Reduction calculation for low heights
+	const double reduction = std::exp(0.0809 * height) * 0.0053;
+	if (reduction <= 0.453595949)
+	{
+		stemsPerAcre *= reduction;
+	}
+
+	return stemsPerAcre;
+}
+
+double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* const record)
 {
 	// Get the equation number for BAT (total aboveground biomass)
-	int equationNumber = 0;
-	
-	
-	equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), BIOMASS_EQUATION_FIELD);
+	int equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), BIOMASS_EQUATION_FIELD);
+
 	if (equationNumber == 0)
 	{
-		stringstream* s = new stringstream();
-		*s << "PLOT_ID: " << ap->PLOT_ID() << ". Shrub biomass equation not found for " << record->SPP_CODE() << ", using ARTR";
-		const char* c = bdio->streamToCharPtr(s);
-		bdio->write_debug_msg(c);
+		std::stringstream s;
+		s << "PLOT_ID: " << ap->PLOT_ID() << ". Shrub biomass equation not found for " << record->SPP_CODE() << ", using ARTR";
+		bdio->write_debug_msg(s.str().c_str());
 
 		equationNumber = bdio->query_crosswalk_table(BIOMASS_BACKUP_SPP_CODE, BIOMASS_EQUATION_FIELD);
 	}
 
-	if (equationNumber == 1160 && record->requestValue("VOL") > 20000)
+	if (equationNumber == 1160 && record->requestValue("VOL") > 20000.0)
 	{
 		equationNumber = 1160;
 	}
@@ -130,88 +161,81 @@ double BiomassDriver::calcShrubBiomass(RVS::DataManagement::SppRecord* record)
 
 	record->batEqNum = equationNumber;
 
-	// Populate the coefficients with values from the biomass equation table
-	double* coefs = new double[4];
-	string* paramNames = new string[3];
-	bdio->query_equation_parameters(equationNumber, paramNames, coefs);
+	// Populate the coefficients with values from the biomass equation table using stack arrays
+	std::array<double, 4> coefs{};
+	std::array<std::string, 3> paramNames{};
+	bdio->query_equation_parameters(equationNumber, paramNames.data(), coefs.data());
 
-	std::map<string, double>* params = new std::map<string, double>();
-
-	double val = 0.0;
-	for (int i = 0; i < paramNames->size(); i++)
+	std::map<std::string, double> params;
+	for (const auto& paramName : paramNames)
 	{
-		val = record->requestValue(paramNames[i]);
-		params->insert(pair<string, double>(paramNames[i], val));
+		if (!paramName.empty())
+		{
+			const double val = record->requestValue(paramName);
+			params.emplace(paramName, val);
+		}
 	}
 
-	double biomass = BiomassEquations::eq_BAT(equationNumber, coefs, params);
+	const double biomass = BiomassEquations::eq_BAT(equationNumber, coefs, params);
 	return biomass;
 }
 
-double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* record)
+double BiomassDriver::calcStemsPerAcre(RVS::DataManagement::SppRecord* const record)
 {
 	// Lookup the equation number from the crosswalk table
-	int equationNumber = 0;
-
-	equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), STEMS_PER_ACRE_EQUATION_FIELD);
+	int equationNumber = bdio->query_crosswalk_table(record->SPP_CODE(), STEMS_PER_ACRE_EQUATION_FIELD);
 
 	if (equationNumber == 0)
 	{
-		stringstream* s = new stringstream();
-		*s << "PLOT_ID: " << ap->PLOT_ID() << ". Stems per acre equation not found for " << record->SPP_CODE() << ", using ARTR";
-		const char* c = bdio->streamToCharPtr(s);
-		bdio->write_debug_msg(c);
+		std::stringstream s;
+		s << "PLOT_ID: " << ap->PLOT_ID() << ". Stems per acre equation not found for " << record->SPP_CODE() << ", using ARTR";
+		bdio->write_debug_msg(s.str().c_str());
 
 		equationNumber = bdio->query_crosswalk_table(BIOMASS_BACKUP_SPP_CODE, STEMS_PER_ACRE_EQUATION_FIELD);
 	}
-	
+
 	record->pchEqNum = equationNumber;
-	
-	double* coefs = new double[4];
 
-	// Populate the coefficients with values from the biomass equation table
-	bdio->query_equation_coefficients(equationNumber, coefs);
+	// Stack array eliminates heap allocation
+	std::array<double, 4> coefs{};
+	bdio->query_equation_coefficients(equationNumber, coefs.data());
 
-	double singleStem = BiomassEquations::eq_PCH(coefs[0], coefs[1], record->HEIGHT());
+	const double singleStem = BiomassEquations::eq_PCH(coefs[0], coefs[1], record->HEIGHT());
 
-	// While we're here, calculate width (singleStem is area)
-	double radius = std::sqrt(singleStem / 3.1415); // Use number for PI rather than constant cause it's the only thing needed out of CMATH
-	record->width = radius * 2;
+	// Calculate width with circle geometry using std::numbers::pi
+	record->width = calcCrownWidth(singleStem);
 
 	// Expand the single stem result
-	// First convert the cm^2 to m^2, then to ACRES
-	double expanded = EXPANSION_FACTOR / (singleStem * .0001);
-	// Return the expanded amount as a function of percent cover
-	double stemsPerAcre = expanded * (record->COVER() / 100);
-
-	// 9/27/2017 new stems per acre reduction calculation, fixes performance at low heights
-	double reduction = exp(0.0809 * record->HEIGHT()) * 0.0053;
-	if (reduction <= 0.453595949) { stemsPerAcre *= reduction; }
+	const double stemsPerAcre = calcStemsPerAcrePure(singleStem, record->COVER(), record->HEIGHT());
 
 	return stemsPerAcre;
 }
 
-
-
-double BiomassDriver::calcHerbHoldover()
+double BiomassDriver::calcHerbHoldover() const noexcept
 {
-	double val = 0;
-	val += ap->previousHerbProductions[0] * .3;
-	val += ap->previousHerbProductions[1] * .1;
-	val += ap->previousHerbProductions[2] * .05;
-	return val;
-}
-
-double BiomassDriver::calcAttenuation(double herbBiomass)
-{
-	double herbIndex = ap->herbCover * ap->herbHeight;
-	double shrubIndex = ap->shrubCover * ap->shrubHeight;
-
-	double ratio = herbIndex / shrubIndex;
-	if (ratio > 1)
+	if (!ap)
 	{
-		ratio = 1 / ratio;
+		return 0.0;
 	}
-	return herbBiomass * ratio;
+	return calcHerbHoldover(
+		ap->previousHerbProductions[0],
+		ap->previousHerbProductions[1],
+		ap->previousHerbProductions[2]);
 }
 
+double BiomassDriver::calcAttenuation(const double herbBiomass) const noexcept
+{
+	if (!ap)
+	{
+		return herbBiomass;
+	}
+	return calcAttenuation(
+		herbBiomass,
+		ap->herbCover,
+		ap->herbHeight,
+		ap->shrubCover,
+		ap->shrubHeight);
+}
+
+} // namespace Biomass
+} // namespace RVS

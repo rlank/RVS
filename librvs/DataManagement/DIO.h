@@ -1,33 +1,32 @@
 /// ********************************************************** ///
 /// Name: DIO.h                                                ///
 /// Desc: Data Input/output class. Contains functions and      ///
-/// methods for access data (primarily from the RVSDB)         ///
+///       methods for access data (primarily from the RVSDB)   ///
+/// Standard: C++20                                            ///
 /// ********************************************************** ///
 
 #pragma once
 
+#include <any>
 #include <ctime>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
+#include <string_view>
 #include <vector>
-
-#include <boost/any.hpp>
-
 
 #include "../RVSDBNAMES.h"
 #include "../RVSDEF.h"
 #include "DataTable.h"
 #include "RVSException.h"
 
-// Need to avoid circular reference here, so declare empty classes
+// Forward declarations
 namespace RVS { namespace DataManagement { class AnalysisPlot; } }
 namespace RVS { namespace DataManagement { class SppRecord; } }
-
-using namespace std;
 
 namespace RVS
 {
@@ -48,13 +47,13 @@ namespace DataManagement
 
 		DataTable* query_input_table(void);
 
-		// Querys the main input table ("Plots")
+		// Queries the main input table ("Plots")
 		DataTable* query_input_table(int plot_num);
-		// Querys the shrub input table ("Shrubs")
+		// Queries the shrub input table ("Shrubs")
 		DataTable* query_shrubs_table(void);
 
 		// Returns a value from a specified column in a sqlite statement object
-		void getVal(sqlite3_stmt* stmt, int column, boost::any* retVal);
+		void getVal(sqlite3_stmt* stmt, int column, std::any* retVal);
 		void getVal(sqlite3_stmt* stmt, int column, double* retval);
 		void getVal(sqlite3_stmt* stmt, int column, std::string* retVal);
 		void getVal(sqlite3_stmt* stmt, int column, int* retVal);
@@ -62,16 +61,20 @@ namespace DataManagement
 		
 		virtual DataTable* query_equation_table(int equation_number);
 		virtual void query_equation_coefficients(int equation_number, double* coefs);
-		virtual void query_equation_parameters(int equation_number, string* params);
-		virtual void query_equation_parameters(int equation_number, string* params, double* coefs);
-		virtual void query_equation_parameters(int equation_number, string* params, double* coefs, int* equation_type);
+		virtual void query_equation_coefficients(int equation_number, std::span<double> coefs);
+		virtual void query_equation_parameters(int equation_number, std::string* params);
+		virtual void query_equation_parameters(int equation_number, std::span<std::string> params);
+		virtual void query_equation_parameters(int equation_number, std::string* params, double* coefs);
+		virtual void query_equation_parameters(int equation_number, std::span<std::string> params, std::span<double> coefs);
+		virtual void query_equation_parameters(int equation_number, std::string* params, double* coefs, int* equation_type);
+		virtual void query_equation_parameters(int equation_number, std::span<std::string> params, std::span<double> coefs, int* equation_type);
 
 		virtual void query_fuels_basic_info(const int* bps, int* fbfm, bool* isDry);
 
 		int* write_output(void);
 		void write_debug_msg(const char* msg);
 
-		// Converts a std::stringstream to a char pointer (array)
+		// Converts a std::stringstream to a char pointer using an internal static bounded ring buffer
 		char* streamToCharPtr(std::stringstream* stream);
 
 	protected:
@@ -86,31 +89,31 @@ namespace DataManagement
 		const char* query_base(const char* table);
 		const char* query_base(const char* table, const char* field);
 		const char* query_base(const char* table, const char* field, int whereClause);
-		const char* query_base(const char* table, const char* field, string whereClause);
-		const char* query_base(const char* table, const char* field, int whereClause, string order);
-		const char* query_base(const char* table, const char* field, string whereClause, string order);
+		const char* query_base(const char* table, const char* field, const std::string& whereClause);
+		const char* query_base(const char* table, const char* field, int whereClause, const std::string& order);
+		const char* query_base(const char* table, const char* field, const std::string& whereClause, const std::string& order);
 
-		// Bogus function for sqlite3_exec
+		// Callback function for sqlite3_exec
 		static int callback(void* nu, int argc, char** argv, char** azColName);
 
 		bool checkDBStatus(sqlite3* db, const char* sql = "", const char* err = "");
 		int* finalizeQueries(void);
 
-		static vector<const char*> queuedWrites;
+		static std::vector<std::string> queuedWrites;
 		
 		static sqlite3* rvsdb;  // SQLite database object
 		static sqlite3* outdb;  // SQLite output database object
 
 	private:
-		static map<string, shared_ptr<DataTable>> activeQueries;
+		static std::map<std::string, std::shared_ptr<DataTable>> activeQueries;
 		static int buildInMemDB(sqlite3 *pInMemory, const char *zFilename, int isSave);
 
 		int* create_output_db();
-		int* create_output_db(char* path);
+		int* create_output_db(const char* path);
 
-		bool isQueryActive(string sql);
+		bool isQueryActive(const std::string& sql);
 		// Opens the database connection. Will remain open until DIO destructs
-		int* open_db_connection(char* pathToDb, sqlite3** db);
+		int* open_db_connection(const char* pathToDb, sqlite3** db);
 	};
 }
 }
